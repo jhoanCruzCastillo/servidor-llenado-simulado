@@ -25,6 +25,7 @@ servidor-llenado-simulado/
 │   ├── resultado.js   respuesta.json, resumen.json, zip, sha256
 │   ├── store.js       trabajos en disco + objeto de estado del contrato
 │   ├── webhook.js     aviso opcional al terminar (firmado HMAC)
+│   ├── chat/          chat de prueba: rutas (SSE), almacén de conversaciones y adaptador de streaming con Claude Code
 │   └── ia/
 │       ├── claude.js    Claude Code (CLI, `claude -p`) con la suscripción
 │       └── simulada.js  sin IA: devuelve los valores del ejemplo de referencia del paquete
@@ -35,6 +36,7 @@ servidor-llenado-simulado/
     ├── verificar-claude.js  comprueba instalación, sesión y que NO se use la API de pago
     ├── probar.js            cliente de prueba (hace lo que hará la plataforma)
     ├── prueba-fallos.js     regresión de errores de la ruta Claude, sin gastar cuota
+    ├── prueba-chat.js       regresión de los endpoints del chat (streaming, cancelar, CORS…)
     └── claude-falso.js      «Claude Code» de mentira para esa regresión
 ```
 
@@ -95,6 +97,27 @@ npm run probar:fallos
 `probar.js` envía el paquete, muestra el avance (`%`, etapa, mensaje), descarga el resultado, verifica `bytes` y `sha256` y comprueba que `respuesta.json` cubre **todos** los campos y tablas que pedía el paquete. Paquetes de ejemplo en [`docs/servidor-llenado-externo/ejemplos/`](ejemplos/) (Educación EBR, Cuidado Diurno, Desarrollo Productivo).
 
 `metadata.simulacion` (opcional, solo para pruebas) acota el trabajo: `{"secciones": ["02","06"], "max_unidades": 4}`. Lo que queda fuera se da por resuelto sin llenar (campos `no_encontrado`, tablas en su estado base) y se anota en `advertencias`.
+
+## Chat de prueba (para la UI `chat-ui-prueba`)
+
+Además del llenado, el servidor expone un chat sobre Claude Code (streaming, sin herramientas), para probar la suscripción de punta a punta desde una interfaz. Mismas credenciales y mismo `SERVIDOR_TOKEN`; las conversaciones se guardan en el volumen (`DATA_DIR/chat`).
+
+| Endpoint | Qué hace |
+|---|---|
+| `GET /v1/chat/modelos` | Modelos disponibles (`sonnet`, `opus`, `haiku`) y el predeterminado |
+| `GET /v1/chat/conversaciones` | Lista (sin mensajes), de la más reciente a la más antigua |
+| `POST /v1/chat/conversaciones` `{titulo?, modelo?}` | Crea una conversación |
+| `GET /v1/chat/conversaciones/{id}` | Conversación con todos sus mensajes |
+| `PATCH /v1/chat/conversaciones/{id}` `{titulo?, modelo?}` | Renombra / cambia de modelo |
+| `DELETE /v1/chat/conversaciones/{id}` | Elimina |
+| `POST /v1/chat/conversaciones/{id}/mensajes` `{contenido, modelo?}` | Responde en **streaming (SSE)** |
+| `POST /v1/chat/conversaciones/{id}/regenerar` `{modelo?}` | Vuelve a responder al último mensaje (SSE) |
+
+**SSE:** eventos `inicio`, `delta` `{texto}`, `fin` `{mensaje, conversacion}` y `error` `{codigo, mensaje, reintentable}`. Si el cliente corta la conexión se detiene Claude y lo generado se guarda como respuesta *interrumpida*.
+
+**Cómo funciona:** cada respuesta lanza `claude -p --output-format stream-json --verbose --include-partial-messages --tools ""` y reenvía los trozos de texto. La conversación continúa con `--resume <session_id>`; si esa sesión ya no existe (o se regenera una respuesta) se reconstruye el contexto con el historial guardado. Las sesiones de Claude viven en `DATA_DIR/claude-config`, así que sobreviven a los redespliegues si hay volumen. Límite de respuestas simultáneas: `CHAT_CONCURRENCIA` (2). CORS: `CORS_ORIGENES` (por defecto `localhost:5173/5174`).
+
+Pruebas sin cuota: `npm run probar:chat` (streaming, reanudar, sesión perdida, regenerar, error, cancelar, concurrencia, CORS) y `npm run dev:falso` para usar la UI contra un servidor local con un Claude falso.
 
 ## Cómo trabaja (por dentro)
 

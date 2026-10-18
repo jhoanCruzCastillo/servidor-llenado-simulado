@@ -9,8 +9,10 @@
     "start": "node --env-file-if-exists=.env src/index.js",
     "dev": "node --watch --env-file-if-exists=.env src/index.js",
     "verificar:claude": "node --env-file-if-exists=.env scripts/verificar-claude.js",
+    "dev:falso": "node --env-file=.env.falso src/index.js",
     "probar": "node --env-file-if-exists=.env scripts/probar.js",
-    "probar:fallos": "node scripts/prueba-fallos.js"
+    "probar:fallos": "node scripts/prueba-fallos.js",
+    "probar:chat": "node scripts/prueba-chat.js"
   },
   "dependencies": {
     "adm-zip": "^0.5.16"

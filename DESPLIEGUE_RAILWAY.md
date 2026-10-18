@@ -91,3 +91,17 @@ npm run probar -- ejemplos/paquete_entrada_ejemplo_fte-cuidado-diurno.zip \
 - **Datos de clientes**: el servidor guarda los paquetes recibidos hasta `RETENCION_DIAS` (2 por defecto) o hasta que la plataforma llame a `DELETE /v1/trabajos/{id}`.
 - **Logs**: Railway → servicio → *Deployments → View logs*. No se imprimen contenidos de documentos; cada trabajo deja además `log.ndjson` en el volumen.
 - **Siguiente paso (otra unidad):** conectar el backend de la plataforma a esta URL con el mismo `SERVIDOR_TOKEN`.
+
+## 10. Probar el chat desde tu PC (UI React)
+
+Tras redesplegar con los endpoints de chat (haz `git push` y espera a que Railway quede **Active**):
+
+```bash
+cd chat-ui-prueba        # carpeta de la UI (en la raíz del proyecto, fuera de este repo)
+npm install
+npm run dev              # http://localhost:5173
+```
+
+En **Servidor** (ajustes) pon la URL de Railway y tu `SERVIDOR_TOKEN`, y usa **Probar con Claude**. El servidor ya permite CORS a `localhost:5173/5174`; si usas otro puerto u origen, añade la variable `CORS_ORIGENES` (lista separada por comas, p. ej. `http://localhost:3000`).
+
+Con el **volumen** montado en `/data`, las conversaciones y las sesiones de Claude sobreviven a los redespliegues; sin él se pierden (el chat sigue funcionando: reconstruye el contexto con el historial mientras exista).

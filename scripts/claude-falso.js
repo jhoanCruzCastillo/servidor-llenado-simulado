@@ -32,6 +32,59 @@ const salida = (result, extra = {}) => {
   }));
 };
 
+// ── Modo chat: `--output-format stream-json` (misma forma de eventos que el Claude Code real) ──────────────────────────
+if (args.includes('stream-json')) {
+  const { randomUUID } = await import('node:crypto');
+  const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+  const emitir = (o) => console.log(JSON.stringify(o));
+  const i = args.indexOf('--resume');
+  const resumeId = i >= 0 ? args[i + 1] : null;
+  const sid = resumeId ?? randomUUID();
+  emitir({ type: 'system', subtype: 'init', session_id: sid, model: 'claude-falso', tools: [] });
+
+  const error = (texto) => {
+    emitir({ type: 'assistant', message: { model: '<synthetic>', role: 'assistant', content: [{ type: 'text', text: texto }] }, session_id: sid });
+    emitir({ type: 'result', subtype: 'success', is_error: true, result: texto, session_id: sid, usage: {} });
+    process.exit(1);
+  };
+  const ultima = prompt.split('Persona: ').at(-1).trim(); // solo el último mensaje manda (el historial puede contener marcas antiguas)
+  if (resumeId && process.env.FALSO_SESION_PERDIDA === '1') error(`No conversation found with session ID: ${resumeId}`);
+  if (/\[\[error\]\]/.test(ultima)) error('API Error: 529 overloaded_error');
+
+  const conHistorial = prompt.includes('Esta es la conversación hasta ahora');
+  let respuesta = `¡Hola! Soy el **Claude falso** de pruebas${resumeId ? ' (sesión reanudada)' : ''}${conHistorial ? ' (con historial reconstruido)' : ''}.
+
+Me escribiste:
+
+> ${ultima.slice(0, 200)}
+
+Algunas cosas para probar el formato:
+
+- Una lista con *cursiva* y \`código en línea\`
+- Otro punto
+
+\`\`\`js
+function saludar(nombre) {
+  return 'Hola, ' + nombre;
+}
+\`\`\`
+
+| Columna A | Columna B |
+|---|---|
+| 1 | 2 |
+| 3 | 4 |
+`;
+  if (/\[\[largo\]\]/.test(ultima)) respuesta = Array.from({ length: 80 }, (_, n) => `Línea ${n + 1} de una respuesta larga para probar el botón de detener.`).join('\n\n');
+
+  for (let p = 0; p < respuesta.length; p += 9) {
+    emitir({ type: 'stream_event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: respuesta.slice(p, p + 9) } }, session_id: sid, parent_tool_use_id: null });
+    await esperar(Number(process.env.FALSO_RITMO_MS ?? 15));
+  }
+  emitir({ type: 'assistant', message: { model: 'claude-falso', role: 'assistant', content: [{ type: 'text', text: respuesta }] }, session_id: sid });
+  emitir({ type: 'result', subtype: 'success', is_error: false, result: respuesta, session_id: sid, total_cost_usd: 0, usage: { input_tokens: 120, output_tokens: Math.ceil(respuesta.length / 4), cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } });
+  process.exit(0);
+}
+
 const falla = process.env.FALSO_FALLA;
 const veces = Number(process.env.FALSO_FALLA_VECES ?? 1);
 if (falla && n <= veces) {
