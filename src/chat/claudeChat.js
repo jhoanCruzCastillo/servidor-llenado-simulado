@@ -26,13 +26,16 @@ const SISTEMA =
   + 'Usa Markdown cuando ayude (listas, tablas, bloques de código indicando el lenguaje). '
   + 'No tienes herramientas ni acceso a archivos, internet ni a ejecutar código en esta conversación: no finjas hacerlo. Si no sabes algo, dilo.';
 
-const dirConfig = join(config.dataDir, 'claude-config'); // las sesiones de Claude Code viven en el volumen para sobrevivir a redespliegues
+// Por defecto el chat usa la MISMA configuración de Claude Code que el resto del servidor (HOME del usuario). Con CHAT_CONFIG_DIR las sesiones
+// pueden vivir en otro directorio (p. ej. el volumen) para sobrevivir a redespliegues; sin ello se reconstruyen con el historial.
+const dirConfig = process.env.CHAT_CONFIG_DIR || null;
 const dirTrabajo = join(config.dataDir, 'chat-cwd'); // directorio de trabajo fijo y vacío: las sesiones se asocian a él
 
 /** Prepara las carpetas de Claude Code para el chat (una vez al arrancar). */
 export function prepararChat() {
-  mkdirSync(dirConfig, { recursive: true });
   mkdirSync(dirTrabajo, { recursive: true });
+  if (!dirConfig) return;
+  mkdirSync(dirConfig, { recursive: true });
   const f = join(dirConfig, '.claude.json');
   if (!existsSync(f)) writeFileSync(f, JSON.stringify({ hasCompletedOnboarding: true }));
 }
@@ -64,7 +67,7 @@ function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta }) {
 
   const { cmd, args: previos, shell } = resolverBin();
   const todos = [...previos, ...args];
-  const env = { ...entornoLimpio(), CLAUDE_CONFIG_DIR: dirConfig };
+  const env = dirConfig ? { ...entornoLimpio(), CLAUDE_CONFIG_DIR: dirConfig } : entornoLimpio();
 
   return new Promise((resolve, reject) => {
     const proc = shell
