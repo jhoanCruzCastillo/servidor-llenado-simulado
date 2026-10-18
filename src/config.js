@@ -48,6 +48,10 @@ export const config = {
   maxCaracteresPorLlamada: num(env.MAX_CARACTERES_POR_LLAMADA, 45_000),
   reintentos: Math.max(0, num(env.REINTENTOS, 2)),
   concurrenciaTrabajos: Math.max(1, num(env.CONCURRENCIA_TRABAJOS, 1)),
+  // Al recibir DELETE se borran los documentos del cliente y el paquete, pero (mientras se afina el servicio) se conservan el log, las respuestas crudas
+  // de la IA y el resultado unos días para poder diagnosticar. CONSERVAR_DIAGNOSTICO=0 borra todo en el acto.
+  conservarDiagnostico: env.CONSERVAR_DIAGNOSTICO !== '0',
+  diagnosticoDias: Math.max(1, num(env.DIAGNOSTICO_DIAS, 3)),
   retencionDias: Math.min(7, Math.max(1, num(env.RETENCION_DIAS, 7))),
   webhookSecreto: env.WEBHOOK_SECRETO || 'dev-secreto-webhook',
   expiraResultadoHoras: num(env.EXPIRA_RESULTADO_HORAS, 24 * 7),

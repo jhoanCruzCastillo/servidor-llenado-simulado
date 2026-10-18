@@ -20,6 +20,7 @@ import { prepararChat } from './chat/claudeChat.js';
 import { manejarChat } from './chat/rutas.js';
 import { cancelarEjecucion, ejecutar, enEjecucion } from './pipeline.js';
 import { leer, tamano } from './resultado.js';
+import { diagnosticoDe } from './diagnostico.js';
 import { aEstado, ahora, buscarIdem, cargarDeDisco, dirDe, eliminar, guardar, guardarIdem, obtener, registrar, TERMINALES, todos } from './store.js';
 
 const LIMITE_BYTES = config.limitePaqueteMB * 1024 * 1024;
@@ -193,6 +194,13 @@ async function manejar(req, res) {
 
   if (req.method === 'POST' && ruta === '/v1/trabajos') return crearTrabajo(req, res);
 
+  // Últimos trabajos (para encontrar el id de uno concreto al diagnosticar).
+  if (req.method === 'GET' && ruta === '/v1/trabajos') {
+    const lista = todos().sort((a, b) => b.creado_en.localeCompare(a.creado_en)).slice(0, 30)
+      .map((t) => ({ trabajo_id: t.id, estado: t.estado, creado_en: t.creado_en, terminado_en: t.terminado_en ?? null, referencia: t.referencia ?? null, purgado: !!t.purgado_en }));
+    return enviar(res, 200, { trabajos: lista });
+  }
+
   if (await manejarChat(req, res, ruta)) return;
 
   // Comprueba que la credencial de Claude funciona (una llamada mínima real; gasta una fracción ínfima de cuota).
@@ -202,9 +210,11 @@ async function manejar(req, res) {
     return enviar(res, r.ok ? 200 : 502, { ...r, claude: estadoIA });
   }
 
-  if ((m = /^\/v1\/trabajos\/([\w-]+)(\/cancelar)?$/.exec(ruta))) {
+  if ((m = /^\/v1\/trabajos\/([\w-]+)(\/cancelar|\/diagnostico)?$/.exec(ruta))) {
     const t = obtener(m[1]);
     if (!t) return fallo(res, 404, 'trabajo_no_encontrado', 'El trabajo no existe o ya fue purgado.');
+
+    if (req.method === 'GET' && m[2] === '/diagnostico') return enviar(res, 200, diagnosticoDe(t));
 
     if (req.method === 'GET' && !m[2]) {
       if (t.estado === 'en_cola') t.mensaje = mensajeCola(t);
@@ -217,7 +227,7 @@ async function manejar(req, res) {
       return enviar(res, 200, aEstado(t));
     }
 
-    if (req.method === 'POST' && m[2]) {
+    if (req.method === 'POST' && m[2] === '/cancelar') {
       if (!TERMINALES.includes(t.estado)) {
         t.cancelando = true;
         if (t.estado === 'en_cola' || !enEjecucion(t.id)) {
@@ -236,7 +246,14 @@ async function manejar(req, res) {
 
     if (req.method === 'DELETE' && !m[2]) {
       if (enEjecucion(t.id)) cancelarEjecucion(t.id);
-      eliminar(t.id);
+      if (config.conservarDiagnostico) {
+        // Fuera lo del cliente (documentos, paquete); queda lo necesario para entender qué pasó (log, respuestas de la IA, resultado) unos días.
+        for (const sub of ['p', 'paquete.zip', 'sistema.md']) rmSync(join(dirDe(t.id), sub), { recursive: true, force: true });
+        t.purgado_en = ahora();
+        guardar(t);
+      } else {
+        eliminar(t.id);
+      }
       res.writeHead(204);
       return res.end();
     }
@@ -250,7 +267,7 @@ function barrer() {
   for (const t of todos()) {
     if (!TERMINALES.includes(t.estado) || !t.terminado_en) continue;
     const dias = (ahoraMs - Date.parse(t.terminado_en)) / 86_400_000;
-    if (dias > 30) { eliminar(t.id); continue; }
+    if (dias > 30 || (t.purgado_en && (ahoraMs - Date.parse(t.purgado_en)) / 86_400_000 > config.diagnosticoDias)) { eliminar(t.id); continue; }
     if (dias > config.retencionDias) {
       for (const sub of ['p', 'salida', 'sistema.md']) rmSync(join(dirDe(t.id), sub), { recursive: true, force: true });
       if (t.resultado && Date.parse(t.resultado.expira_en) < ahoraMs) rmSync(join(dirDe(t.id), 'resultado.zip'), { force: true });
