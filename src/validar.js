@@ -3,6 +3,8 @@
  * Lanza ErrorRespuesta cuando la respuesta no se puede aprovechar: el pipeline reintenta con ese mensaje como retroalimentación.
  * Lo recuperable se corrige y se anota como advertencia.
  */
+import { jsonrepair } from 'jsonrepair';
+
 export class ErrorRespuesta extends Error {}
 
 const ESTADOS = ['extraido', 'inferido', 'requiere_confirmacion', 'no_encontrado', 'conflictivo', 'calculado'];
@@ -12,11 +14,20 @@ const clave = (s) => sinTildes(String(s)).toLowerCase().replace(/\s+/g, ' ').tri
 
 /** Saca el primer JSON (objeto o arreglo) de un texto que puede traer ```json … ``` o prosa alrededor. */
 export function extraerJson(texto) {
+  return extraerJsonTolerante(texto).json;
+}
+
+/**
+ * Igual que extraerJson, pero si el JSON viene roto (comillas internas sin escapar, comas de más, claves sin comillas, saltos de línea dentro de un texto…)
+ * intenta repararlo antes de rendirse. Devuelve `reparado: true` cuando hizo falta, para dejar constancia: una reparación puede tapar un corte.
+ * @returns {{json: *, reparado: boolean}}
+ */
+export function extraerJsonTolerante(texto) {
   let t = String(texto ?? '').trim();
   const cerco = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (cerco) t = cerco[1].trim();
   try {
-    return JSON.parse(t);
+    return { json: JSON.parse(t), reparado: false };
   } catch {
     /* intenta recortar entre el primer y el último delimitador */
   }
@@ -24,10 +35,16 @@ export function extraerJson(texto) {
   if (ini < 0) throw new ErrorRespuesta('La respuesta no contiene ningún JSON.');
   const cierre = t[ini] === '{' ? '}' : ']';
   const fin = t.lastIndexOf(cierre);
-  if (fin <= ini) throw new ErrorRespuesta('El JSON de la respuesta está incompleto (¿se cortó?).');
+  const candidato = fin > ini ? t.slice(ini, fin + 1) : t.slice(ini);
   try {
-    return JSON.parse(t.slice(ini, fin + 1));
+    return { json: JSON.parse(candidato), reparado: false };
   } catch (e) {
+    try {
+      const json = JSON.parse(jsonrepair(candidato));
+      if (json !== null && typeof json === 'object') return { json, reparado: true };
+    } catch {
+      /* ni reparado: se informa el error original */
+    }
     throw new ErrorRespuesta(`La respuesta no es un JSON válido: ${e.message}`);
   }
 }

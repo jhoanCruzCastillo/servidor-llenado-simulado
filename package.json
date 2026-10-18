@@ -4,7 +4,9 @@
   "private": true,
   "description": "Servidor de llenado simulado de Proyecta Fácil: recibe el paquete .zip, llena la ficha con Claude Code (suscripción) y entrega el zip de resultado. Contrato en ../docs/servidor-llenado-externo/",
   "type": "module",
-  "engines": { "node": ">=22.9" },
+  "engines": {
+    "node": ">=22.9"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/index.js",
     "dev": "node --watch --env-file-if-exists=.env src/index.js",
@@ -15,6 +17,7 @@
     "probar:chat": "node scripts/prueba-chat.js"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16"
+    "adm-zip": "^0.5.16",
+    "jsonrepair": "^3.15.0"
   }
 }
