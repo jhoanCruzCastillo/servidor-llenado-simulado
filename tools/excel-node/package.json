@@ -1,0 +1,8 @@
+{
+  "name": "excel-node",
+  "private": true,
+  "type": "module",
+  "description": "Empaqueta para Node el mismo código de Excel de la plataforma (escritor y volcado del frontend). Genera ../../vendor/excel-ficha.mjs",
+  "scripts": { "build": "node build.mjs" },
+  "devDependencies": { "esbuild": "^0.25.0", "linkedom": "^0.18.0" }
+}

@@ -9,8 +9,10 @@
  *  - Credenciales: las de `claude login` en este equipo, o CLAUDE_CODE_OAUTH_TOKEN.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
 import { promptCampos, promptSistema, promptTablas } from '../prompts.js';
 import { ErrorRespuesta, extraerJsonTolerante } from '../validar.js';
@@ -158,6 +160,48 @@ ${r.stderr}`);
   }
 }
 
+/**
+ * Prueba REAL de la conexión de herramientas con Excel: Claude Code lanza el servidor MCP de prueba, llama a `ver_hoja` sobre un Excel diminuto y responde
+ * la palabra que hay en B1. Si esto pasa, el llenado con herramientas (Claude Code ↔ MCP ↔ Excel) está bien cableado en este servidor.
+ */
+export async function probarClaudeExcel() {
+  const t0 = Date.now();
+  const dir = mkdtempSync(join(tmpdir(), 'pf-prueba-excel-'));
+  try {
+    const aqui = dirname(fileURLToPath(import.meta.url));
+    const mcpConfig = join(dir, 'mcp.json');
+    writeFileSync(mcpConfig, JSON.stringify({ mcpServers: { [SERVIDOR_MCP]: { type: 'stdio', command: process.execPath, args: [resolve(aqui, '../excel/mcp-prueba.js'), resolve(aqui, '../excel/prueba/prueba.xlsx')], env: {} } } }));
+    const r = await ejecutarClaude(
+      ['-p', '--output-format', 'json', '--model', config.claude.modelo, '--mcp-config', mcpConfig, '--strict-mcp-config', '--tools', '', '--allowedTools', `mcp__${SERVIDOR_MCP}__ver_hoja`, '--permission-mode', 'dontAsk', '--max-turns', '6', '--no-session-persistence', '--setting-sources', 'project,local'],
+      { stdin: 'Usa la herramienta ver_hoja para mirar la hoja «Hoja de prueba» y responde SOLO con el valor de la celda B1, sin nada más.', cwd: dir, timeoutMs: 180_000 },
+    );
+    const j = leerResultado(r.stdout);
+    if (j.is_error || r.code !== 0) {
+      const e = clasificarFallo(`${j.result ?? ''}
+${r.stderr}`);
+      return { ok: false, codigo: e.codigo, mensaje: e.message, detalle: e.detalle };
+    }
+    const respuesta = String(j.result ?? '').trim();
+    const funciona = respuesta.includes('MANZANA-42');
+    return {
+      ok: funciona,
+      mensaje: funciona ? 'Claude Code llamó a la herramienta del Excel y leyó la celda B1.' : 'Claude Code respondió, pero no con el valor de la celda: no usó la herramienta (revisa permisos o la conexión MCP).',
+      respuesta: respuesta.slice(0, 120),
+      turnos: j.num_turns ?? null,
+      segundos: Number(((Date.now() - t0) / 1000).toFixed(1)),
+      modelo_pedido: config.claude.modelo,
+    };
+  } catch (e) {
+    return { ok: false, codigo: e.codigo ?? 'ia_no_disponible', mensaje: e.message };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** Nombre del servidor MCP del Excel y sus herramientas (las ve Claude Code como mcp__<servidor>__<herramienta>). */
+export const SERVIDOR_MCP = 'excel_ficha';
+export const HERRAMIENTAS_MCP = ['ver_hoja', 'llenar_campos', 'llenar_tablas'];
+
 export function crearIAClaude() {
   const c = config.claude;
 
@@ -166,11 +210,21 @@ export function crearIAClaude() {
     proveedor: 'anthropic-claude-code',
     modelo: c.modelo,
 
-    /** Escribe el prompt del sistema del trabajo en un archivo (supera el límite de longitud de la línea de comandos). */
-    preparar(paq, dirTrabajo) {
+    /**
+     * Escribe el prompt del sistema del trabajo en un archivo (supera el límite de longitud de la línea de comandos).
+     * Con `sesion` (modo Excel) también deja la configuración MCP que lanza la «mesa de trabajo» del Excel (src/excel/mcp-excel.js).
+     */
+    preparar(paq, dirTrabajo, { sesion } = {}) {
       const archivo = join(dirTrabajo, 'sistema.md');
-      writeFileSync(archivo, promptSistema(paq), 'utf8');
-      return { archivoSistema: archivo };
+      writeFileSync(archivo, promptSistema(paq, { excel: !!sesion }), 'utf8');
+      const preparado = { archivoSistema: archivo };
+      if (sesion) {
+        const mcpConfig = join(dirTrabajo, 'mcp.json');
+        const servidor = resolve(dirname(fileURLToPath(import.meta.url)), '../excel/mcp-excel.js');
+        writeFileSync(mcpConfig, JSON.stringify({ mcpServers: { [SERVIDOR_MCP]: { type: 'stdio', command: process.execPath, args: [servidor, '--raiz', paq.rutaRaiz, '--sesion', sesion.dir], env: {} } } }, null, 2));
+        preparado.mcpConfig = mcpConfig;
+      }
+      return preparado;
     },
 
     /**
@@ -218,6 +272,60 @@ export function crearIAClaude() {
       };
       const { json, reparado } = extraerJsonTolerante(textoResultado);
       return { bruto: json, uso, reparado };
+    },
+
+    /**
+     * Resuelve una unidad trabajando sobre el Excel: Claude Code mira la hoja y entrega con las herramientas (src/excel/mcp-excel.js), que validan y
+     * escriben en el Excel. No devuelve el contenido: queda en la sesión (`sesion.recargar()` y consultar), el llamador comprueba qué se entregó.
+     * @returns {{uso: object}}
+     */
+    async ejecutarUnidad(unidad, paq, { coherencia = '', correccion = '', signal, preparado }) {
+      const usuario = unidad.tipo === 'campos'
+        ? promptCampos(paq, unidad.seccion, coherencia, correccion, { excel: true })
+        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { excel: true });
+
+      const mcp = HERRAMIENTAS_MCP.map((h) => `mcp__${SERVIDOR_MCP}__${h}`);
+      const args = [
+        '-p',
+        '--output-format', 'json',
+        '--model', c.modelo,
+        '--append-system-prompt-file', preparado.archivoSistema,
+        '--mcp-config', preparado.mcpConfig,
+        '--strict-mcp-config',
+        '--tools', 'Read,Glob,Grep',
+        '--allowedTools', ['Read', 'Glob', 'Grep', ...mcp].join(','),
+        '--permission-mode', 'dontAsk',
+        '--max-turns', String(c.maxTurnos),
+        '--no-session-persistence',
+        '--setting-sources', 'project,local',
+      ];
+      if (c.esfuerzo) args.push('--effort', c.esfuerzo);
+
+      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal });
+      let r;
+      try {
+        r = leerResultado(stdout);
+      } catch (e) {
+        if (code !== 0) throw clasificarFallo(`${stderr}
+${stdout}`);
+        throw e;
+      }
+      const textoResultado = typeof r.result === 'string' ? r.result : '';
+      if (r.is_error || (code !== 0 && !textoResultado)) throw clasificarFallo(`${textoResultado}
+${stderr}
+${r.subtype ?? ''}`);
+      // Sin turnos suficientes puede haber entregado la mitad: el llamador mira qué quedó en la sesión y reintenta lo que falta.
+      const u = r.usage ?? {};
+      return {
+        uso: {
+          llamadas: 1,
+          tokens_entrada: (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0),
+          tokens_salida: u.output_tokens ?? 0,
+          costo_usd_referencial: r.total_cost_usd ?? 0,
+        },
+        agotoTurnos: r.subtype === 'error_max_turns',
+        cierre: textoResultado.slice(0, 300),
+      };
     },
   };
 }

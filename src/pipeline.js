@@ -10,6 +10,7 @@ import { ErrorIA } from './ia/claude.js';
 import { ensamblar } from './resultado.js';
 import { ahora, dirDe, guardar } from './store.js';
 import { cargarPaquete } from './paquete.js';
+import { Sesion } from './excel/sesion.js';
 import { ErrorRespuesta, validarCampos, validarTabla } from './validar.js';
 import { notificar } from './webhook.js';
 
@@ -69,6 +70,8 @@ export async function ejecutar(t, ia) {
   const avisar = (a) => { t.advertencias.push(a); };
   let coherencia = [];
   let llamadas = 0;
+  let sesion = null;
+  let conHerramientas = false;
 
   const sumarUso = (u) => {
     const k = `${ia.proveedor}/${ia.modelo}`;
@@ -78,19 +81,15 @@ export async function ejecutar(t, ia) {
     a.tokens_salida += u.tokens_salida ?? 0;
   };
 
-  /** Una llamada a la IA con reintentos. Devuelve lo que `validar` acepte; ErrorRespuesta agotado se relanza para que la unidad lo trate. */
-  async function llamarIA(unidad, paq, preparado, validar, correccionInicial = '') {
+  /** Ejecuta `intentar(correccion)` con los reintentos de siempre: respuesta inválida → se reintenta con el motivo; fallo transitorio de la IA → espera creciente. */
+  async function conReintentos(unidad, intentar, correccionInicial = '') {
     let correccion = correccionInicial;
     let ultimo;
     for (let intento = 0; intento <= config.reintentos; intento++) {
       if (ctl.signal.aborted) throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
       try {
         llamadas++;
-        const { bruto, uso, reparado } = await ia.resolver(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
-        sumarUso(uso);
-        if (reparado) log('json_reparado', { seccion: unidad.seccion.numero, tipo: unidad.tipo });
-        writeFileSync(join(salida, `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}.json`), JSON.stringify(bruto, null, 2));
-        return validar(bruto);
+        return await intentar(correccion);
       } catch (e) {
         if (ctl.signal.aborted || e.codigo === 'cancelado') throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
         ultimo = e;
@@ -107,6 +106,56 @@ export async function ejecutar(t, ia) {
     throw ultimo;
   }
 
+  /** Una llamada a la IA que responde un JSON. Devuelve lo que `validar` acepte; ErrorRespuesta agotado se relanza para que la unidad lo trate. */
+  function llamarIA(unidad, paq, preparado, validar, correccionInicial = '') {
+    return conReintentos(unidad, async (correccion) => {
+      const { bruto, uso, reparado } = await ia.resolver(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
+      sumarUso(uso);
+      if (reparado) log('json_reparado', { seccion: unidad.seccion.numero, tipo: unidad.tipo });
+      writeFileSync(join(salida, `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}.json`), JSON.stringify(bruto, null, 2));
+      return validar(bruto);
+    }, correccionInicial);
+  }
+
+  const aExcelDesdeJson = () => !conHerramientas && !!sesion?.disponible && config.salida === 'excel';
+  /** Por qué se rechazó una tabla según lo que le respondió la herramienta a la IA (último rechazo registrado). */
+  function rechazoDe(id) {
+    const marca = `RECHAZADA ${id}: `;
+    for (const x of sesion.leerRegistro().reverse()) {
+      const linea = String(x.informe ?? '').split(/\r?\n/).find((l) => l.startsWith(marca));
+      if (linea) return linea.slice(marca.length, marca.length + 200);
+    }
+    return 'sin entregar';
+  }
+
+  /** Pasa a t.advertencias lo que la sesión del Excel anotó desde la última vez (validaciones y valores que el Excel no aceptó). */
+  let advertenciasVistas = 0;
+  function recogerAdvertenciasDeSesion() {
+    sesion.recargar();
+    for (const a of sesion.advertencias.slice(advertenciasVistas)) avisar(a);
+    advertenciasVistas = sesion.advertencias.length;
+  }
+
+  /**
+   * Una solicitud a la IA que trabaja sobre el Excel con herramientas. `comprobar()` mira qué quedó entregado en la sesión y lanza ErrorRespuesta
+   * si falta lo esencial (se reintenta con ese motivo).
+   */
+  function llamarIAConHerramientas(unidad, paq, preparado, comprobar, correccionInicial = '') {
+    return conReintentos(unidad, async (correccion) => {
+      writeFileSync(join(sesion.dir, 'unidad.json'), JSON.stringify({ tipo: unidad.tipo, seccionId: unidad.seccion.id, tablas: unidad.tablas?.map((x) => x.id) }));
+      const antes = sesion.leerRegistro().length;
+      const r = await ia.ejecutarUnidad(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
+      sumarUso(r.uso);
+      sesion.recargar();
+      // Lo que la IA entregó (entrada y respuesta de cada herramienta), en el mismo lugar donde se guardan las respuestas crudas, para diagnosticar.
+      const entregas = sesion.leerRegistro(antes);
+      const base = `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}`;
+      if (entregas.length === 0) writeFileSync(join(salida, `${base}_sin_entrega.json`), JSON.stringify({ nota: 'La IA terminó sin llamar a ninguna herramienta de entrega.', cierre: r.cierre, agoto_turnos: r.agotoTurnos }, null, 2));
+      entregas.forEach((x, i) => writeFileSync(join(salida, `${base}_${i + 1}.json`), JSON.stringify({ herramienta: x.herramienta, ...(x.entrada.campos ? { seccion_id: x.entrada.seccion_id, campos: x.entrada.campos } : { tablas: x.entrada.tablas }), informe: x.informe }, null, 2)));
+      comprobar(r);
+    }, correccionInicial);
+  }
+
   try {
     t.estado = 'procesando';
     t.iniciado_en = ahora();
@@ -118,8 +167,13 @@ export async function ejecutar(t, ia) {
     t.etapa = 'analizando_documentos';
     t.mensaje = 'Analizando los documentos del proyecto…';
     guardar(t);
-    const preparado = ia.preparar(paq, dirDe(t.id));
-    log('inicio', { ia: ia.nombre, secciones: paq.secciones.length, modo: paq.modo });
+    // El resultado es un Excel: cada entrega validada se escribe en `ficha_llenada` (src/excel/sesion.js). Claude Code lo ve y lo llena con herramientas;
+    // la IA simulada (y el modo SALIDA=json) entregan JSON que el servidor escribe en el mismo Excel.
+    sesion = new Sesion(paq, join(dirDe(t.id), 'excel'));
+    const aExcel = config.salida === 'excel' && sesion.disponible;
+    conHerramientas = aExcel && typeof ia.ejecutarUnidad === 'function';
+    const preparado = ia.preparar(paq, dirDe(t.id), { sesion: conHerramientas ? sesion : undefined });
+    log('inicio', { ia: ia.nombre, secciones: paq.secciones.length, modo: paq.modo, salida: conHerramientas ? 'excel_con_herramientas' : aExcel ? 'excel_desde_json' : 'json' });
 
     // Los números de sección pueden venir como "2" o "02" según la plantilla: se comparan sin ceros a la izquierda.
     const normNum = (x) => (/^\d+$/.test(String(x)) ? String(Number(x)) : String(x));
@@ -150,9 +204,25 @@ export async function ejecutar(t, ia) {
         t.mensaje = `Procesando «${st.nombre}» — ${st.campos_totales} campos de texto`;
         guardar(t);
         try {
-          const { campos, advertencias } = await llamarIA(unidad, paq, preparado, (b) => validarCampos(b, unidad.seccion, paq.modo));
+          let campos;
+          if (conHerramientas) {
+            await llamarIAConHerramientas(unidad, paq, preparado, (r) => {
+              if (!sesion.res.campos.has(unidad.seccion.id)) {
+                throw new ErrorRespuesta(`No entregaste los campos de la sección: no llamaste a llenar_campos${r.agotoTurnos ? ' (se acabaron los turnos; trabaja más directo)' : ''}.`);
+              }
+            });
+            campos = sesion.res.campos.get(unidad.seccion.id);
+            recogerAdvertenciasDeSesion();
+          } else {
+            const validado = await llamarIA(unidad, paq, preparado, (b) => validarCampos(b, unidad.seccion, paq.modo));
+            campos = validado.campos;
+            validado.advertencias.forEach(avisar);
+            if (aExcelDesdeJson()) {
+              await sesion.guardarCampos(unidad.seccion.id, campos, { yaValidado: true });
+              recogerAdvertenciasDeSesion();
+            }
+          }
           res.campos.set(unidad.seccion.id, campos);
-          advertencias.forEach(avisar);
           coherencia.push(...lineasDeCoherencia(unidad.seccion, campos));
         } catch (e) {
           if (!(e instanceof ErrorRespuesta)) throw e;
@@ -169,32 +239,64 @@ export async function ejecutar(t, ia) {
           t.mensaje = `Procesando «${st.nombre}» — tabla${pend.length > 1 ? 's' : ''} ${primera}${pend.length > 1 ? `–${primera + pend.length - 1}` : ''} de ${st.tablas_totales}`;
           guardar(t);
           const lote = { ...unidad, tablas: pend };
-          let aceptadas;
-          try {
-            aceptadas = await llamarIA(lote, paq, preparado, (b) => {
-              const lista = Array.isArray(b) ? b : b?.tablas;
-              if (!Array.isArray(lista)) throw new ErrorRespuesta('Falta el arreglo «tablas» en la respuesta.');
-              return lista;
-            }, motivo);
-          } catch (e) {
-            if (!(e instanceof ErrorRespuesta)) throw e;
-            motivo = e.message; // la estructura general no sirvió ni tras los reintentos de llamarIA: las tablas quedan sin llenar
-            break;
-          }
           const fallidas = [];
           const motivos = [];
-          for (const tb of pend) {
-            const e = aceptadas.find((x) => String(x?.identificador) === tb.id);
+
+          if (conHerramientas) {
+            // La IA entrega con llenar_tablas: lo válido ya está en el Excel y en la sesión; aquí se ve qué tablas de la solicitud faltan.
             try {
-              if (!e) throw new ErrorRespuesta(`Tabla ${tb.id}: no vino en la respuesta.`);
-              const { valor, advertencias } = validarTabla(e, tb);
-              res.tablas.set(tb.id, { valor, fuente: String(e.fuente ?? '').trim() });
-              advertencias.forEach(avisar);
-              st.tablas_completadas++;
-            } catch (err) {
-              if (!(err instanceof ErrorRespuesta)) throw err;
-              fallidas.push(tb);
-              motivos.push(err.message);
+              await llamarIAConHerramientas(lote, paq, preparado, (r) => {
+                if (!pend.some((tb) => sesion.res.tablas.has(tb.id))) {
+                  throw new ErrorRespuesta(`No entregaste ninguna de las tablas (${pend.map((tb) => tb.id).join(', ')}): llama a llenar_tablas${r.agotoTurnos ? ' (se acabaron los turnos; trabaja más directo)' : ''}.`);
+                }
+              }, motivo);
+            } catch (e) {
+              if (!(e instanceof ErrorRespuesta)) throw e;
+              motivo = e.message; // ni tras los reintentos entregó nada: las tablas quedan sin llenar
+              break;
+            }
+            recogerAdvertenciasDeSesion();
+            for (const tb of pend) {
+              if (sesion.res.tablas.has(tb.id)) {
+                res.tablas.set(tb.id, sesion.res.tablas.get(tb.id));
+                st.tablas_completadas++;
+              } else {
+                fallidas.push(tb);
+                motivos.push(`Tabla ${tb.id}: no la entregaste o fue rechazada (${rechazoDe(tb.id)}).`);
+              }
+            }
+          } else {
+            let aceptadas;
+            try {
+              aceptadas = await llamarIA(lote, paq, preparado, (b) => {
+                const lista = Array.isArray(b) ? b : b?.tablas;
+                if (!Array.isArray(lista)) throw new ErrorRespuesta('Falta el arreglo «tablas» en la respuesta.');
+                return lista;
+              }, motivo);
+            } catch (e) {
+              if (!(e instanceof ErrorRespuesta)) throw e;
+              motivo = e.message; // la estructura general no sirvió ni tras los reintentos de llamarIA: las tablas quedan sin llenar
+              break;
+            }
+            const buenas = [];
+            for (const tb of pend) {
+              const e = aceptadas.find((x) => String(x?.identificador) === tb.id);
+              try {
+                if (!e) throw new ErrorRespuesta(`Tabla ${tb.id}: no vino en la respuesta.`);
+                const { valor, advertencias } = validarTabla(e, tb);
+                res.tablas.set(tb.id, { valor, fuente: String(e.fuente ?? '').trim() });
+                advertencias.forEach(avisar);
+                buenas.push(e);
+                st.tablas_completadas++;
+              } catch (err) {
+                if (!(err instanceof ErrorRespuesta)) throw err;
+                fallidas.push(tb);
+                motivos.push(err.message);
+              }
+            }
+            if (aExcelDesdeJson() && buenas.length) {
+              await sesion.guardarTablas(buenas);
+              recogerAdvertenciasDeSesion();
             }
           }
           pend = fallidas;
@@ -223,7 +325,7 @@ export async function ejecutar(t, ia) {
     t.etapa = 'ensamblando_resultado';
     t.mensaje = 'Armando el archivo de resultado…';
     guardar(t);
-    const out = ensamblar(t, paq, res);
+    const out = ensamblar(t, paq, res, sesion);
     t.tokenDescarga = out.tokenDescarga;
     t.resultado = out.resultado;
     t.estado = 'completado';

@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { config } from './config.js';
-import { crearIAClaude, infoClaude, probarClaude } from './ia/claude.js';
+import { crearIAClaude, infoClaude, probarClaude, probarClaudeExcel } from './ia/claude.js';
 import { crearIASimulada } from './ia/simulada.js';
 import { cargarPaquete, ErrorPaquete, validarYExtraer } from './paquete.js';
 import { prepararChat } from './chat/claudeChat.js';
@@ -210,6 +210,13 @@ async function manejar(req, res) {
     return enviar(res, r.ok ? 200 : 502, { ...r, claude: estadoIA });
   }
 
+  // Prueba real de las herramientas con Excel: Claude Code llama a ver_hoja sobre un Excel de prueba (confirma permisos, MCP y nombres de herramientas).
+  if (req.method === 'POST' && ruta === '/v1/diagnostico/claude-excel') {
+    if (config.ia !== 'claude') return enviar(res, 200, { ok: true, mensaje: 'La IA configurada es «simulada»; no hay nada que probar.' });
+    const r = await probarClaudeExcel();
+    return enviar(res, r.ok ? 200 : 502, r);
+  }
+
   if ((m = /^\/v1\/trabajos\/([\w-]+)(\/cancelar|\/diagnostico)?$/.exec(ruta))) {
     const t = obtener(m[1]);
     if (!t) return fallo(res, 404, 'trabajo_no_encontrado', 'El trabajo no existe o ya fue purgado.');
@@ -248,7 +255,7 @@ async function manejar(req, res) {
       if (enEjecucion(t.id)) cancelarEjecucion(t.id);
       if (config.conservarDiagnostico) {
         // Fuera lo del cliente (documentos, paquete); queda lo necesario para entender qué pasó (log, respuestas de la IA, resultado) unos días.
-        for (const sub of ['p', 'paquete.zip', 'sistema.md']) rmSync(join(dirDe(t.id), sub), { recursive: true, force: true });
+        for (const sub of ['p', 'paquete.zip', 'sistema.md', 'excel', 'mcp.json']) rmSync(join(dirDe(t.id), sub), { recursive: true, force: true });
         t.purgado_en = ahora();
         guardar(t);
       } else {

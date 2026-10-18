@@ -3,7 +3,7 @@
  */
 import AdmZip from 'adm-zip';
 import { createHash, randomBytes } from 'node:crypto';
-import { createReadStream, readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { config } from './config.js';
 import { ahora, dirDe } from './store.js';
@@ -14,8 +14,9 @@ const json = (o) => JSON.stringify(o, null, 2) + '\n';
  * @param {object} t    trabajo
  * @param {object} paq  paquete cargado
  * @param {{campos: Map<string, object[]>, tablas: Map<string, object>}} res  resultados ya validados
+ * @param {import('./excel/sesion.js').Sesion|null} [sesion]  sesión del Excel: si trae el libro llenado, va en el zip como entregable principal
  */
-export function ensamblar(t, paq, res) {
+export function ensamblar(t, paq, res, sesion = null) {
   const m = paq.manifiesto;
   const eco = { carpeta_raiz: m.carpeta_raiz, ficha_id: m.ficha.id, plantilla_codigo: m.plantilla.codigo, version_paquete: m.version_paquete };
 
@@ -42,12 +43,13 @@ export function ensamblar(t, paq, res) {
   }
   const sinCambios = tablas.filter((x) => !res.tablas.has(x.identificador)).length;
 
-  // Excel: solo con la IA simulada, donde el resultado ES el ejemplo de referencia y su Excel es coherente con él.
-  const usaExcelDelEjemplo = config.ia === 'simulada' && paq.ejemplo.excel;
-  const extExcel = usaExcelDelEjemplo ? extname(paq.ejemplo.excel) : null;
-  const excel = usaExcelDelEjemplo
-    ? { incluido: true, archivo: `ficha_llenada${extExcel}`, basado_en: `02_estructura_base/formato_base${extExcel}`, nota: 'Simulación: es el Excel del ejemplo de referencia del paquete.' }
-    : { incluido: false, motivo: 'Este servidor simulado todavía no escribe el Excel; la plataforma aplica respuesta.json.' };
+  // El Excel llenado (escrito con el mismo escritor de la plataforma a partir del formato en blanco) es el entregable principal; respuesta.json lo acompaña
+  // con el detalle de cada campo (estado, confianza, fuente) y como respaldo.
+  const hayExcel = !!sesion?.disponible && existsSync(sesion.rutaExcel);
+  const nombreExcel = `ficha_llenada${sesion?.extension ?? '.xlsx'}`;
+  const excel = hayExcel
+    ? { incluido: true, archivo: nombreExcel, basado_en: `02_estructura_base/${extname(sesion.formato) === '.xlsm' ? 'formato_base.xlsm' : 'formato_base.xlsx'}`, nota: 'Formato oficial en blanco con los datos escritos; las celdas calculadas las resuelve el propio Excel al abrirlo.' }
+    : { incluido: false, motivo: 'No se generó el Excel: el paquete no trae el formato en blanco o el servidor está en modo SALIDA=json.' };
 
   const usoPorModelo = Object.values(t.uso ?? {});
   const resumen = {
@@ -72,7 +74,7 @@ export function ensamblar(t, paq, res) {
   const zip = new AdmZip();
   zip.addFile(`${raiz}/respuesta.json`, Buffer.from(json({ version_respuesta: '1.0', paquete: eco, secciones, tablas }), 'utf8'));
   zip.addFile(`${raiz}/resumen.json`, Buffer.from(json(resumen), 'utf8'));
-  if (usaExcelDelEjemplo) zip.addLocalFile(paq.ejemplo.excel, raiz, `ficha_llenada${extExcel}`);
+  if (hayExcel) zip.addLocalFile(sesion.rutaExcel, raiz, nombreExcel);
 
   const ruta = join(dirDe(t.id), 'resultado.zip');
   zip.writeZip(ruta);
