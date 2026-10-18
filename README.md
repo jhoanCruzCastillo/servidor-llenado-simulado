@@ -129,6 +129,8 @@ Pruebas sin cuota: `npm run probar:chat` (streaming, reanudar, sesión perdida, 
 6. **Avance**: `porcentaje` = (campos + tablas completados) / total, nunca baja, máximo 99 hasta publicar el zip; `100 ⇔ completado ⇔ resultado.url`.
 7. **Entrega**: `respuesta.json` + `resumen.json` en un zip, enlace `/descargas/<id>/<token>/resultado.zip` con `bytes` y `sha256`; vigencia 7 días (si expira, el `GET` de estado lo renueva). El paquete recibido se borra a los 7 días (`RETENCION_DIAS`) o al instante con `DELETE`.
 
+**Diagnóstico (mientras se afina el servicio).** Al recibir `DELETE` se borran los documentos del cliente y el paquete, pero se conservan unos días (`DIAGNOSTICO_DIAS`, 3) el log, las respuestas crudas de la IA y el resultado. Con `GET /v1/trabajos` (últimos 30) y `GET /v1/trabajos/{id}/diagnostico` se ve qué pasó: estado por sección, advertencias, qué devolvió la IA en cada llamada (resumen por estado de campo / filas por tabla + inicio del texto), el `resumen.json` del resultado y el log. `CONSERVAR_DIAGNOSTICO=0` borra todo en el acto.
+
 Endpoints: `POST /v1/trabajos` · `GET /v1/trabajos/{id}` · `POST /v1/trabajos/{id}/cancelar` · `DELETE /v1/trabajos/{id}` · `GET /v1/salud` — formatos exactos en [`01_CONTRATO_DEL_SERVIDOR.md`](docs/01_CONTRATO_DEL_SERVIDOR.md).
 
 ## Límites de esta primera versión
