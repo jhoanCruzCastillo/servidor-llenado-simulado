@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://proyectafacil.example/schemas/llenado-externo/estado.schema.json",
+  "title": "Estado de un trabajo de llenado",
+  "description": "Cuerpo de GET /v1/trabajos/{id}, de POST /v1/trabajos/{id}/cancelar y del webhook. Contrato en 01_CONTRATO_DEL_SERVIDOR.md §3. Los consumidores deben ignorar claves desconocidas.",
+  "type": "object",
+  "required": [
+    "version_estado", "trabajo_id", "referencia", "estado", "cancelando", "porcentaje", "etapa", "mensaje",
+    "seccion_actual", "totales", "secciones", "creado_en", "iniciado_en", "actualizado_en", "terminado_en",
+    "segundos_restantes_estimados", "resultado", "error", "advertencias"
+  ],
+  "properties": {
+    "version_estado": { "const": "1.0" },
+    "trabajo_id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.-]+$" },
+    "referencia": {
+      "description": "Eco de metadata.referencia tal como la envió la plataforma; null si no se envió.",
+      "type": ["object", "null"]
+    },
+    "estado": { "enum": ["en_cola", "procesando", "completado", "error", "cancelado"] },
+    "cancelando": { "type": "boolean" },
+    "porcentaje": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "etapa": {
+      "enum": [
+        "recibido", "validando_paquete", "analizando_documentos", "llenando_secciones",
+        "llenando_tablas", "ensamblando_resultado", "finalizado"
+      ]
+    },
+    "mensaje": { "type": "string", "maxLength": 200, "description": "Frase en español lista para mostrar al usuario." },
+    "seccion_actual": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["id", "numero", "nombre"],
+          "properties": {
+            "id": { "type": "string" },
+            "numero": { "type": "string" },
+            "nombre": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "totales": {
+      "type": "object",
+      "required": [
+        "secciones_totales", "secciones_completadas", "campos_totales", "campos_completados",
+        "tablas_totales", "tablas_completadas"
+      ],
+      "properties": {
+        "secciones_totales": { "type": "integer", "minimum": 0 },
+        "secciones_completadas": { "type": "integer", "minimum": 0 },
+        "campos_totales": { "type": "integer", "minimum": 0 },
+        "campos_completados": { "type": "integer", "minimum": 0 },
+        "tablas_totales": { "type": "integer", "minimum": 0 },
+        "tablas_completadas": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "secciones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "numero", "nombre", "estado", "porcentaje",
+          "campos_totales", "campos_completados", "tablas_totales", "tablas_completadas"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "numero": { "type": "string" },
+          "nombre": { "type": "string" },
+          "estado": { "enum": ["pendiente", "en_curso", "completada", "con_errores", "omitida"] },
+          "porcentaje": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "campos_totales": { "type": "integer", "minimum": 0 },
+          "campos_completados": { "type": "integer", "minimum": 0 },
+          "tablas_totales": { "type": "integer", "minimum": 0 },
+          "tablas_completadas": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "creado_en": { "type": "string", "format": "date-time" },
+    "iniciado_en": { "type": ["string", "null"], "format": "date-time" },
+    "actualizado_en": { "type": "string", "format": "date-time" },
+    "terminado_en": { "type": ["string", "null"], "format": "date-time" },
+    "segundos_restantes_estimados": { "type": ["integer", "null"], "minimum": 0 },
+    "resultado": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["url", "formato", "bytes", "sha256", "expira_en", "requiere_autorizacion"],
+          "properties": {
+            "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+            "formato": { "const": "zip" },
+            "bytes": { "type": "integer", "minimum": 1 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "expira_en": { "type": "string", "format": "date-time" },
+            "requiere_autorizacion": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "error": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["codigo", "mensaje", "reintentable"],
+          "properties": {
+            "codigo": {
+              "enum": [
+                "paquete_invalido", "ia_no_disponible", "limite_de_uso_ia",
+                "respuesta_invalida", "tiempo_agotado", "interno"
+              ]
+            },
+            "mensaje": { "type": "string" },
+            "reintentable": { "type": "boolean" },
+            "detalle": { "type": ["string", "null"] }
+          }
+        }
+      ]
+    },
+    "advertencias": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ambito", "mensaje"],
+        "properties": {
+          "ambito": { "enum": ["paquete", "documento", "seccion", "campo", "tabla"] },
+          "identificador": { "type": ["string", "null"] },
+          "mensaje": { "type": "string" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "completado ⇔ porcentaje 100 ⇔ resultado presente; error solo con estado error.",
+      "if": { "properties": { "estado": { "const": "completado" } } },
+      "then": { "properties": { "porcentaje": { "const": 100 }, "resultado": { "type": "object" }, "error": { "type": "null" }, "terminado_en": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "estado": { "const": "error" } } },
+      "then": { "properties": { "resultado": { "type": "null" }, "error": { "type": "object" }, "terminado_en": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "estado": { "const": "cancelado" } } },
+      "then": { "properties": { "resultado": { "type": "null" }, "error": { "type": "null" }, "terminado_en": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "estado": { "enum": ["en_cola", "procesando"] } } },
+      "then": { "properties": { "porcentaje": { "maximum": 99 }, "resultado": { "type": "null" }, "error": { "type": "null" }, "terminado_en": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "estado": { "const": "en_cola" } } },
+      "then": { "properties": { "porcentaje": { "const": 0 }, "seccion_actual": { "type": "null" } } }
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://proyectafacil.example/schemas/llenado-externo/respuesta.schema.json",
+  "title": "respuesta.json — datos llenados por el servidor",
+  "description": "Archivo respuesta.json del zip de resultado (03_RESULTADO_QUE_ESPERAMOS.md §2). Este esquema valida la FORMA; la plataforma además valida cada valor contra la estructura de la ficha (ids existentes, opciones, forma exacta de cada tabla). La definición `resumen` (en $defs) valida resumen.json.",
+  "type": "object",
+  "required": ["version_respuesta", "paquete", "secciones", "tablas"],
+  "properties": {
+    "version_respuesta": { "const": "1.0" },
+    "paquete": { "$ref": "#/$defs/paquete" },
+    "secciones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["seccion_id", "campos"],
+        "properties": {
+          "seccion_id": { "type": "string", "minLength": 1 },
+          "campos": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/campo" }
+          }
+        }
+      }
+    },
+    "tablas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["identificador", "valor", "fuente"],
+        "properties": {
+          "identificador": { "type": "string", "minLength": 1 },
+          "valor": {
+            "description": "Filas simples: [{<idColumna>: texto}]. Agrupadas: [{grupo, filas:[…], valoresGrupo?}]. Jerárquica: [{value, children:[…]}]. La forma exacta la fija el archivo de cada tabla del paquete.",
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "fuente": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "paquete": {
+      "description": "Eco del manifiesto del paquete recibido.",
+      "type": "object",
+      "required": ["carpeta_raiz", "ficha_id", "plantilla_codigo", "version_paquete"],
+      "properties": {
+        "carpeta_raiz": { "type": "string", "minLength": 1 },
+        "ficha_id": { "type": "integer" },
+        "plantilla_codigo": { "type": "string", "minLength": 1 },
+        "version_paquete": { "type": "string" }
+      }
+    },
+    "campo": {
+      "type": "object",
+      "required": ["id", "valor_propuesto", "estado", "confianza", "fuente", "evidencia"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "El `identificador` del campo (p. ej. 01.01.3), no el UUID." },
+        "valor_propuesto": { "type": ["string", "null"], "description": "Siempre texto (también los números). null si no hay dato." },
+        "estado": { "enum": ["extraido", "inferido", "requiere_confirmacion", "no_encontrado", "conflictivo", "calculado"] },
+        "confianza": { "type": "number", "minimum": 0, "maximum": 1 },
+        "fuente": { "type": "string" },
+        "evidencia": { "type": "string" }
+      },
+      "if": { "properties": { "estado": { "const": "no_encontrado" } } },
+      "then": { "properties": { "valor_propuesto": { "type": "null" } } }
+    },
+    "advertencia": {
+      "type": "object",
+      "required": ["ambito", "mensaje"],
+      "properties": {
+        "ambito": { "enum": ["paquete", "documento", "seccion", "campo", "tabla"] },
+        "identificador": { "type": ["string", "null"] },
+        "mensaje": { "type": "string" }
+      }
+    },
+    "resumen": {
+      "title": "resumen.json",
+      "type": "object",
+      "required": ["version_resultado", "trabajo_id", "paquete", "generado_en", "duracion_segundos", "conteos", "excel", "advertencias"],
+      "properties": {
+        "version_resultado": { "const": "1.0" },
+        "trabajo_id": { "type": "string" },
+        "paquete": { "$ref": "#/$defs/paquete" },
+        "generado_en": { "type": "string", "format": "date-time" },
+        "duracion_segundos": { "type": "integer", "minimum": 0 },
+        "modelos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["proveedor", "modelo"],
+            "properties": {
+              "proveedor": { "type": "string" },
+              "modelo": { "type": "string" },
+              "llamadas": { "type": "integer", "minimum": 0 },
+              "tokens_entrada": { "type": "integer", "minimum": 0 },
+              "tokens_salida": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "conteos": {
+          "type": "object",
+          "required": ["secciones_con_campos", "campos_texto", "tablas_entregadas"],
+          "properties": {
+            "secciones_con_campos": { "type": "integer", "minimum": 0 },
+            "campos_texto": {
+              "type": "object",
+              "required": ["total", "extraido", "inferido", "no_encontrado"],
+              "properties": {
+                "total": { "type": "integer", "minimum": 0 },
+                "extraido": { "type": "integer", "minimum": 0 },
+                "inferido": { "type": "integer", "minimum": 0 },
+                "requiere_confirmacion": { "type": "integer", "minimum": 0 },
+                "conflictivo": { "type": "integer", "minimum": 0 },
+                "no_encontrado": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "tablas_entregadas": { "type": "integer", "minimum": 0 },
+            "tablas_sin_cambios_respecto_al_formato": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "excel": {
+          "type": "object",
+          "required": ["incluido"],
+          "properties": {
+            "incluido": { "type": "boolean" },
+            "archivo": { "type": "string" },
+            "basado_en": { "type": "string" },
+            "motivo": { "type": "string", "description": "Obligatorio si incluido es false." }
+          },
+          "if": { "properties": { "incluido": { "const": false } } },
+          "then": { "required": ["motivo"] }
+        },
+        "advertencias": { "type": "array", "items": { "$ref": "#/$defs/advertencia" } },
+        "nota": { "type": "string" }
+      }
+    }
+  }
+}

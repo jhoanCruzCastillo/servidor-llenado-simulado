@@ -1,0 +1,8 @@
+{
+  "referencia": {
+    "ficha_id": 140,
+    "plantilla_codigo": "FTE-EBR-V03"
+  },
+  "callback_url": "https://api.proyectafacil.example/api/llenado-externo/webhook",
+  "solicitado_por": "usuario-123"
+}

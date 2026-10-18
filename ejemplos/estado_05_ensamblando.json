@@ -1,0 +1,98 @@
+{
+  "version_estado": "1.0",
+  "trabajo_id": "trb_01J9ZQ4K8M2V7X",
+  "referencia": {
+    "ficha_id": 140,
+    "plantilla_codigo": "FTE-EBR-V03"
+  },
+  "estado": "procesando",
+  "cancelando": false,
+  "porcentaje": 99,
+  "etapa": "ensamblando_resultado",
+  "mensaje": "Armando el archivo de resultado…",
+  "seccion_actual": null,
+  "totales": {
+    "secciones_totales": 6,
+    "secciones_completadas": 6,
+    "campos_totales": 66,
+    "campos_completados": 66,
+    "tablas_totales": 118,
+    "tablas_completadas": 118
+  },
+  "secciones": [
+    {
+      "id": "d3a96d61-750f-4b37-ae42-4ad57446138a",
+      "numero": "01",
+      "nombre": "ASPECTOS GENERALES",
+      "estado": "completada",
+      "porcentaje": 100,
+      "campos_totales": 55,
+      "campos_completados": 55,
+      "tablas_totales": 75,
+      "tablas_completadas": 75
+    },
+    {
+      "id": "941fabc3-5267-414b-8793-101fbce82d5e",
+      "numero": "02",
+      "nombre": "ANEXO 01: COSTOS UNITARIOS REFERENCIALES DE ACTIVOS ESTRATEGICOS",
+      "estado": "completada",
+      "porcentaje": 100,
+      "campos_totales": 5,
+      "campos_completados": 5,
+      "tablas_totales": 1,
+      "tablas_completadas": 1
+    },
+    {
+      "id": "c40eb510-0f57-4353-b41d-640d2da36af6",
+      "numero": "03",
+      "nombre": "ANEXO 02: PRESUPUESTO DE INFRAESTRUCTURA",
+      "estado": "completada",
+      "porcentaje": 100,
+      "campos_totales": 1,
+      "campos_completados": 1,
+      "tablas_totales": 25,
+      "tablas_completadas": 25
+    },
+    {
+      "id": "594f40b1-6b96-4614-97f8-1625a52a7dad",
+      "numero": "04",
+      "nombre": "ANEXO 03: PRESUPUESTO DE MOBILIARIO Y EQUIPO",
+      "estado": "completada",
+      "porcentaje": 100,
+      "campos_totales": 1,
+      "campos_completados": 1,
+      "tablas_totales": 4,
+      "tablas_completadas": 4
+    },
+    {
+      "id": "ee6f1df7-c901-4f32-8253-873224a026ae",
+      "numero": "05",
+      "nombre": "ANEXO 04: ACCIONES CONSOLIDADAS",
+      "estado": "completada",
+      "porcentaje": 100,
+      "campos_totales": 0,
+      "campos_completados": 0,
+      "tablas_totales": 5,
+      "tablas_completadas": 5
+    },
+    {
+      "id": "6018b66a-28c7-46df-8a44-f85ac7125b5b",
+      "numero": "06",
+      "nombre": "ANEXO 05: EVALUACIÓN ECONÓMICA - ALTERNATIVA N°1",
+      "estado": "completada",
+      "porcentaje": 100,
+      "campos_totales": 4,
+      "campos_completados": 4,
+      "tablas_totales": 8,
+      "tablas_completadas": 8
+    }
+  ],
+  "creado_en": "2026-10-17T22:15:30Z",
+  "iniciado_en": "2026-10-17T22:15:41Z",
+  "actualizado_en": "2026-10-17T22:58:20Z",
+  "terminado_en": null,
+  "segundos_restantes_estimados": 60,
+  "resultado": null,
+  "error": null,
+  "advertencias": []
+}

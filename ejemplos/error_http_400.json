@@ -1,0 +1,7 @@
+{
+  "error": {
+    "codigo": "paquete_invalido",
+    "mensaje": "No se encontró manifiesto.json en la raíz del zip.",
+    "detalle": null
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version_estado": "1.0",
+  "trabajo_id": "trb_01J9ZQ4K8M2V7X",
+  "referencia": {
+    "ficha_id": 140,
+    "plantilla_codigo": "FTE-EBR-V03"
+  },
+  "estado": "en_cola",
+  "cancelando": false,
+  "porcentaje": 0,
+  "etapa": "recibido",
+  "mensaje": "En cola — posición 2",
+  "seccion_actual": null,
+  "totales": {
+    "secciones_totales": 0,
+    "secciones_completadas": 0,
+    "campos_totales": 0,
+    "campos_completados": 0,
+    "tablas_totales": 0,
+    "tablas_completadas": 0
+  },
+  "secciones": [],
+  "creado_en": "2026-10-17T22:15:30Z",
+  "iniciado_en": null,
+  "actualizado_en": "2026-10-17T22:15:30Z",
+  "terminado_en": null,
+  "segundos_restantes_estimados": null,
+  "resultado": null,
+  "error": null,
+  "advertencias": []
+}
