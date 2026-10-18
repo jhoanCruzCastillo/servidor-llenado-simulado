@@ -86,8 +86,9 @@ export async function ejecutar(t, ia) {
       if (ctl.signal.aborted) throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
       try {
         llamadas++;
-        const { bruto, uso } = await ia.resolver(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
+        const { bruto, uso, reparado } = await ia.resolver(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
         sumarUso(uso);
+        if (reparado) log('json_reparado', { seccion: unidad.seccion.numero, tipo: unidad.tipo });
         writeFileSync(join(salida, `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}.json`), JSON.stringify(bruto, null, 2));
         return validar(bruto);
       } catch (e) {

@@ -13,7 +13,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { config } from '../config.js';
 import { promptCampos, promptSistema, promptTablas } from '../prompts.js';
-import { ErrorRespuesta, extraerJson } from '../validar.js';
+import { ErrorRespuesta, extraerJsonTolerante } from '../validar.js';
 
 export class ErrorIA extends Error {
   constructor(codigo, mensaje, { reintentable = false, detalle = null } = {}) {
@@ -216,7 +216,8 @@ export function crearIAClaude() {
         tokens_salida: u.output_tokens ?? 0,
         costo_usd_referencial: r.total_cost_usd ?? 0,
       };
-      return { bruto: extraerJson(textoResultado), uso };
+      const { json, reparado } = extraerJsonTolerante(textoResultado);
+      return { bruto: json, uso, reparado };
     },
   };
 }
