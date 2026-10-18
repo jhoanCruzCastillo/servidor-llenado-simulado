@@ -91,7 +91,7 @@ async function responder(req, res, conv, { modelo, reiniciar }) {
     } else {
       const ia = e instanceof ErrorIA;
       console.error('[chat] error:', ia ? `${e.codigo}: ${e.message}` : e);
-      sse('error', { codigo: ia ? e.codigo : 'interno', mensaje: ia ? e.message : 'Fallo inesperado al generar la respuesta.', reintentable: ia ? e.reintentable : true });
+      sse('error', { codigo: ia ? e.codigo : 'interno', mensaje: ia ? e.message : 'Fallo inesperado al generar la respuesta.', reintentable: ia ? e.reintentable : true, detalle: ia ? (e.detalle ?? null) : null });
     }
   } finally {
     clearInterval(latido);
