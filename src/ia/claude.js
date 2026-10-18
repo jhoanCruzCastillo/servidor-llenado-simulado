@@ -54,7 +54,7 @@ export function resolverBin() {
 
 const comillas = (s) => `"${String(s).replaceAll('"', '\\"')}"`;
 
-function matarArbol(proc) {
+export function matarArbol(proc) {
   if (!proc.pid) return;
   if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F']);
   else proc.kill('SIGKILL');

@@ -40,6 +40,10 @@ export const config = {
   },
   simulada: { demoraMs: num(env.SIMULADA_DEMORA_MS, 400) },
 
+  // Chat de prueba (UI en React): respuestas simultáneas permitidas y orígenes web que pueden llamar a la API (CORS).
+  chatConcurrencia: Math.max(1, num(env.CHAT_CONCURRENCIA, 2)),
+  corsOrigenes: (env.CORS_ORIGENES || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean),
+
   tablasPorLlamada: Math.max(1, num(env.TABLAS_POR_LLAMADA, 4)),
   maxCaracteresPorLlamada: num(env.MAX_CARACTERES_POR_LLAMADA, 45_000),
   reintentos: Math.max(0, num(env.REINTENTOS, 2)),

@@ -16,6 +16,8 @@ import { config } from './config.js';
 import { crearIAClaude, infoClaude, probarClaude } from './ia/claude.js';
 import { crearIASimulada } from './ia/simulada.js';
 import { cargarPaquete, ErrorPaquete, validarYExtraer } from './paquete.js';
+import { prepararChat } from './chat/claudeChat.js';
+import { manejarChat } from './chat/rutas.js';
 import { cancelarEjecucion, ejecutar, enEjecucion } from './pipeline.js';
 import { leer, tamano } from './resultado.js';
 import { aEstado, ahora, buscarIdem, cargarDeDisco, dirDe, eliminar, guardar, guardarIdem, obtener, registrar, TERMINALES, todos } from './store.js';
@@ -150,15 +152,30 @@ async function crearTrabajo(req, res) {
 }
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
+/** CORS: la UI de prueba corre en otro origen (localhost). Solo se permiten los orígenes de CORS_ORIGENES. */
+function aplicarCors(req, res) {
+  const origen = req.headers.origin;
+  if (!origen) return;
+  res.setHeader('Vary', 'Origin');
+  if (!config.corsOrigenes.includes(origen)) return;
+  res.setHeader('Access-Control-Allow-Origin', origen);
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Max-Age', '600');
+}
+
 async function manejar(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const ruta = url.pathname.replace(/\/+$/, '') || '/';
   let m;
 
+  aplicarCors(req, res);
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+
   if (req.method === 'GET' && ruta === '/v1/salud') {
     // Siempre 200 mientras el proceso viva (lo usa el healthcheck de Railway); `listo_para_llenar` dice si la IA está utilizable.
     const listo = estadoIA.tipo === 'simulada' || estadoIA.instalado === true;
-    return enviar(res, 200, { ok: true, version_servidor: config.versionServidor, versiones_paquete_soportadas: config.versionesPaqueteSoportadas, ia: ia.nombre, listo_para_llenar: listo, estado_ia: estadoIA });
+    return enviar(res, 200, { ok: true, version_servidor: config.versionServidor, versiones_paquete_soportadas: config.versionesPaqueteSoportadas, ia: ia.nombre, listo_para_llenar: listo, estado_ia: estadoIA, chat: config.ia === 'claude' });
   }
 
   // Enlace de descarga del resultado: la «firma» es el token aleatorio de la URL (no lleva Authorization).
@@ -175,6 +192,8 @@ async function manejar(req, res) {
   if (!autorizado(req)) return fallo(res, 401, 'no_autorizado', 'Falta el token Bearer o es inválido.');
 
   if (req.method === 'POST' && ruta === '/v1/trabajos') return crearTrabajo(req, res);
+
+  if (await manejarChat(req, res, ruta)) return;
 
   // Comprueba que la credencial de Claude funciona (una llamada mínima real; gasta una fracción ínfima de cuota).
   if (req.method === 'POST' && ruta === '/v1/diagnostico/claude') {
@@ -240,6 +259,7 @@ function barrer() {
 }
 
 cargarDeDisco();
+prepararChat();
 barrer();
 setInterval(barrer, 3600_000).unref();
 if (config.ia === 'claude') infoClaude().then((i) => { estadoIA = { tipo: 'claude', ...i }; console.log('Claude Code:', JSON.stringify(i)); });
