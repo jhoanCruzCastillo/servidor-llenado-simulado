@@ -70,6 +70,14 @@ curl -X POST -H "Authorization: Bearer <SERVIDOR_TOKEN>" https://<tu-dominio>.up
 # → {"ok":true,"respuesta":"OK",…}
 ```
 
+Y la conexión de **Claude Code con el Excel** (lo que usa el llenado real: Claude Code abre una herramienta, mira una hoja y responde):
+
+```bash
+curl -X POST -H "Authorization: Bearer <SERVIDOR_TOKEN>" https://<tu-dominio>.up.railway.app/v1/diagnostico/claude-excel
+# → {"ok":true,"mensaje":"Claude Code llamó a la herramienta del Excel y leyó la celda B1.","respuesta":"MANZANA-42",…}
+# Si "ok" es false: Claude respondió sin usar la herramienta (permisos o conexión MCP). Pásame el JSON completo.
+```
+
 Si el diagnóstico dice `Not logged in`, revisa `CLAUDE_CODE_OAUTH_TOKEN` (sin comillas ni espacios). Si dice `limite_de_uso_ia`, se agotó la ventana de la suscripción.
 
 ## 8. Primera prueba real (acotada, desde tu PC)

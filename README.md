@@ -51,7 +51,7 @@ cp .env.example .env      # y ajusta lo que necesites (el token, la IA…)
 npm start                 # http://localhost:8090
 ```
 
-Extra para operación: `GET /v1/salud` incluye `listo_para_llenar` y el estado de Claude Code (instalado, versión, qué credencial usará); `POST /v1/diagnostico/claude` (con token) hace una llamada mínima real para confirmar que la credencial funciona.
+Extra para operación: `POST /v1/diagnostico/claude-excel` hace una prueba real de la conexión Claude Code ↔ herramientas del Excel (sin ella, un llenado real podría fallar en silencio). `GET /v1/salud` incluye `listo_para_llenar` y el estado de Claude Code (instalado, versión, qué credencial usará); `POST /v1/diagnostico/claude` (con token) hace una llamada mínima real para confirmar que la credencial funciona.
 
 Token por defecto: `dev-token-cambiar` (cámbialo con `SERVIDOR_TOKEN`). Los trabajos se guardan en `~/.proyectafacil-sim` (ruta corta y **fuera del repo**: el paquete tiene rutas de más de 200 caracteres y, dentro del repo, Claude Code leería el `CLAUDE.md` del proyecto). Cámbialo con `DATA_DIR`.
 
@@ -119,6 +119,16 @@ Además del llenado, el servidor expone un chat sobre Claude Code (streaming, si
 
 Pruebas sin cuota: `npm run probar:chat` (streaming, reanudar, sesión perdida, regenerar, error, cancelar, concurrencia, CORS) y `npm run dev:falso` para usar la UI contra un servidor local con un Claude falso.
 
+## El Excel es el entregable (modo `SALIDA=excel`, el normal)
+
+El resultado es el **Excel oficial de la plantilla ya llenado** (`ficha_llenada.xlsx`/`.xlsm` dentro del zip); `respuesta.json` lo acompaña con el detalle (estado, confianza, fuente de cada campo) y como respaldo. La plataforma lee ese Excel con el volcado del superusuario.
+
+- **La IA ve y llena el Excel.** Claude Code recibe tres herramientas (servidor MCP propio, `src/excel/mcp-excel.js`): `ver_hoja` (una hoja tal como está: etiquetas, valores, lo que calculan las fórmulas, desplegables con sus opciones, fusiones), `llenar_campos` y `llenar_tablas`. Las guías del paquete (`seccion.md`, tablas, `estructura.json`) siguen siendo su ayuda para saber qué va en cada campo, pero el Excel manda en celdas, formatos y opciones.
+- **Entrega con herramientas, no con texto**: los argumentos tienen esquema, así que ya no puede devolver un JSON roto. Cada entrega se valida (ids, opciones, forma exacta de las tablas) y se **escribe en el Excel**; la respuesta de la herramienta le dice qué quedó escrito, qué se descartó y por qué, y puede corregir dentro de la misma conversación.
+- **Mismo escritor que la plataforma** (`tools/excel-node` empaqueta `insertarValoresEnExcel` y el volcado del frontend en `vendor/excel-ficha.mjs`): fechas, números, desplegables, tablas que crecen y fórmulas nativas se tratan igual que en una exportación normal. En cada entrega el libro se reescribe desde el formato en blanco con todo lo acumulado (así las filas que crecen siempre caen donde corresponde).
+- La IA simulada entrega JSON y el servidor lo escribe en el mismo Excel, así que el zip también trae `ficha_llenada`. Con `SALIDA=json` se vuelve al comportamiento anterior (Claude responde un JSON, sin Excel).
+- Cada entrega queda en `salida/` del diagnóstico (`NNN_<sección>_<campos|tablas>_<n>.json`: lo que envió la IA y lo que le respondió la herramienta); si Claude termina sin entregar nada se anota `…_sin_entrega.json` con su último mensaje.
+
 ## Cómo trabaja (por dentro)
 
 1. **Recibe** (`POST /v1/trabajos`): valida el zip (raíz única, sin rutas peligrosas, `version_paquete`, **sha256 de cada archivo**), lo extrae y responde `202`. Todo se descubre del `manifiesto.json`: no hay secciones ni plantillas fijas en el código.
@@ -135,7 +145,7 @@ Endpoints: `POST /v1/trabajos` · `GET /v1/trabajos/{id}` · `POST /v1/trabajos/
 
 ## Límites de esta primera versión
 
-- **Sin Excel en modo Claude**: `ficha_llenada.xlsx` solo se incluye con `IA=simulada` (es el Excel del ejemplo). Con Claude, `resumen.json` declara `excel.incluido: false` y la plataforma aplica `respuesta.json`. Escribir el Excel (filas que crecen, fórmulas, macros `.xlsm`) es la siguiente unidad.
+- **El Excel depende de la plantilla**: el servidor escribe con el mismo código de Excel de la plataforma (`vendor/excel-ficha.mjs`). Si cambia el escritor o el volcado del frontend hay que regenerarlo (`cd tools/excel-node && npm install && npm run build`) y commitear el resultado.
 - **Sin resultados parciales**: si la suscripción se agota a mitad de ficha, el trabajo falla (`limite_de_uso_ia`); lo ya llenado no se entrega.
 - **Rótulos fijos de las tablas**: se mantiene la forma, pero no se restauran las celdas de rótulo si la IA las cambia.
 - Estado en memoria + disco de **un solo proceso**; un reinicio marca los trabajos en curso como `error` (reintentable).

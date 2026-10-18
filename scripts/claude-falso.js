@@ -94,6 +94,56 @@ if (falla && n <= veces) {
   if (falla === 'sin_sesion') { salida('Not logged in · Please run /login', { is_error: true }); process.exit(1); }
 }
 
+// ── Modo Excel: Claude Code con el servidor MCP del Excel (--mcp-config). Se comporta como un cliente MCP que entrega con las herramientas. ──────────────
+const iMcp = args.indexOf('--mcp-config');
+if (iMcp >= 0) {
+  const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+  const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+  const cfg = JSON.parse(readFileSync(args[iMcp + 1], 'utf8'));
+  const [[nombre, srv]] = Object.entries(cfg.mcpServers);
+  const cliente = new Client({ name: 'claude-falso', version: '0.0.0' });
+  await cliente.connect(new StdioClientTransport({ command: srv.command, args: srv.args, env: { ...process.env, ...(srv.env ?? {}) }, stderr: 'ignore' }));
+  const herramientas = (await cliente.listTools()).tools.map((t) => t.name);
+  const permitidas = args[args.indexOf('--allowedTools') + 1].split(',');
+  for (const h of herramientas) if (!permitidas.includes(`mcp__${nombre}__${h}`)) { salida(`herramienta no permitida: ${h}`, { is_error: true }); process.exit(1); }
+
+  if (process.env.FALSO_SIN_ENTREGA === '1' && n <= Number(process.env.FALSO_FALLA_VECES ?? 1)) { await cliente.close(); salida('Listo'); process.exit(0); }
+  const texto = (r) => r.content?.map((c) => c.text).join('\n') ?? '';
+  if (/Usa la herramienta ver_hoja/.test(prompt)) {
+    const r = await cliente.callTool({ name: 'ver_hoja', arguments: { hoja: 'Hoja de prueba' } });
+    await cliente.close();
+    salida(texto(r).match(/B1 = "([^"]+)"/)?.[1] ?? 'no pude leer B1');
+    process.exit(0);
+  }
+  if (/# Tarea: llenar los CAMPOS/.test(prompt)) {
+    const id = prompt.match(/seccion_id: `([^`]+)`/)?.[1];
+    const hoja = prompt.match(/Mira la hoja «([^»]+)»/)?.[1];
+    if (hoja) await cliente.callTool({ name: 'ver_hoja', arguments: { hoja, rango: 'A1:T20' } });
+    const campos = [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)].map((m) => {
+      const opcion = m[2]?.split(' | ')[0]?.trim();
+      return opcion
+        ? { id: m[1], valor_propuesto: opcion, estado: 'extraido', confianza: 0.9, fuente: 'falso', evidencia: '' }
+        : { id: m[1], valor_propuesto: null, estado: 'no_encontrado', confianza: 0, fuente: '', evidencia: '' };
+    });
+    const r = await cliente.callTool({ name: 'llenar_campos', arguments: { seccion_id: id, campos } });
+    console.error(texto(r).slice(0, 300));
+  } else {
+    const bloques = prompt.split(/={19} TABLA /).slice(1);
+    const tablas = bloques.map((b) => {
+      const identificador = b.match(/^(\S+) =+/)?.[1];
+      const actual = b.split(/^Tabla actual[^\n]*\n/m)[1]?.split('\n')[0];
+      let valor = [];
+      try { valor = JSON.parse(actual); } catch { /* sin «tabla actual» legible */ }
+      return { identificador, valor, fuente: 'falso' };
+    });
+    const r = await cliente.callTool({ name: 'llenar_tablas', arguments: { tablas } });
+    console.error(texto(r).slice(0, 300));
+  }
+  await cliente.close();
+  salida('Listo');
+  process.exit(0);
+}
+
 if (/# Tarea: llenar los CAMPOS/.test(prompt)) {
   const id = prompt.match(/seccion_id: `([^`]+)`/)?.[1];
   const campos = [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)].map((m) => {

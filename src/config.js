@@ -39,6 +39,8 @@ export const config = {
     permitirApiKey: env.PERMITIR_API_KEY === '1',
   },
   simulada: { demoraMs: num(env.SIMULADA_DEMORA_MS, 400) },
+  // 'excel': el resultado es el Excel llenado (Claude Code lo ve y lo llena con herramientas; ver src/excel/). 'json': como antes, solo respuesta.json.
+  salida: (env.SALIDA || 'excel').toLowerCase() === 'json' ? 'json' : 'excel',
 
   // Chat de prueba (UI en React): respuestas simultáneas permitidas y orígenes web que pueden llamar a la API (CORS).
   chatConcurrencia: Math.max(1, num(env.CHAT_CONCURRENCIA, 2)),
