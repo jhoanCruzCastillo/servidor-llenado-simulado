@@ -100,6 +100,8 @@ npm run probar:fallos
 
 ## Chat de prueba (para la UI `chat-ui-prueba`)
 
+> **Adjuntos**: `POST /v1/chat/conversaciones/:id/archivos?nombre=…` (cuerpo = bytes del archivo), `GET`/`DELETE …/archivos/:archivoId`, y `archivos: [ids]` en el envío del mensaje. Claude lee los adjuntos con `Read` desde `DATA_DIR/chat-cwd/<conversación>/adjuntos/`. `npm run probar:adjuntos` lo verifica sin gastar cuota.
+
 Además del llenado, el servidor expone un chat sobre Claude Code (streaming, sin herramientas), para probar la suscripción de punta a punta desde una interfaz. Mismas credenciales y mismo `SERVIDOR_TOKEN`; las conversaciones se guardan en el volumen (`DATA_DIR/chat`).
 
 | Endpoint | Qué hace |

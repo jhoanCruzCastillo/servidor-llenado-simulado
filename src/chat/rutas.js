@@ -7,7 +7,10 @@
  *   GET    /v1/chat/conversaciones/:id                     con todos sus mensajes
  *   PATCH  /v1/chat/conversaciones/:id      {titulo?, modelo?}
  *   DELETE /v1/chat/conversaciones/:id
- *   POST   /v1/chat/conversaciones/:id/mensajes   {contenido, modelo?}   → respuesta en streaming (SSE)
+ *   POST   /v1/chat/conversaciones/:id/archivos?nombre=…   cuerpo = bytes del archivo (cualquier formato)  → metadatos del adjunto
+ *   GET    /v1/chat/conversaciones/:id/archivos/:archivoId  descarga el archivo
+ *   DELETE /v1/chat/conversaciones/:id/archivos/:archivoId  quita un adjunto que aún no se envió
+ *   POST   /v1/chat/conversaciones/:id/mensajes   {contenido, modelo?, archivos?: [ids]}   → respuesta en streaming (SSE)
  *   POST   /v1/chat/conversaciones/:id/regenerar  {modelo?}              → vuelve a responder al último mensaje (SSE)
  *
  * SSE: Content-Type text/event-stream; eventos `inicio`, `delta` {texto}, `fin` {mensaje, conversacion}, `error` {codigo, mensaje, reintentable}.
@@ -16,6 +19,7 @@
 import { config } from '../config.js';
 import { ErrorIA } from '../ia/claude.js';
 import * as almacen from './almacen.js';
+import * as archivos from './archivos.js';
 import { generar, modeloValido, MODELOS } from './claudeChat.js';
 
 const MAX_MENSAJE = 20_000;
@@ -69,6 +73,7 @@ async function responder(req, res, conv, { modelo, reiniciar }) {
     sse('inicio', { conversacion: almacen.resumen(conv), modelo });
     const r = await generar({
       mensajes: conv.mensajes,
+      convId: conv.id,
       sessionId: conv.session_id,
       modelo,
       reiniciar,
@@ -107,7 +112,7 @@ export async function manejarChat(req, res, ruta) {
 
   try {
     if (req.method === 'GET' && ruta === '/v1/chat/modelos') {
-      json(res, 200, { modelos: MODELOS, predeterminado: config.claude.modelo });
+      json(res, 200, { modelos: MODELOS, predeterminado: config.claude.modelo, adjuntos: { max_bytes_por_archivo: archivos.MAX_ARCHIVO_BYTES, max_por_mensaje: archivos.MAX_ARCHIVOS_POR_MENSAJE } });
       return true;
     }
 
@@ -122,13 +127,13 @@ export async function manejarChat(req, res, ruta) {
       }
     }
 
-    if ((m = /^\/v1\/chat\/conversaciones\/(cnv_[0-9a-f]{12})(\/mensajes|\/regenerar)?$/.exec(ruta))) {
+    if ((m = /^\/v1\/chat\/conversaciones\/(cnv_[0-9a-f]{12})(\/mensajes|\/regenerar|\/archivos(?:\/([0-9a-f]{10}))?)?$/.exec(ruta))) {
       const conv = almacen.obtener(m[1]);
       if (!conv) { fallo(res, 404, 'conversacion_no_encontrada', 'La conversación no existe.'); return true; }
 
       if (!m[2]) {
         if (req.method === 'GET') { json(res, 200, conv); return true; }
-        if (req.method === 'DELETE') { almacen.eliminar(conv.id); res.writeHead(204); res.end(); return true; }
+        if (req.method === 'DELETE') { almacen.eliminar(conv.id); archivos.borrarTodos(conv.id); res.writeHead(204); res.end(); return true; }
         if (req.method === 'PATCH') {
           const b = await leerJson(req);
           if (typeof b.titulo === 'string' && b.titulo.trim()) { conv.titulo = b.titulo.trim().slice(0, 120); conv.tituloAutomatico = false; }
@@ -141,19 +146,65 @@ export async function manejarChat(req, res, ruta) {
         }
       }
 
+      if (m[2]?.startsWith('/archivos')) {
+        conv.adjuntos ??= {};
+        const aid = m[3];
+        if (!aid && req.method === 'POST') {
+          const url = new URL(req.url, 'http://localhost');
+          const pendientes = Object.values(conv.adjuntos).filter((a) => !a.mensaje_id).length;
+          if (pendientes >= archivos.MAX_ARCHIVOS_POR_MENSAJE) { fallo(res, 409, 'demasiados_archivos', `Máximo ${archivos.MAX_ARCHIVOS_POR_MENSAJE} archivos por mensaje.`); return true; }
+          const a = await archivos.guardarSubida(req, conv.id, url.searchParams.get('nombre') ?? 'archivo', String(req.headers['content-type'] ?? '').split(';')[0].trim());
+          const actual = almacen.obtener(conv.id) ?? conv; // otra subida en paralelo pudo guardar su adjunto mientras llegaban los bytes
+          actual.adjuntos ??= {};
+          actual.adjuntos[a.id] = { ...a, mensaje_id: null };
+          almacen.guardar(actual);
+          json(res, 201, a);
+          return true;
+        }
+        const a = aid ? conv.adjuntos[aid] : null;
+        if (aid && !a) { fallo(res, 404, 'archivo_no_encontrado', 'El archivo no existe.'); return true; }
+        if (aid && req.method === 'GET') {
+          if (!archivos.existeArchivo(conv.id, a)) { fallo(res, 404, 'archivo_no_encontrado', 'El archivo ya no está en el servidor.'); return true; }
+          res.writeHead(200, {
+            'Content-Type': a.tipo || 'application/octet-stream',
+            'Content-Length': archivos.tamanoArchivo(conv.id, a),
+            'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(a.nombre)}`,
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(archivos.leerArchivo(conv.id, a));
+          return true;
+        }
+        if (aid && req.method === 'DELETE') {
+          if (a.mensaje_id) { fallo(res, 409, 'archivo_enviado', 'Ese archivo ya forma parte de un mensaje.'); return true; }
+          archivos.borrarArchivo(conv.id, aid);
+          delete conv.adjuntos[aid];
+          almacen.guardar(conv);
+          res.writeHead(204);
+          res.end();
+          return true;
+        }
+      }
+
       if (req.method === 'POST' && m[2] === '/mensajes') {
         const b = await leerJson(req);
         const contenido = typeof b.contenido === 'string' ? b.contenido.trim() : '';
-        if (!contenido) { fallo(res, 400, 'mensaje_vacio', 'El mensaje está vacío.'); return true; }
+        conv.adjuntos ??= {};
+        const ids = Array.isArray(b.archivos) ? b.archivos.map(String) : [];
+        if (ids.length > archivos.MAX_ARCHIVOS_POR_MENSAJE) { fallo(res, 400, 'demasiados_archivos', `Máximo ${archivos.MAX_ARCHIVOS_POR_MENSAJE} archivos por mensaje.`); return true; }
+        const adjuntos = ids.map((id) => conv.adjuntos[id]);
+        if (adjuntos.some((a) => !a || a.mensaje_id)) { fallo(res, 400, 'archivo_invalido', 'Alguno de los archivos adjuntos no existe o ya se envió en otro mensaje.'); return true; }
+        if (!contenido && adjuntos.length === 0) { fallo(res, 400, 'mensaje_vacio', 'El mensaje está vacío.'); return true; }
         if (contenido.length > MAX_MENSAJE) { fallo(res, 413, 'mensaje_muy_largo', `El mensaje supera ${MAX_MENSAJE} caracteres.`); return true; }
         const modelo = b.modelo ?? conv.modelo ?? config.claude.modelo;
         if (!modeloValido(modelo)) { fallo(res, 400, 'modelo_invalido', `Modelo no válido: ${modelo}.`); return true; }
         if (!hayCapacidad(res, conv)) return true;
         if (conv.mensajes.at(-1)?.rol === 'usuario') { fallo(res, 409, 'respuesta_pendiente', 'El último mensaje no tiene respuesta: usa «regenerar».'); return true; }
 
-        conv.mensajes.push(almacen.nuevoMensaje('usuario', contenido));
+        const mensajeUsuario = almacen.nuevoMensaje('usuario', contenido, adjuntos.length ? { archivos: adjuntos.map(({ mensaje_id: _, ...a }) => a) } : {});
+        for (const a of adjuntos) a.mensaje_id = mensajeUsuario.id;
+        conv.mensajes.push(mensajeUsuario);
         conv.modelo = modelo;
-        if (conv.tituloAutomatico && conv.mensajes.length === 1) conv.titulo = almacen.tituloDesde(contenido);
+        if (conv.tituloAutomatico && conv.mensajes.length === 1) conv.titulo = almacen.tituloDesde(contenido || adjuntos[0]?.nombre || '');
         almacen.guardar(conv);
         await responder(req, res, conv, { modelo, reiniciar: false });
         return true;
@@ -174,7 +225,7 @@ export async function manejarChat(req, res, ruta) {
       }
     }
   } catch (e) {
-    if (!res.headersSent) fallo(res, e.http ?? 500, e.http ? 'solicitud_invalida' : 'interno', e.message);
+    if (!res.headersSent) fallo(res, e.http ?? 500, e.codigo ?? (e.http ? 'solicitud_invalida' : 'interno'), e.message);
     else res.end();
     return true;
   }

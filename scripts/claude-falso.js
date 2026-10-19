@@ -74,6 +74,14 @@ function saludar(nombre) {
 | 1 | 2 |
 | 3 | 4 |
 `;
+  // Adjuntos: el Claude real los abriría con Read; el falso comprueba que existen donde el servidor dijo (cwd de la conversación) y cuenta sus bytes.
+  const rutasAdjuntas = [...ultima.matchAll(/^- (adjuntos\/\S+\/[^\n]*?) — /gm)].map((x) => x[1]);
+  if (rutasAdjuntas.length || args.includes('Read')) {
+    const filas = rutasAdjuntas.map((r) => {
+      try { return `- \`${r}\`: ${readFileSync(r).length} bytes (herramientas: ${args[args.indexOf('--tools') + 1] || 'ninguna'})`; } catch { return `- \`${r}\`: NO existe desde ${process.cwd()}`; }
+    });
+    respuesta += `\n\nArchivos recibidos (${rutasAdjuntas.length}):\n\n${filas.join('\n')}\n`;
+  }
   if (/\[\[largo\]\]/.test(ultima)) respuesta = Array.from({ length: 80 }, (_, n) => `Línea ${n + 1} de una respuesta larga para probar el botón de detener.`).join('\n\n');
 
   for (let p = 0; p < respuesta.length; p += 9) {
