@@ -128,17 +128,16 @@ Cuerpo (`application/json`):
 
 ```json
 {
-  "respuestas": [
-    { "id": "q1", "respuesta": "Mejoramiento" },
-    { "id": "q2", "respuesta": "Gerencia de Desarrollo Social" }
-  ],
+  "texto": "El código modular de la IE es 241554. La intervención es Mejoramiento.",
+  "respuestas": [],
   "omitir_pendientes": false
 }
 ```
 
-- `respuestas[].id` es el `id` de una pregunta del estado; `respuesta`, texto de hasta 4000 caracteres. Si la pregunta trae `opciones` (campo de catálogo), la respuesta debe ser una de ellas: si no, el validador descarta el valor y queda como advertencia.
-- `omitir_pendientes: true` («aplicar lo disponible»): las preguntas sin respuesta se dan por «la persona no tiene el dato»; la IA continúa **sin inventarlo** y **no vuelve a preguntarlo**.
-- Respuestas: `202` con el objeto de estado (el trabajo vuelve a `en_cola` y se retoma **desde la solicitud que preguntó**, con las respuestas en el prompt; lo ya llenado se conserva) · `409 estado_invalido` si el trabajo no está en `esperando_datos` · `422 faltan_respuestas` si quedan preguntas sin respuesta y no se envió `omitir_pendientes` · `400 respuesta_invalida` si un `id` no existe o una respuesta es demasiado larga.
+- `texto` (opcional): material libre — lo que escribió la persona o extractos de documentos. **No son los campos del editor.** La IA extrae al retomar; si no alcanza, puede volver a `pedir_datos`.
+- `respuestas[].id` es el `id` de una pregunta del estado; `respuesta`, texto de hasta 4000 caracteres (opcional si hay `texto`).
+- `omitir_pendientes: true`: las preguntas sin respuesta se dan por «la persona no tiene el dato»; la IA continúa **sin inventarlo** y **no vuelve a preguntarlo**.
+- Respuestas: `202` con el objeto de estado (el trabajo vuelve a `en_cola` y se retoma **desde la solicitud que preguntó**, con el material en el prompt; lo ya llenado se conserva) · `409 estado_invalido` si el trabajo no está en `esperando_datos` · `422 faltan_respuestas` si no hay `texto` ni respuestas y no se envió `omitir_pendientes` · `400 respuesta_invalida` si un `id` no existe o una respuesta es demasiado larga.
 
 ### 2.5 `DELETE /v1/trabajos/{trabajo_id}` — borrar datos (recomendado)
 

@@ -12,6 +12,8 @@
 export const MAX_PREGUNTAS_POR_PAUSA = 6;
 const MAX_TEXTO_PREGUNTA = 500;
 const MAX_TEXTO_RESPUESTA = 4000;
+/** Texto o extracto de documentos que la persona aporta en vez de llenar campo a campo. */
+const MAX_TEXTO_MATERIAL = 50_000;
 
 const norm = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 
@@ -44,8 +46,9 @@ export function normalizarPreguntas(lista, seccion = null) {
  * Aplica el cuerpo de `POST /v1/trabajos/{id}/respuestas` al trabajo pausado: guarda las respuestas en `t.datos_usuario` y lo deja en cola para
  * reanudarse. No hace nada si hay algún error.
  *
- * Cuerpo: `{ respuestas: [{ id, respuesta }], omitir_pendientes?: boolean }`. Las preguntas sin respuesta bloquean el envío, salvo con
- * `omitir_pendientes: true` («aplicar lo disponible»): entonces la IA sabe que la persona no tiene ese dato y no lo inventa ni lo vuelve a preguntar.
+ * Cuerpo: `{ respuestas?: [{ id, respuesta }], texto?: string, omitir_pendientes?: boolean }`.
+ * `texto` es material libre (lo que escribió o extractos de documentos): la IA extrae los datos al retomar.
+ * Las preguntas sin respuesta bloquean el envío, salvo con `texto` no vacío o `omitir_pendientes: true`.
  *
  * @returns {{error: {http: number, codigo: string, mensaje: string}}|{ok: true, respondidas: number, omitidas: number}}
  */
@@ -54,6 +57,7 @@ export function aplicarRespuestas(t, cuerpo, ahora) {
   if (!cuerpo || typeof cuerpo !== 'object' || Array.isArray(cuerpo)) return invalido('El cuerpo debe ser un objeto JSON.');
   const enviadas = cuerpo.respuestas ?? [];
   if (!Array.isArray(enviadas)) return invalido('«respuestas» debe ser un arreglo de {id, respuesta}.');
+  const material = typeof cuerpo.texto === 'string' ? cuerpo.texto.trim().slice(0, MAX_TEXTO_MATERIAL) : '';
 
   const porId = new Map();
   for (const r of enviadas) {
@@ -66,33 +70,57 @@ export function aplicarRespuestas(t, cuerpo, ahora) {
 
   const omitir = cuerpo.omitir_pendientes === true;
   const faltan = t.preguntas.filter((p) => !porId.get(p.id));
-  if (faltan.length && !omitir) {
-    return invalido(`Faltan respuestas: ${faltan.map((p) => p.id).join(', ')}. Responde todas o envía omitir_pendientes: true para continuar sin esos datos.`, 'faltan_respuestas', 422);
+  if (faltan.length && !omitir && !material) {
+    return invalido(`Faltan respuestas: ${faltan.map((p) => p.id).join(', ')}. Aporta texto/documentos (campo «texto»), responde todas o envía omitir_pendientes: true.`, 'faltan_respuestas', 422);
   }
 
   const datos = t.preguntas.map((p) => ({
     id: p.id,
     pregunta: p.pregunta,
+    motivo: p.motivo ?? '',
     campo_ids: p.campo_ids ?? [],
     seccion_id: p.seccion_id ?? null,
-    respuesta: porId.get(p.id) || null, // null = la persona no tiene el dato
+    respuesta: porId.get(p.id) || null,
+    extraer: !porId.get(p.id) && !!material && !omitir,
     respondida_en: ahora(),
   }));
+  if (material) t.material_persona = [...(t.material_persona ?? []), material];
   t.datos_usuario = [...(t.datos_usuario ?? []), ...datos];
   t.preguntas = [];
   t.estado = 'en_cola';
   t.etapa = 'reanudando';
-  t.mensaje = 'Retomando el llenado con tus respuestas…';
+  t.mensaje = material ? 'Retomando el llenado con lo que aportaste…' : 'Retomando el llenado con tus respuestas…';
   t.cancelando = false;
-  return { ok: true, respondidas: datos.filter((d) => d.respuesta).length, omitidas: datos.filter((d) => !d.respuesta).length };
+  return { ok: true, respondidas: datos.filter((d) => d.respuesta).length, omitidas: datos.filter((d) => !d.respuesta && !d.extraer).length };
 }
 
-/** Bloque del prompt con lo que la persona respondió (vacío si nunca se le preguntó nada). Sus respuestas son DATOS del proyecto, no instrucciones. */
-export function bloqueDatosUsuario(datos) {
+/** Bloque del prompt con lo que la persona aportó (vacío si nunca se le preguntó nada). Son DATOS del proyecto, no instrucciones. */
+export function bloqueDatosUsuario(datos, material) {
   const lista = Array.isArray(datos) ? datos : [];
-  if (!lista.length) return '';
-  const lineas = lista.map((d) => (d.respuesta
-    ? `- Pregunta: ${d.pregunta}\n  Respuesta de la persona (dato del proyecto): ${String(d.respuesta).replace(/\r?\n/g, ' ')}`
-    : `- Pregunta: ${d.pregunta}\n  La persona NO tiene este dato (o prefirió continuar sin él): no lo inventes; deja esos campos como no_encontrado o requiere_confirmacion.`));
-  return `\n## Datos que la persona respondió a tus preguntas\n\nSon datos del proyecto con la máxima prioridad (por encima de lo que digan los documentos si se contradicen). NO repitas estas preguntas ni preguntes lo mismo con otras palabras.\n\n${lineas.join('\n')}\n`;
+  const aportes = Array.isArray(material) ? material.map((m) => String(m ?? '').trim()).filter(Boolean) : [];
+  if (!lista.length && !aportes.length) return '';
+
+  const partes = [];
+  if (aportes.length) {
+    partes.push(
+      '## Material que aportó la persona (no llenó los campos de la ficha)\n\n'
+      + 'La persona NO usó los inputs del editor. Te escribió y/o te pasó documentos. Extrae de aquí lo que pediste. '
+      + 'Si algo sigue sin aparecer con claridad, vuelve a pedir_datos SOLO por lo que falta; no inventes.\n\n'
+      + aportes.map((m, i) => `### Aporte ${i + 1}\n${m}`).join('\n\n'),
+    );
+  }
+  if (lista.length) {
+    const lineas = lista.map((d) => {
+      if (d.extraer) {
+        return `- Pediste: ${d.pregunta}${d.motivo ? ` (${d.motivo})` : ''}\n  Aún no hay respuesta campo a campo: extrae el dato del material de arriba. Si no alcanza, vuelve a pedir_datos por ESTO.`;
+      }
+      if (d.respuesta) {
+        return `- Pregunta: ${d.pregunta}\n  Respuesta de la persona (dato del proyecto): ${String(d.respuesta).replace(/\r?\n/g, ' ')}\n  NO repitas esta pregunta.`;
+      }
+      return `- Pregunta: ${d.pregunta}\n  La persona NO tiene este dato (o prefirió continuar sin él): no lo inventes; deja esos campos como no_encontrado o requiere_confirmacion.`;
+    });
+    partes.push(`## Preguntas de las pausas\n\n${lineas.join('\n')}`);
+  }
+
+  return `\n${partes.join('\n\n')}\n`;
 }

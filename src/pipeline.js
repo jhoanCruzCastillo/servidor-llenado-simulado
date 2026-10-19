@@ -90,7 +90,7 @@ export async function ejecutar(t, ia) {
 
   /** ¿Puede la IA preguntar ahora? Solo si la plataforma lo permitió y no se agotaron las pausas de este trabajo. */
   const puedePreguntar = () => !!t.puede_preguntar && (t.pausas ?? 0) < (t.max_pausas ?? 0);
-  const datosParaIA = () => bloqueDatosUsuario(t.datos_usuario);
+  const datosParaIA = () => bloqueDatosUsuario(t.datos_usuario, t.material_persona);
 
   const sumarUso = (u) => {
     const k = `${ia.proveedor}/${ia.modelo}`;
@@ -197,7 +197,9 @@ export async function ejecutar(t, ia) {
     t.estado = 'procesando';
     t.iniciado_en = t.iniciado_en ?? ahora();
     t.etapa = 'validando_paquete';
-    t.mensaje = reanudacion ? 'Retomando el llenado con tus respuestas…' : 'Leyendo el paquete…';
+    t.mensaje = reanudacion
+      ? (t.material_persona?.length ? 'Retomando el llenado con lo que aportaste…' : 'Retomando el llenado…')
+      : 'Leyendo el paquete…';
     guardar(t);
 
     const paq = cargarPaquete(t.rutaRaiz, t.manifiesto);

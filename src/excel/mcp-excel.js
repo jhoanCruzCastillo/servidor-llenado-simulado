@@ -132,7 +132,7 @@ server.registerTool(
   'pedir_datos',
   {
     description:
-      'Pide a la PERSONA un dato imprescindible que NO consta en ningún documento ni nota del paquete (p. ej. la naturaleza de intervención o la unidad formuladora). Úsala solo después de buscar bien en los documentos y solo para datos que no puedas inferir con seguridad; nunca para cosas opcionales. Agrupa todas tus preguntas en UNA llamada (máximo 6), concretas y breves, en español. NO esperes la respuesta: tras llamarla, entrega con las otras herramientas lo que SÍ puedes llenar (sin inventar lo que depende de esos datos) y termina con «Listo». El llenado se detiene, se le pregunta a la persona y se retoma con sus respuestas, que verás en tu siguiente solicitud.',
+      'Pide a la PERSONA un dato imprescindible que NO consta en ningún documento ni nota del paquete (p. ej. la naturaleza de intervención o la unidad formuladora). Úsala solo después de buscar bien en los documentos y solo para datos que no puedas inferir con seguridad; nunca para cosas opcionales. Agrupa todas tus preguntas en UNA llamada (máximo 6), concretas y breves, en español. La persona NO llenará los campos de la ficha: escribirá texto o subirá documentos y TÚ extraerás el dato al retomar. `opciones` es para ti (catálogo cerrado), no un formulario. NO esperes la respuesta: tras llamarla, entrega con las otras herramientas lo que SÍ puedes llenar (sin inventar lo que depende de esos datos) y termina con «Listo».',
     inputSchema: {
       preguntas: z
         .array(

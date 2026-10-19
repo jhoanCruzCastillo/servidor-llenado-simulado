@@ -77,14 +77,23 @@ async function probarMotor(motor) {
     let id = await enviar({ puede_preguntar: true, simulacion: SIMULACION });
     let e = await esperar(id, ['esperando_datos']);
     if (!verificar('se pausa en «esperando_datos»', e.estado === 'esperando_datos', `estado=${e.estado} mensaje=${e.mensaje} error=${JSON.stringify(e.error)}\n${s.log().slice(-500)}`)) return;
-    const q = e.preguntas[0];
+    let q = e.preguntas[0];
     verificar('trae preguntas con id, texto y campo', e.preguntas.length >= 1 && /^q\d+$/.test(q.id) && q.pregunta.length > 3 && Array.isArray(q.campo_ids) && q.campo_ids.length >= 1, JSON.stringify(e.preguntas));
     verificar('sin resultado y por debajo de 100%', e.resultado === null && e.porcentaje < 100, `porcentaje=${e.porcentaje}`);
     verificar('cuenta la pausa', e.pausas === 1);
 
     // 2. Validaciones del endpoint.
-    let r = await responder(id, { respuestas: [] });
-    verificar('sin respuestas ni omitir → 422 faltan_respuestas', r.status === 422 && (await r.json()).error.codigo === 'faltan_respuestas');
+    let     r = await responder(id, { respuestas: [] });
+    verificar('sin respuestas ni omitir ni texto → 422 faltan_respuestas', r.status === 422 && (await r.json()).error.codigo === 'faltan_respuestas');
+    r = await responder(id, { texto: 'Material de prueba: el dato pedido está en este texto.' });
+    verificar('texto libre (sin respuestas campo a campo) → 202', r.status === 202);
+    e = await esperar(id, ['completado', 'esperando_datos', 'error']);
+    verificar('con texto el trabajo sale de la pausa', e.estado !== 'esperando_datos', `estado=${e.estado}`);
+
+    id = await enviar({ puede_preguntar: true, simulacion: SIMULACION });
+    e = await esperar(id, ['esperando_datos']);
+    if (!verificar('segunda pausa para el resto de la prueba', e.estado === 'esperando_datos' && e.preguntas?.[0], `estado=${e.estado}`)) return;
+    q = e.preguntas[0];
     r = await responder(id, { respuestas: [{ id: 'q999', respuesta: 'x' }] });
     verificar('pregunta inexistente → 400', r.status === 400);
     verificar('sigue pausado tras los rechazos', (await estado(id)).estado === 'esperando_datos');
