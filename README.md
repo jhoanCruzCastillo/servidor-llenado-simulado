@@ -117,6 +117,7 @@ Además del llenado, el servidor expone un chat sobre Claude Code (streaming, si
 | `DELETE /v1/chat/conversaciones/{id}` | Elimina |
 | `POST /v1/chat/conversaciones/{id}/mensajes` `{contenido, modelo?}` | Responde en **streaming (SSE)** |
 | `POST /v1/chat/conversaciones/{id}/regenerar` `{modelo?}` | Vuelve a responder al último mensaje (SSE) |
+| `POST /v1/chat/completar` `{sistema, mensajes, modelo?}` | Una respuesta JSON `{texto}` **sin guardar** conversación. Lo usa el backend de Proyecta Fácil (asesor / ayuda por campo) con la **misma** Claude Code / suscripción Pro. |
 
 **SSE:** eventos `inicio`, `delta` `{texto}`, `fin` `{mensaje, conversacion}` y `error` `{codigo, mensaje, reintentable}`. Si el cliente corta la conexión se detiene Claude y lo generado se guarda como respuesta *interrumpida*.
 

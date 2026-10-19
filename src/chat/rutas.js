@@ -12,6 +12,7 @@
  *   DELETE /v1/chat/conversaciones/:id/archivos/:archivoId  quita un adjunto que aún no se envió
  *   POST   /v1/chat/conversaciones/:id/mensajes   {contenido, modelo?, archivos?: [ids]}   → respuesta en streaming (SSE)
  *   POST   /v1/chat/conversaciones/:id/regenerar  {modelo?}              → vuelve a responder al último mensaje (SSE)
+ *   POST   /v1/chat/completar  {sistema, mensajes:[{role|rol, content|contenido}], modelo?}  → {texto} (una respuesta, sin guardar; lo usa la plataforma)
  *
  * SSE: Content-Type text/event-stream; eventos `inicio`, `delta` {texto}, `fin` {mensaje, conversacion}, `error` {codigo, mensaje, reintentable}.
  * Si el cliente corta la conexión, se detiene Claude y lo ya generado se guarda como respuesta «interrumpida».
@@ -20,7 +21,7 @@ import { config } from '../config.js';
 import { ErrorIA } from '../ia/claude.js';
 import * as almacen from './almacen.js';
 import * as archivos from './archivos.js';
-import { generar, modeloValido, MODELOS } from './claudeChat.js';
+import { completar, generar, modeloValido, MODELOS } from './claudeChat.js';
 
 const MAX_MENSAJE = 20_000;
 const activos = new Set(); // conversaciones con una respuesta en curso
@@ -113,6 +114,48 @@ export async function manejarChat(req, res, ruta) {
   try {
     if (req.method === 'GET' && ruta === '/v1/chat/modelos') {
       json(res, 200, { modelos: MODELOS, predeterminado: config.claude.modelo, adjuntos: { max_bytes_por_archivo: archivos.MAX_ARCHIVO_BYTES, max_por_mensaje: archivos.MAX_ARCHIVOS_POR_MENSAJE } });
+      return true;
+    }
+
+    // Una respuesta para la plataforma (asesor / ayuda por campo): misma Claude Code que el chat de prueba, sin guardar conversación aquí.
+    if (req.method === 'POST' && ruta === '/v1/chat/completar') {
+      if (config.ia !== 'claude') {
+        fallo(res, 503, 'chat_no_disponible', 'El chat con Claude Code solo está activo cuando el servidor corre con IA=claude.');
+        return true;
+      }
+      if (activos.size >= config.chatConcurrencia) {
+        fallo(res, 429, 'servidor_ocupado', 'Hay demasiadas respuestas en curso. Intenta de nuevo en unos segundos.', { 'Retry-After': '5' });
+        return true;
+      }
+      const b = await leerJson(req, 2_000_000);
+      const modelo = b.modelo ?? config.claude.modelo;
+      if (!modeloValido(modelo)) { fallo(res, 400, 'modelo_invalido', `Modelo no válido: ${modelo}.`); return true; }
+      const mensajes = (Array.isArray(b.mensajes) ? b.mensajes : []).map((m) => ({
+        rol: (m?.role === 'assistant' || m?.rol === 'asistente') ? 'asistente' : 'usuario',
+        contenido: String(m?.content ?? m?.contenido ?? '').trim(),
+      })).filter((m) => m.contenido);
+      if (mensajes.length === 0 || mensajes.at(-1).rol !== 'usuario') {
+        fallo(res, 400, 'mensaje_vacio', 'Hace falta al menos un mensaje de la persona (el último).');
+        return true;
+      }
+      const slot = `cplt_${Date.now()}`;
+      activos.add(slot);
+      const ctl = new AbortController();
+      res.on('close', () => { if (!res.writableEnded) ctl.abort(); });
+      try {
+        const r = await completar({ sistema: typeof b.sistema === 'string' ? b.sistema : '', mensajes, modelo, signal: ctl.signal });
+        json(res, 200, { texto: r.texto, modelo, uso: r.uso });
+      } catch (e) {
+        const ia = e instanceof ErrorIA;
+        console.error('[chat] completar:', ia ? `${e.codigo}: ${e.message}` : e);
+        if (e instanceof ErrorIA && e.codigo === 'cancelado') {
+          fallo(res, 400, 'cancelado', 'La petición se canceló.');
+        } else {
+          fallo(res, 502, ia ? e.codigo : 'interno', ia ? e.message : 'Fallo inesperado al generar la respuesta.');
+        }
+      } finally {
+        activos.delete(slot);
+      }
       return true;
     }
 

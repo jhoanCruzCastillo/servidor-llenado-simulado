@@ -391,3 +391,16 @@ Los paquetes contienen **documentos reales de proyectos de inversión pública**
 - [ ] `POST …/cancelar` en mitad del llenado detiene el gasto de IA y deja `cancelado` sin resultado.
 - [ ] Un fallo de la IA a media ficha: o se recupera (advertencia) o termina en `error` con `codigo` y `reintentable` correctos; nunca queda colgado en `procesando`.
 - [ ] El estado se puede consultar 1 vez por segundo durante una hora sin degradarse.
+
+---
+
+## Anexo · Chat de la plataforma (fuera del llenado)
+
+Este servidor, además del contrato de llenado, expone `POST /v1/chat/completar` para que el backend de Proyecta Fácil use **la misma Claude Code / suscripción Pro** en el asesor y la ayuda por campo. No forma parte del contrato que tendría que implementar otro servidor de llenado.
+
+- Autenticación: el mismo `Authorization: Bearer <SERVIDOR_TOKEN>`.
+- Cuerpo: `{ "sistema": "…", "mensajes": [{ "role": "user"|"assistant", "content": "…" }], "modelo": "sonnet"|"opus"|"haiku" }`. El último mensaje debe ser de la persona.
+- Respuesta `200`: `{ "texto": "…", "modelo": "sonnet", "uso": { "tokens_entrada": 0, "tokens_salida": 0 } }`. **No guarda** conversación: el historial vive en la BD de la plataforma.
+- Errores: `400` mensaje vacío / no termina en usuario; `429` `servidor_ocupado` (comparte `CHAT_CONCURRENCIA` con el chat SSE); `502` fallo de Claude Code; `503` si `IA` no es `claude`.
+
+El chat SSE de prueba (`/v1/chat/conversaciones/…`) es otra superficie, para `chat-ui-prueba`. Ver el README.

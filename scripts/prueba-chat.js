@@ -80,6 +80,11 @@ await conServidor({}, async () => {
   ok(mod.status === 200 && mod.cuerpo.modelos.some((m) => m.id === 'sonnet'), 'GET modelos');
   ok((await json('/v1/chat/conversaciones', { method: 'POST', body: JSON.stringify({ modelo: 'gpt-9' }) })).status === 400, 'modelo inválido → 400');
 
+  const cplt = await json('/v1/chat/completar', { method: 'POST', body: JSON.stringify({ sistema: 'Responde en JSON.', mensajes: [{ role: 'user', content: 'Hola desde la plataforma' }] }) });
+  ok(cplt.status === 200 && /Hola desde la plataforma/.test(cplt.cuerpo?.texto ?? ''), 'POST /v1/chat/completar (una respuesta, sin guardar conversación)', JSON.stringify(cplt.cuerpo)?.slice(0, 180));
+  ok((await json('/v1/chat/completar', { method: 'POST', body: JSON.stringify({ mensajes: [] }) })).status === 400, 'completar sin mensajes → 400');
+  ok((await json('/v1/chat/conversaciones')).cuerpo.conversaciones.length === 0, 'completar no crea conversaciones en el almacén');
+
   const c = await json('/v1/chat/conversaciones', { method: 'POST', body: '{}' });
   const id = c.cuerpo.id;
   ok(c.status === 201 && /^cnv_/.test(id), 'crear conversación', JSON.stringify(c.cuerpo));

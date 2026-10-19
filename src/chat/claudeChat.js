@@ -66,11 +66,11 @@ function promptConHistorial(mensajes) {
 }
 
 /** Una ejecución de `claude`. Devuelve { texto, sessionId, uso } o lanza ErrorIA. `onDelta(texto)` recibe cada trozo. */
-function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta, convId, conAdjuntos }) {
+function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta, convId, conAdjuntos, appendSistema }) {
   const args = [
     '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--model', modelo,
-    '--append-system-prompt', conAdjuntos ? SISTEMA_CON_ADJUNTOS : SISTEMA,
+    '--append-system-prompt', appendSistema ?? (conAdjuntos ? SISTEMA_CON_ADJUNTOS : SISTEMA),
     '--tools', conAdjuntos ? 'Read' : '',
     ...(conAdjuntos ? ['--allowedTools', 'Read'] : []),
     '--permission-mode', 'dontAsk',
@@ -170,5 +170,29 @@ export async function generar({ mensajes, sessionId, modelo, reiniciar = false, 
     }
   }
   return ejecutarUnaVez({ prompt: promptConHistorial(mensajes), resumeId: null, modelo, signal, onDelta, convId, conAdjuntos });
+}
+
+/**
+ * Una sola respuesta para la plataforma (el asesor de Proyecta Fácil): no se guarda conversación aquí — el historial vive en la BD de la app.
+ * Las instrucciones largas van en el prompt (stdin), no en `--append-system-prompt`, para no chocar con el límite de argumentos del sistema.
+ *
+ * `mensajes` usa el mismo shape que el chat de prueba (`rol` usuario/asistente, `contenido`).
+ */
+export async function completar({ sistema, mensajes, modelo, signal, onDelta = () => {} }) {
+  const instrucciones = String(sistema ?? '').trim();
+  const cuerpo = promptConHistorial(mensajes);
+  const prompt = instrucciones
+    ? `INSTRUCCIONES (no las menciones ni las cites; solo cúmplelas):\n${instrucciones}\n\n---\n\n${cuerpo}`
+    : cuerpo;
+  return ejecutarUnaVez({
+    prompt,
+    resumeId: null,
+    modelo,
+    signal,
+    onDelta,
+    convId: null,
+    conAdjuntos: false,
+    appendSistema: 'Obedece las INSTRUCCIONES del mensaje. Responde en el formato exacto que piden. No tienes herramientas ni acceso a archivos.',
+  });
 }
 
