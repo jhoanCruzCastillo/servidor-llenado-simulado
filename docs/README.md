@@ -27,6 +27,7 @@ Proyecta Fácil envía a este servidor un `.zip` con la ficha técnica y los doc
 | `paquete_entrada_ejemplo_fte-desarrollo-prod.zip` / `resultado_ejemplo_fte-desarrollo-prod.zip` | Tercer par, de **FTE-DESARROLLO-PROD** (Agricultura / desarrollo productivo): 22 secciones, 80 tablas, Excel **con macros (`.xlsm`, ≈ 29 MB)**. El resultado sale de la ficha de ejemplo del café (Chanchamayo), que está llena solo en parte: 46 de las 80 tablas van en su estado base. |
 | `crear_trabajo_metadata.json`, `crear_trabajo_respuesta_202.json` | Cuerpo de `metadata` y respuesta de `POST /v1/trabajos`. |
 | `estado_01_en_cola.json` … `estado_08_cancelado.json` | El objeto de estado en cada momento del ciclo de vida (en cola, llenando campos, llenando tablas, avanzado, ensamblando, **completado con el enlace**, error, cancelado). |
+| `estado_09_esperando_datos.json` | El trabajo **en pausa**: la IA necesita datos que no constan en los documentos y trae sus `preguntas` (solo si la plataforma envió `metadata.puede_preguntar: true`; ver contrato §2.4 bis). |
 | `error_http_400.json` | Formato de los errores HTTP. |
 
 Todos los JSON de estado y el zip de resultado están **validados contra los esquemas**; el `sha256` y `bytes` de `estado_06_completado.json` corresponden al zip de ejemplo real.
@@ -41,3 +42,5 @@ Este mismo repositorio (`../README.md`) es un servidor que implementa este contr
 2. `GET /v1/trabajos/{id}` cada pocos segundos → `{estado, porcentaje, mensaje, seccion_actual, secciones[], totales}`.
 3. Con `estado: "completado"` y `porcentaje: 100`: `resultado.url` (zip) + `sha256` + `bytes`.
 4. Nosotros descargamos, verificamos, validamos `respuesta.json` y lo aplicamos a la ficha.
+
+**Opcional — preguntas a la persona.** Si el `metadata` trae `puede_preguntar: true`, el servidor puede pasar a `estado: "esperando_datos"` (con `preguntas[]`) cuando falta un dato imprescindible. No mantiene ningún proceso esperando: la plataforma muestra las preguntas, la persona responde cuando pueda (incluso días después) y nosotros llamamos a `POST /v1/trabajos/{id}/respuestas`; el trabajo vuelve a `en_cola` y continúa. Sin `puede_preguntar` el servidor nunca se pausa.

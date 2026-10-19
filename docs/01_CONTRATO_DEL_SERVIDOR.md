@@ -205,8 +205,8 @@ Es lo que devuelve `GET /v1/trabajos/{id}`, `POST …/cancelar` y lo que se env�
 | `trabajo_id` | texto | sí | El id devuelto al crear el trabajo. |
 | `referencia` | objeto \| null | sí | Eco de `metadata.referencia` tal cual lo enviamos. `null` si no se envió. |
 | `estado` | enumeración | sí | `en_cola` · `procesando` · `esperando_datos` · `completado` · `error` · `cancelado`. Ver §3.3. `esperando_datos` solo aparece si se creó con `metadata.puede_preguntar: true`. |
-| `preguntas` | arreglo | sí | **Solo con `estado: "esperando_datos"`** (en cualquier otro, `[]`): lo que la IA necesita saber. Cada una: `{ "id": "q1", "pregunta": "…", "motivo": "…", "campo_ids": ["1.01.01"], "opciones": ["…"], "seccion_id": "…" }`. `opciones` viene lleno si el dato es de un catálogo cerrado. Se responden con §2.4 bis. |
-| `pausas` | entero | sí | Cuántas veces se ha pausado este trabajo para preguntar. |
+| `preguntas` | arreglo | no (si falta, se asume `[]`) | **Solo con `estado: "esperando_datos"`** (en cualquier otro, `[]`): lo que la IA necesita saber. Cada una: `{ "id": "q1", "pregunta": "…", "motivo": "…", "campo_ids": ["1.01.01"], "opciones": ["…"], "seccion_id": "…" }`. `opciones` viene lleno si el dato es de un catálogo cerrado. Se responden con §2.4 bis. |
+| `pausas` | entero | no (si falta, se asume `0`) | Cuántas veces se ha pausado este trabajo para preguntar. |
 | `cancelando` | booleano | sí | `true` entre que se pidió cancelar y que se detuvo de verdad. |
 | `porcentaje` | entero 0–100 | sí | Avance global. Reglas en §3.4. |
 | `etapa` | enumeración | sí | Fase técnica actual: `recibido` · `validando_paquete` · `analizando_documentos` · `llenando_secciones` · `llenando_tablas` · `ensamblando_resultado` · `finalizado` · `esperando_datos` · `reanudando` (las dos últimas solo con preguntas). (Si trabajan por secciones completas —campos y tablas juntos— usen `llenando_secciones` durante todo el llenado.) |

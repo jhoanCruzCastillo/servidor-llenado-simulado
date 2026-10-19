@@ -194,11 +194,13 @@ Esquema en [`respuesta.schema.json`](respuesta.schema.json) (definición `resume
 4. `resumen.json` se calcula a partir de los resultados reales (no a mano).
 5. Se comprime todo en el zip descrito, se calcula `sha256` y `bytes`, se publica en un almacenamiento con URL prefirmada y **recién entonces** el estado pasa a `completado` con `porcentaje: 100` y `resultado` (contrato 01 §3.4).
 
+**Si el trabajo se pausó para preguntar** (contrato 01 §2.4 bis), el resultado **no cambia de formato**: es el mismo zip. Las respuestas de la persona son un insumo más para la IA —igual que los documentos— y no hay un campo especial que las marque; solo se espera que el valor resultante cumpla las mismas validaciones. Si la persona omitió una pregunta («aplicar lo disponible»), el campo queda en su estado base (nunca se inventa) y conviene declararlo en `advertencias[]` (`ambito: "campo"`). Mientras el trabajo está en `esperando_datos` no hay `resultado` ni se ha escrito nada en la ficha de la persona.
+
 ---
 
 ## 6. Qué valida la plataforma al recibirlo (lo que no deben romper)
 
-Aunque confíen en la IA, **la plataforma valida todo** antes de escribir en la ficha del usuario. Son las mismas validaciones que ya aplicamos hoy cuando llamamos a la IA directamente; la integración con este servidor las reutiliza (esa parte de nuestro lado aún está por construirse, hoy solo existe el envío simulado). Lo que no pasa la validación se descarta (nunca se escribe) y se avisa al usuario. Cuanto más apegado al contrato, menos descartes.
+Aunque confíen en la IA, **la plataforma valida todo** antes de escribir en la ficha del usuario. Son las mismas validaciones que ya aplicamos hoy cuando llamamos a la IA directamente; la integración con este servidor las reutiliza (ya está construida del lado de la plataforma: `LlenadoExternoWorker` vigila el trabajo, aplica el resultado y gestiona las pausas). Lo que no pasa la validación se descarta (nunca se escribe) y se avisa al usuario. Cuanto más apegado al contrato, menos descartes.
 
 | # | Validación | Si falla |
 |---|---|---|
