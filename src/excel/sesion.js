@@ -9,8 +9,9 @@
  * El estado vive en disco (`estado.json`) porque lo escriben dos procesos distintos: el servidor y, cuando llena Claude Code, el servidor MCP
  * que Claude Code lanza (src/excel/mcp-excel.js). Nunca escriben a la vez: el servidor espera a que Claude termine.
  */
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
+import { normalizarPreguntas } from '../preguntas.js';
 import { ErrorRespuesta, validarCampos, validarTabla } from '../validar.js';
 
 const cargarMotor = (() => {
@@ -45,7 +46,47 @@ export class Sesion {
     this.valores = {};
     this.advertencias = [];
     this.rutaRegistro = join(dir, 'llamadas.ndjson');
+    this.rutaPreguntas = join(dir, 'preguntas.json');
+    this.rutaLimites = join(dir, 'limites.json');
     this.recargar();
+  }
+
+  // ── Preguntas a la persona (herramienta `pedir_datos`) ─────────────────────────────────────────────────────────────
+  // Viven en disco porque las escribe el servidor MCP (otro proceso) y las lee el pipeline cuando Claude termina.
+
+  /** Lo que el servidor le permite a la IA preguntar ahora: lo escribe el pipeline antes de cada solicitud y lo lee la herramienta. */
+  escribirLimites(limites) {
+    writeFileSync(this.rutaLimites, JSON.stringify(limites));
+  }
+
+  leerLimites() {
+    try {
+      return leerJson(this.rutaLimites);
+    } catch {
+      return { puede_preguntar: false };
+    }
+  }
+
+  preguntasPendientes() {
+    try {
+      const j = leerJson(this.rutaPreguntas);
+      return Array.isArray(j) ? j : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Suma preguntas a las pendientes (sin repetir las ya anotadas). @param {{id?: string}|null} seccion sección en curso */
+  anotarPreguntas(lista, seccion = null) {
+    const todas = normalizarPreguntas([...this.preguntasPendientes(), ...lista], seccion);
+    const tmp = `${this.rutaPreguntas}.tmp`;
+    writeFileSync(tmp, JSON.stringify(todas, null, 2));
+    renameSync(tmp, this.rutaPreguntas);
+    return todas;
+  }
+
+  vaciarPreguntas() {
+    rmSync(this.rutaPreguntas, { force: true });
   }
 
   get disponible() {

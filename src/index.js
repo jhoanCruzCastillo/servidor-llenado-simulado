@@ -3,6 +3,7 @@
  *   POST   /v1/trabajos                  (multipart: paquete=.zip, metadata=JSON opcional)   → 202 {trabajo_id}
  *   GET    /v1/trabajos/:id              estado (porcentaje, sección en curso, resultado.url al completar)
  *   POST   /v1/trabajos/:id/cancelar
+ *   POST   /v1/trabajos/:id/respuestas   la persona responde las preguntas de la IA (estado «esperando_datos»)
  *   DELETE /v1/trabajos/:id
  *   GET    /v1/salud
  *   GET    /descargas/:id/:token/resultado.zip   (enlace «prefirmado» del resultado)
@@ -19,6 +20,7 @@ import { cargarPaquete, ErrorPaquete, validarYExtraer } from './paquete.js';
 import { prepararChat } from './chat/claudeChat.js';
 import { manejarChat } from './chat/rutas.js';
 import { cancelarEjecucion, ejecutar, enEjecucion } from './pipeline.js';
+import { aplicarRespuestas } from './preguntas.js';
 import { leer, tamano } from './resultado.js';
 import { diagnosticoDe } from './diagnostico.js';
 import { aEstado, ahora, buscarIdem, cargarDeDisco, dirDe, eliminar, guardar, guardarIdem, obtener, registrar, TERMINALES, todos } from './store.js';
@@ -65,6 +67,20 @@ function procesarCola() {
 function mensajeCola(t) {
   const delante = todos().filter((x) => x.estado === 'en_cola' && x.creado_en < t.creado_en).length + corriendo;
   return delante > 0 ? `En cola — posición ${delante + 1}` : 'En cola…';
+}
+
+/** Cuerpo JSON de una petición pequeña (tope 256 KB). Lanza un error con `http` y `codigo` si no es válido. */
+async function leerCuerpoJson(req, limite = 256 * 1024) {
+  let texto = '';
+  for await (const trozo of req) {
+    texto += trozo;
+    if (texto.length > limite) throw Object.assign(new Error('El cuerpo es demasiado grande.'), { http: 413, codigo: 'solicitud_invalida' });
+  }
+  try {
+    return JSON.parse(texto || '{}');
+  } catch {
+    throw Object.assign(new Error('El cuerpo no es un JSON válido.'), { http: 400, codigo: 'solicitud_invalida' });
+  }
 }
 
 // ── Crear trabajo ─────────────────────────────────────────────────────────────
@@ -126,6 +142,13 @@ async function crearTrabajo(req, res) {
       referencia: metadata.referencia ?? null,
       callback_url: typeof metadata.callback_url === 'string' ? metadata.callback_url : null,
       simulacion: metadata.simulacion ?? null,
+      // Preguntas de la IA a la persona: solo si la plataforma lo pide (si no, el trabajo nunca pasa a «esperando_datos»; ver src/preguntas.js).
+      puede_preguntar: metadata.puede_preguntar === true,
+      max_pausas: Math.min(config.maxPausas, Math.max(0, Math.floor(Number(metadata.max_pausas ?? config.maxPausas)) || 0)),
+      pausas: 0,
+      preguntas: [],
+      preguntas_total: 0,
+      datos_usuario: [],
       rutaRaiz,
       manifiesto,
       secciones: paq.secciones.map((s) => ({
@@ -217,11 +240,29 @@ async function manejar(req, res) {
     return enviar(res, r.ok ? 200 : 502, r);
   }
 
-  if ((m = /^\/v1\/trabajos\/([\w-]+)(\/cancelar|\/diagnostico)?$/.exec(ruta))) {
+  if ((m = /^\/v1\/trabajos\/([\w-]+)(\/cancelar|\/diagnostico|\/respuestas)?$/.exec(ruta))) {
     const t = obtener(m[1]);
     if (!t) return fallo(res, 404, 'trabajo_no_encontrado', 'El trabajo no existe o ya fue purgado.');
 
     if (req.method === 'GET' && m[2] === '/diagnostico') return enviar(res, 200, diagnosticoDe(t));
+
+    // La persona responde lo que la IA preguntó: el trabajo vuelve a la cola y se retoma desde la solicitud que preguntó (src/preguntas.js).
+    if (req.method === 'POST' && m[2] === '/respuestas') {
+      let cuerpo;
+      try {
+        cuerpo = await leerCuerpoJson(req);
+      } catch (e) {
+        return fallo(res, e.http ?? 400, e.codigo ?? 'solicitud_invalida', e.message);
+      }
+      if (t.estado !== 'esperando_datos') return fallo(res, 409, 'estado_invalido', `El trabajo está «${t.estado}»: solo se responde cuando está «esperando_datos».`);
+      const r = aplicarRespuestas(t, cuerpo, ahora);
+      if (r.error) return fallo(res, r.error.http, r.error.codigo, r.error.mensaje);
+      t.mensaje = mensajeCola(t);
+      guardar(t);
+      console.log(`[${t.id}] respuestas recibidas (${r.respondidas} respondidas, ${r.omitidas} omitidas) — vuelve a la cola`);
+      procesarCola();
+      return enviar(res, 202, aEstado(t));
+    }
 
     if (req.method === 'GET' && !m[2]) {
       if (t.estado === 'en_cola') t.mensaje = mensajeCola(t);
@@ -272,6 +313,15 @@ async function manejar(req, res) {
 function barrer() {
   const ahoraMs = Date.now();
   for (const t of todos()) {
+    // Nadie respondió las preguntas a tiempo: se cancela (así también se liberan sus datos con la retención de siempre).
+    if (t.estado === 'esperando_datos' && t.pausado_en && (ahoraMs - Date.parse(t.pausado_en)) / 86_400_000 > config.esperaDatosDias) {
+      t.estado = 'cancelado';
+      t.mensaje = `Nadie respondió las preguntas en ${config.esperaDatosDias} días; el trabajo se canceló.`;
+      t.terminado_en = ahora();
+      t.preguntas = [];
+      t.reanudacion = null;
+      guardar(t);
+    }
     if (!TERMINALES.includes(t.estado) || !t.terminado_en) continue;
     const dias = (ahoraMs - Date.parse(t.terminado_en)) / 86_400_000;
     if (dias > 30 || (t.purgado_en && (ahoraMs - Date.parse(t.purgado_en)) / 86_400_000 > config.diagnosticoDias)) { eliminar(t.id); continue; }

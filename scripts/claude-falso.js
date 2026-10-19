@@ -133,6 +133,20 @@ if (iMcp >= 0) {
         ? { id: m[1], valor_propuesto: opcion, estado: 'extraido', confianza: 0.9, fuente: 'falso', evidencia: '' }
         : { id: m[1], valor_propuesto: null, estado: 'no_encontrado', confianza: 0, fuente: '', evidencia: '' };
     });
+    // FALSO_PREGUNTAR=1: como la IA real ante un dato que falta, llama a pedir_datos (una vez: tras la respuesta el prompt trae «Datos que la persona respondió»)
+    // y usa esa respuesta como valor del primer campo para poder comprobar que llegó hasta la ficha.
+    if (process.env.FALSO_PREGUNTAR === '1' && campos.length) {
+      const respuestaPersona = prompt.match(/Respuesta de la persona \(dato del proyecto\): (.+)/)?.[1]?.trim();
+      const sinDato = /La persona NO tiene este dato/.test(prompt);
+      if (!respuestaPersona && !sinDato) {
+        // Si el campo es de catálogo (desplegable), la pregunta lleva sus opciones: la respuesta tiene que ser una de ellas.
+        const opciones = [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)][0]?.[2]?.split(' | ').map((o) => o.trim()).filter(Boolean) ?? [];
+        const r = await cliente.callTool({ name: 'pedir_datos', arguments: { preguntas: [{ pregunta: `Prueba MCP: ¿qué va en el campo ${campos[0].id}?`, motivo: 'No consta en los documentos.', campo_ids: [campos[0].id], opciones }] } });
+        console.error(texto(r).slice(0, 200));
+      } else if (respuestaPersona) {
+        campos[0] = { id: campos[0].id, valor_propuesto: respuestaPersona, estado: 'extraido', confianza: 1, fuente: 'Respuesta de la persona', evidencia: '' };
+      }
+    }
     const r = await cliente.callTool({ name: 'llenar_campos', arguments: { seccion_id: id, campos } });
     console.error(texto(r).slice(0, 300));
   } else {

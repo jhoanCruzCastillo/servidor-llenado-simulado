@@ -4,6 +4,7 @@
  *   ver_hoja       lo que hay en una hoja del Excel de la ficha (valores, fórmulas ya calculadas, desplegables, fusiones)
  *   llenar_campos  entrega los campos de texto de la sección en curso: se validan, se escriben en el Excel y se devuelve qué quedó
  *   llenar_tablas  entrega las tablas de la solicitud en curso, con la misma comprobación
+ *   pedir_datos    pide a la persona un dato que no consta en los documentos (el llenado se pausa; ver src/preguntas.js)
  *
  * La IA entrega por herramienta (argumentos con esquema) y no como texto libre, así que ya no puede devolver un JSON roto. Si algo no es válido la
  * herramienta lo dice con el motivo y la IA puede corregirlo y volver a llamar dentro de la misma conversación.
@@ -121,6 +122,42 @@ server.registerTool(
       const informe = await informeTablas(sesion, u, r);
       sesion.registrar('llenar_tablas', { tablas }, informe);
       return texto(informe);
+    } catch (e) {
+      return falla(e.message);
+    }
+  },
+);
+
+server.registerTool(
+  'pedir_datos',
+  {
+    description:
+      'Pide a la PERSONA un dato imprescindible que NO consta en ningún documento ni nota del paquete (p. ej. la naturaleza de intervención o la unidad formuladora). Úsala solo después de buscar bien en los documentos y solo para datos que no puedas inferir con seguridad; nunca para cosas opcionales. Agrupa todas tus preguntas en UNA llamada (máximo 6), concretas y breves, en español. NO esperes la respuesta: tras llamarla, entrega con las otras herramientas lo que SÍ puedes llenar (sin inventar lo que depende de esos datos) y termina con «Listo». El llenado se detiene, se le pregunta a la persona y se retoma con sus respuestas, que verás en tu siguiente solicitud.',
+    inputSchema: {
+      preguntas: z
+        .array(
+          z.object({
+            pregunta: z.string().describe('La pregunta, concreta y breve, dirigida a la persona'),
+            motivo: z.string().optional().describe('Por qué hace falta (qué campos dependen de este dato)'),
+            campo_ids: z.array(z.string()).optional().describe('Identificadores de los campos que dependen de la respuesta'),
+            opciones: z.array(z.string()).optional().describe('Si el dato es de un catálogo cerrado (p. ej. un desplegable), las opciones válidas'),
+          }),
+        )
+        .min(1)
+        .max(6)
+        .describe('Una entrada por dato que falta'),
+    },
+  },
+  async ({ preguntas }) => {
+    try {
+      const limites = sesion.leerLimites();
+      if (!limites.puede_preguntar) {
+        return falla('En este trabajo no puedes preguntar a la persona (o ya se agotaron las preguntas permitidas). Decide con lo que consta en los archivos: si falta el dato, deja el campo como no_encontrado o requiere_confirmacion.');
+      }
+      const u = unidad();
+      const anotadas = sesion.anotarPreguntas(preguntas, { id: u.seccionId });
+      sesion.registrar('pedir_datos', { preguntas }, `${anotadas.length} pregunta(s) anotada(s)`);
+      return texto(`Anotado: se le preguntará a la persona (${anotadas.length} pregunta(s)). No esperes la respuesta. Entrega ahora con ${u.tipo === 'campos' ? 'llenar_campos' : 'llenar_tablas'} lo que SÍ puedes llenar con lo que consta (deja sin inventar lo que depende de esos datos) y termina con «Listo»; se retomará cuando responda.`);
     } catch (e) {
       return falla(e.message);
     }

@@ -200,7 +200,7 @@ ${r.stderr}`);
 
 /** Nombre del servidor MCP del Excel y sus herramientas (las ve Claude Code como mcp__<servidor>__<herramienta>). */
 export const SERVIDOR_MCP = 'excel_ficha';
-export const HERRAMIENTAS_MCP = ['ver_hoja', 'llenar_campos', 'llenar_tablas'];
+export const HERRAMIENTAS_MCP = ['ver_hoja', 'llenar_campos', 'llenar_tablas', 'pedir_datos'];
 
 export function crearIAClaude() {
   const c = config.claude;
@@ -214,9 +214,9 @@ export function crearIAClaude() {
      * Escribe el prompt del sistema del trabajo en un archivo (supera el límite de longitud de la línea de comandos).
      * Con `sesion` (modo Excel) también deja la configuración MCP que lanza la «mesa de trabajo» del Excel (src/excel/mcp-excel.js).
      */
-    preparar(paq, dirTrabajo, { sesion } = {}) {
+    preparar(paq, dirTrabajo, { sesion, puedePreguntar = false } = {}) {
       const archivo = join(dirTrabajo, 'sistema.md');
-      writeFileSync(archivo, promptSistema(paq, { excel: !!sesion }), 'utf8');
+      writeFileSync(archivo, promptSistema(paq, { excel: !!sesion, preguntas: !!sesion && puedePreguntar }), 'utf8');
       const preparado = { archivoSistema: archivo };
       if (sesion) {
         const mcpConfig = join(dirTrabajo, 'mcp.json');
@@ -231,10 +231,10 @@ export function crearIAClaude() {
      * Resuelve una unidad de trabajo.
      * @returns {{bruto: object, uso: object}} bruto = JSON ya parseado de la respuesta (aún sin validar)
      */
-    async resolver(unidad, paq, { coherencia = '', correccion = '', signal, preparado }) {
+    async resolver(unidad, paq, { coherencia = '', correccion = '', signal, preparado, datos = '' }) {
       const usuario = unidad.tipo === 'campos'
-        ? promptCampos(paq, unidad.seccion, coherencia, correccion)
-        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion);
+        ? promptCampos(paq, unidad.seccion, coherencia, correccion, { datos })
+        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { datos });
 
       const args = [
         '-p',
@@ -279,10 +279,10 @@ export function crearIAClaude() {
      * escriben en el Excel. No devuelve el contenido: queda en la sesión (`sesion.recargar()` y consultar), el llamador comprueba qué se entregó.
      * @returns {{uso: object}}
      */
-    async ejecutarUnidad(unidad, paq, { coherencia = '', correccion = '', signal, preparado }) {
+    async ejecutarUnidad(unidad, paq, { coherencia = '', correccion = '', signal, preparado, datos = '' }) {
       const usuario = unidad.tipo === 'campos'
-        ? promptCampos(paq, unidad.seccion, coherencia, correccion, { excel: true })
-        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { excel: true });
+        ? promptCampos(paq, unidad.seccion, coherencia, correccion, { excel: true, datos })
+        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { excel: true, datos });
 
       const mcp = HERRAMIENTAS_MCP.map((h) => `mcp__${SERVIDOR_MCP}__${h}`);
       const args = [

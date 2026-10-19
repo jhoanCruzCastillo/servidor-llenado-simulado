@@ -11,8 +11,21 @@ import { ensamblar } from './resultado.js';
 import { ahora, dirDe, guardar } from './store.js';
 import { cargarPaquete } from './paquete.js';
 import { Sesion } from './excel/sesion.js';
+import { bloqueDatosUsuario, normalizarPreguntas } from './preguntas.js';
 import { ErrorRespuesta, validarCampos, validarTabla } from './validar.js';
 import { notificar } from './webhook.js';
+
+/**
+ * La IA necesita datos de la persona. No es un fallo: `ejecutar` pausa el trabajo (`esperando_datos`), deja un punto de reanudación y termina;
+ * `POST /v1/trabajos/{id}/respuestas` lo vuelve a encolar y retoma desde la solicitud que preguntó, ya con las respuestas en el prompt.
+ */
+class PausaPorDatos extends Error {
+  constructor(preguntas) {
+    super('Faltan datos de la persona.');
+    this.codigo = 'pausa_por_datos';
+    this.preguntas = preguntas;
+  }
+}
 
 const controles = new Map();
 export const cancelarEjecucion = (id) => controles.get(id)?.abort();
@@ -72,6 +85,12 @@ export async function ejecutar(t, ia) {
   let llamadas = 0;
   let sesion = null;
   let conHerramientas = false;
+  /** Solicitud en curso (índice, sección y su contador al empezar): si la IA pregunta a mitad de una, se vuelve a este punto. */
+  let actual = null;
+
+  /** ¿Puede la IA preguntar ahora? Solo si la plataforma lo permitió y no se agotaron las pausas de este trabajo. */
+  const puedePreguntar = () => !!t.puede_preguntar && (t.pausas ?? 0) < (t.max_pausas ?? 0);
+  const datosParaIA = () => bloqueDatosUsuario(t.datos_usuario);
 
   const sumarUso = (u) => {
     const k = `${ia.proveedor}/${ia.modelo}`;
@@ -109,10 +128,18 @@ export async function ejecutar(t, ia) {
   /** Una llamada a la IA que responde un JSON. Devuelve lo que `validar` acepte; ErrorRespuesta agotado se relanza para que la unidad lo trate. */
   function llamarIA(unidad, paq, preparado, validar, correccionInicial = '') {
     return conReintentos(unidad, async (correccion) => {
-      const { bruto, uso, reparado } = await ia.resolver(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
+      const { bruto, uso, reparado } = await ia.resolver(unidad, paq, {
+        coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado,
+        datos: datosParaIA(), datosUsuario: t.datos_usuario ?? [], simulacion: t.simulacion ?? null, puedePreguntar: puedePreguntar(),
+      });
       sumarUso(uso);
       if (reparado) log('json_reparado', { seccion: unidad.seccion.numero, tipo: unidad.tipo });
       writeFileSync(join(salida, `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}.json`), JSON.stringify(bruto, null, 2));
+      // Una respuesta con «preguntas» es un pedido de datos (no se valida como campos/tablas): se pausa si el trabajo lo permite.
+      if (puedePreguntar() && Array.isArray(bruto?.preguntas) && bruto.preguntas.length) {
+        const preguntas = normalizarPreguntas(bruto.preguntas, unidad.seccion);
+        if (preguntas.length) throw new PausaPorDatos(preguntas);
+      }
       return validar(bruto);
     }, correccionInicial);
   }
@@ -143,24 +170,34 @@ export async function ejecutar(t, ia) {
   function llamarIAConHerramientas(unidad, paq, preparado, comprobar, correccionInicial = '') {
     return conReintentos(unidad, async (correccion) => {
       writeFileSync(join(sesion.dir, 'unidad.json'), JSON.stringify({ tipo: unidad.tipo, seccionId: unidad.seccion.id, tablas: unidad.tablas?.map((x) => x.id) }));
+      // Lo que `pedir_datos` puede hacer en esta solicitud (lo lee el servidor MCP) y sin preguntas viejas de un intento anterior.
+      sesion.escribirLimites({ puede_preguntar: puedePreguntar() });
+      sesion.vaciarPreguntas();
       const antes = sesion.leerRegistro().length;
-      const r = await ia.ejecutarUnidad(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado });
+      const r = await ia.ejecutarUnidad(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado, datos: datosParaIA() });
       sumarUso(r.uso);
       sesion.recargar();
       // Lo que la IA entregó (entrada y respuesta de cada herramienta), en el mismo lugar donde se guardan las respuestas crudas, para diagnosticar.
       const entregas = sesion.leerRegistro(antes);
       const base = `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}`;
       if (entregas.length === 0) writeFileSync(join(salida, `${base}_sin_entrega.json`), JSON.stringify({ nota: 'La IA terminó sin llamar a ninguna herramienta de entrega.', cierre: r.cierre, agoto_turnos: r.agotoTurnos }, null, 2));
-      entregas.forEach((x, i) => writeFileSync(join(salida, `${base}_${i + 1}.json`), JSON.stringify({ herramienta: x.herramienta, ...(x.entrada.campos ? { seccion_id: x.entrada.seccion_id, campos: x.entrada.campos } : { tablas: x.entrada.tablas }), informe: x.informe }, null, 2)));
+      entregas.forEach((x, i) => writeFileSync(join(salida, `${base}_${i + 1}.json`), JSON.stringify({ herramienta: x.herramienta, ...(x.entrada.campos ? { seccion_id: x.entrada.seccion_id, campos: x.entrada.campos } : x.entrada.tablas ? { tablas: x.entrada.tablas } : { preguntas: x.entrada.preguntas }), informe: x.informe }, null, 2)));
+      // Si la IA pidió datos a la persona (pedir_datos) se pausa ANTES de comprobar la entrega: lo que dependía de esos datos aún no se puede dar.
+      const preguntas = sesion.preguntasPendientes();
+      if (preguntas.length && puedePreguntar()) throw new PausaPorDatos(normalizarPreguntas(preguntas, unidad.seccion));
       comprobar(r);
     }, correccionInicial);
   }
 
+  // Punto de reanudación que dejó una pausa anterior (ver el catch de abajo): desde qué solicitud seguir y lo acumulado hasta entonces.
+  const reanudacion = t.reanudacion ?? null;
+  t.reanudacion = null;
+
   try {
     t.estado = 'procesando';
-    t.iniciado_en = ahora();
+    t.iniciado_en = t.iniciado_en ?? ahora();
     t.etapa = 'validando_paquete';
-    t.mensaje = 'Leyendo el paquete…';
+    t.mensaje = reanudacion ? 'Retomando el llenado con tus respuestas…' : 'Leyendo el paquete…';
     guardar(t);
 
     const paq = cargarPaquete(t.rutaRaiz, t.manifiesto);
@@ -172,7 +209,7 @@ export async function ejecutar(t, ia) {
     sesion = new Sesion(paq, join(dirDe(t.id), 'excel'));
     const aExcel = config.salida === 'excel' && sesion.disponible;
     conHerramientas = aExcel && typeof ia.ejecutarUnidad === 'function';
-    const preparado = ia.preparar(paq, dirDe(t.id), { sesion: conHerramientas ? sesion : undefined });
+    const preparado = ia.preparar(paq, dirDe(t.id), { sesion: conHerramientas ? sesion : undefined, puedePreguntar: !!t.puede_preguntar });
     log('inicio', { ia: ia.nombre, secciones: paq.secciones.length, modo: paq.modo, salida: conHerramientas ? 'excel_con_herramientas' : aExcel ? 'excel_desde_json' : 'json' });
 
     // Los números de sección pueden venir como "2" o "02" según la plantilla: se comparan sin ceros a la izquierda.
@@ -181,13 +218,26 @@ export async function ejecutar(t, ia) {
     const maxLlamadas = t.simulacion?.max_unidades ?? Infinity;
     const unidades = construirUnidades(paq);
 
+    // Al reanudar se recupera lo que ya estaba hecho (las unidades son siempre las mismas del mismo paquete, así que el índice guardado sigue valiendo).
+    let inicio = 0;
+    if (reanudacion) {
+      inicio = reanudacion.unidad ?? 0;
+      coherencia = reanudacion.coherencia ?? [];
+      llamadas = reanudacion.llamadas ?? 0;
+      for (const [id, v] of reanudacion.res?.campos ?? []) res.campos.set(id, v);
+      for (const [id, v] of reanudacion.res?.tablas ?? []) res.tablas.set(id, v);
+      log('reanudado', { desde_unidad: inicio, respuestas: (t.datos_usuario ?? []).length });
+    }
+
     // Cuántas unidades le quedan a cada sección, para saber cuándo cierra.
     const pendientes = new Map();
-    for (const u of unidades) pendientes.set(u.seccion.id, (pendientes.get(u.seccion.id) ?? 0) + 1);
+    unidades.forEach((u, k) => { if (k >= inicio) pendientes.set(u.seccion.id, (pendientes.get(u.seccion.id) ?? 0) + 1); });
 
-    for (const unidad of unidades) {
+    for (let i = inicio; i < unidades.length; i++) {
+      const unidad = unidades[i];
       if (ctl.signal.aborted) throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
       const st = sec(unidad.seccion.id);
+      actual = { i, st, antes: { ...st } }; // para volver aquí si la IA pregunta a mitad de esta solicitud
       const omitir = (filtro && !filtro.has(normNum(unidad.seccion.numero))) || llamadas >= maxLlamadas;
 
       if (st.estado === 'pendiente') { st.estado = omitir ? 'omitida' : 'en_curso'; }
@@ -335,6 +385,21 @@ export async function ejecutar(t, ia) {
     log('completado', { bytes: out.resultado.bytes, llamadas, advertencias: t.advertencias.length });
   } catch (e) {
     t.seccionActualId = null;
+    if (e instanceof PausaPorDatos && actual && !ctl.signal.aborted) {
+      // Pausa, no fallo: la solicitud que preguntó se repetirá entera al reanudar, así que sus contadores vuelven a como estaban al empezarla.
+      Object.assign(actual.st, actual.antes);
+      const hechas = t.preguntas_total ?? 0;
+      t.preguntas = e.preguntas.map((p, k) => ({ id: `q${hechas + k + 1}`, ...p }));
+      t.preguntas_total = hechas + t.preguntas.length;
+      t.pausas = (t.pausas ?? 0) + 1;
+      t.pausado_en = ahora();
+      t.reanudacion = { unidad: actual.i, coherencia, llamadas, res: { campos: [...res.campos], tablas: [...res.tablas] } };
+      t.estado = 'esperando_datos';
+      t.etapa = 'esperando_datos';
+      t.mensaje = `Necesito ${t.preguntas.length === 1 ? 'un dato' : `${t.preguntas.length} datos`} para continuar.`;
+      log('pausa_por_datos', { seccion: actual.st.numero, preguntas: t.preguntas.map((p) => p.id), pausa: t.pausas });
+      return;
+    }
     t.terminado_en = ahora();
     if (e.codigo === 'cancelado' || ctl.signal.aborted) {
       t.estado = 'cancelado';

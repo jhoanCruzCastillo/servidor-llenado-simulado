@@ -16,13 +16,30 @@
       "description": "Eco de metadata.referencia tal como la envió la plataforma; null si no se envió.",
       "type": ["object", "null"]
     },
-    "estado": { "enum": ["en_cola", "procesando", "completado", "error", "cancelado"] },
+    "estado": { "enum": ["en_cola", "procesando", "esperando_datos", "completado", "error", "cancelado"] },
+    "preguntas": {
+      "description": "Solo con estado esperando_datos (en cualquier otro, vacío). Se responden con POST /v1/trabajos/{id}/respuestas.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "pregunta"],
+        "properties": {
+          "id": { "type": "string" },
+          "pregunta": { "type": "string" },
+          "motivo": { "type": "string" },
+          "campo_ids": { "type": "array", "items": { "type": "string" } },
+          "opciones": { "type": "array", "items": { "type": "string" }, "description": "Lleno si el dato es de un catálogo cerrado: la respuesta debe ser una de ellas." },
+          "seccion_id": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "pausas": { "type": "integer", "minimum": 0, "description": "Veces que el trabajo se ha pausado para preguntar." },
     "cancelando": { "type": "boolean" },
     "porcentaje": { "type": "integer", "minimum": 0, "maximum": 100 },
     "etapa": {
       "enum": [
         "recibido", "validando_paquete", "analizando_documentos", "llenando_secciones",
-        "llenando_tablas", "ensamblando_resultado", "finalizado"
+        "llenando_tablas", "ensamblando_resultado", "finalizado", "esperando_datos", "reanudando"
       ]
     },
     "mensaje": { "type": "string", "maxLength": 200, "description": "Frase en español lista para mostrar al usuario." },
@@ -146,12 +163,23 @@
       "then": { "properties": { "resultado": { "type": "null" }, "error": { "type": "null" }, "terminado_en": { "type": "string" } } }
     },
     {
-      "if": { "properties": { "estado": { "enum": ["en_cola", "procesando"] } } },
+      "if": { "properties": { "estado": { "enum": ["en_cola", "procesando", "esperando_datos"] } } },
       "then": { "properties": { "porcentaje": { "maximum": 99 }, "resultado": { "type": "null" }, "error": { "type": "null" }, "terminado_en": { "type": "null" } } }
     },
     {
+      "description": "En cola sin haber empezado nunca (iniciado_en null): 0 %. Un trabajo reanudado tras una pausa vuelve a en_cola conservando su avance.",
       "if": { "properties": { "estado": { "const": "en_cola" } } },
-      "then": { "properties": { "porcentaje": { "const": 0 }, "seccion_actual": { "type": "null" } } }
+      "then": {
+        "properties": { "seccion_actual": { "type": "null" } },
+        "if": { "properties": { "iniciado_en": { "type": "null" } } },
+        "then": { "properties": { "porcentaje": { "const": 0 } } }
+      }
+    },
+    {
+      "description": "Solo en esperando_datos hay preguntas.",
+      "if": { "properties": { "estado": { "const": "esperando_datos" } } },
+      "then": { "properties": { "preguntas": { "minItems": 1 }, "seccion_actual": { "type": "null" } } },
+      "else": { "properties": { "preguntas": { "maxItems": 0 } } }
     }
   ]
 }

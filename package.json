@@ -15,7 +15,8 @@
     "probar": "node --env-file-if-exists=.env scripts/probar.js",
     "probar:fallos": "node scripts/prueba-fallos.js",
     "probar:chat": "node scripts/prueba-chat.js",
-    "probar:adjuntos": "node scripts/prueba-adjuntos.js"
+    "probar:adjuntos": "node scripts/prueba-adjuntos.js",
+    "probar:preguntas": "node scripts/prueba-preguntas.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",

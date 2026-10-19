@@ -69,9 +69,14 @@ Cabeceras que enviamos:
 {
   "referencia": { "ficha_id": 140, "plantilla_codigo": "FTE-EBR-V03" },
   "callback_url": "https://api.proyectafacil.example/api/llenado-externo/webhook",
-  "solicitado_por": "usuario-123"
+  "solicitado_por": "usuario-123",
+  "puede_preguntar": true,
+  "max_pausas": 3
 }
 ```
+
+- `puede_preguntar` (booleano, por defecto `false`): permite que la IA **pida datos a la persona** cuando falta uno imprescindible que no consta en los documentos (p. ej. la naturaleza de intervención o la unidad formuladora). Con `false` el trabajo **nunca** pasa a `esperando_datos` (comportamiento de siempre). Ver §2.4 bis.
+- `max_pausas` (entero, por defecto lo que fije el servidor, hoy 3; el servidor nunca concede más que su tope): cuántas veces puede pausarse este trabajo para preguntar. `0` equivale a `puede_preguntar: false`.
 
 > Nada de `metadata` es necesario para trabajar: **todo lo imprescindible ya viene dentro del paquete** (`manifiesto.json`). `metadata` solo sirve para que ustedes nos devuelvan nuestra referencia y para el webhook.
 
@@ -113,6 +118,27 @@ El usuario puede cancelar desde la plataforma. El servidor debe **dejar de gasta
 - `200` con el objeto de estado. Si pudo detenerlo de inmediato: `estado: "cancelado"`. Si necesita unos segundos: `estado: "procesando"` + `cancelando: true`, y luego pasa a `cancelado`.
 - Si el trabajo ya estaba en `completado`, `error` o `cancelado`: `200` con el estado actual (idempotente, no es error).
 - Un trabajo cancelado **no** produce resultado (`resultado: null`).
+- Un trabajo en `esperando_datos` se cancela de inmediato (no hay nada en ejecución).
+
+### 2.4 bis `POST /v1/trabajos/{trabajo_id}/respuestas` — responder las preguntas de la IA
+
+Solo aplica a trabajos creados con `metadata.puede_preguntar: true`. Cuando la IA necesita un dato que no consta en los documentos, el trabajo pasa a **`esperando_datos`** y el objeto de estado trae las **`preguntas`** (§3.2). El servidor **no mantiene ningún proceso abierto** esperando: todo queda en disco, así que la persona puede cerrar sesión y responder horas o días después, y la pausa sobrevive a un reinicio del servidor. Si nadie responde en el plazo del servidor (hoy 14 días) el trabajo pasa a `cancelado`.
+
+Cuerpo (`application/json`):
+
+```json
+{
+  "respuestas": [
+    { "id": "q1", "respuesta": "Mejoramiento" },
+    { "id": "q2", "respuesta": "Gerencia de Desarrollo Social" }
+  ],
+  "omitir_pendientes": false
+}
+```
+
+- `respuestas[].id` es el `id` de una pregunta del estado; `respuesta`, texto de hasta 4000 caracteres. Si la pregunta trae `opciones` (campo de catálogo), la respuesta debe ser una de ellas: si no, el validador descarta el valor y queda como advertencia.
+- `omitir_pendientes: true` («aplicar lo disponible»): las preguntas sin respuesta se dan por «la persona no tiene el dato»; la IA continúa **sin inventarlo** y **no vuelve a preguntarlo**.
+- Respuestas: `202` con el objeto de estado (el trabajo vuelve a `en_cola` y se retoma **desde la solicitud que preguntó**, con las respuestas en el prompt; lo ya llenado se conserva) · `409 estado_invalido` si el trabajo no está en `esperando_datos` · `422 faltan_respuestas` si quedan preguntas sin respuesta y no se envió `omitir_pendientes` · `400 respuesta_invalida` si un `id` no existe o una respuesta es demasiado larga.
 
 ### 2.5 `DELETE /v1/trabajos/{trabajo_id}` — borrar datos (recomendado)
 
@@ -178,10 +204,12 @@ Es lo que devuelve `GET /v1/trabajos/{id}`, `POST …/cancelar` y lo que se env�
 | `version_estado` | texto | sí | Versión de este contrato. Hoy `"1.0"`. |
 | `trabajo_id` | texto | sí | El id devuelto al crear el trabajo. |
 | `referencia` | objeto \| null | sí | Eco de `metadata.referencia` tal cual lo enviamos. `null` si no se envió. |
-| `estado` | enumeración | sí | `en_cola` · `procesando` · `completado` · `error` · `cancelado`. Ver §3.3. |
+| `estado` | enumeración | sí | `en_cola` · `procesando` · `esperando_datos` · `completado` · `error` · `cancelado`. Ver §3.3. `esperando_datos` solo aparece si se creó con `metadata.puede_preguntar: true`. |
+| `preguntas` | arreglo | sí | **Solo con `estado: "esperando_datos"`** (en cualquier otro, `[]`): lo que la IA necesita saber. Cada una: `{ "id": "q1", "pregunta": "…", "motivo": "…", "campo_ids": ["1.01.01"], "opciones": ["…"], "seccion_id": "…" }`. `opciones` viene lleno si el dato es de un catálogo cerrado. Se responden con §2.4 bis. |
+| `pausas` | entero | sí | Cuántas veces se ha pausado este trabajo para preguntar. |
 | `cancelando` | booleano | sí | `true` entre que se pidió cancelar y que se detuvo de verdad. |
 | `porcentaje` | entero 0–100 | sí | Avance global. Reglas en §3.4. |
-| `etapa` | enumeración | sí | Fase técnica actual: `recibido` · `validando_paquete` · `analizando_documentos` · `llenando_secciones` · `llenando_tablas` · `ensamblando_resultado` · `finalizado`. (Si trabajan por secciones completas —campos y tablas juntos— usen `llenando_secciones` durante todo el llenado.) |
+| `etapa` | enumeración | sí | Fase técnica actual: `recibido` · `validando_paquete` · `analizando_documentos` · `llenando_secciones` · `llenando_tablas` · `ensamblando_resultado` · `finalizado` · `esperando_datos` · `reanudando` (las dos últimas solo con preguntas). (Si trabajan por secciones completas —campos y tablas juntos— usen `llenando_secciones` durante todo el llenado.) |
 | `mensaje` | texto | sí | Frase **lista para mostrar al usuario**, en español, ≤ 200 caracteres (ej. `Procesando «ASPECTOS GENERALES» — tabla 28 de 75`). Cuando `completado`: `Listo.`; cuando `error`: el motivo resumido. |
 | `seccion_actual` | objeto \| null | sí | La sección que se está llenando **ahora** (`id`, `numero`, `nombre` tal cual vienen en `secciones.json`). `null` si el trabajo está en cola, ensamblando o terminado. Si procesan varias secciones en paralelo, la de menor número aún no completada. |
 | `totales` | objeto | sí | Contadores globales: secciones, **campos de texto** y **tablas**. Los totales se fijan al leer `secciones.json` y **no cambian** durante el trabajo. En cola (antes de leer el paquete) pueden ir en `0`. |
@@ -198,7 +226,13 @@ Es lo que devuelve `GET /v1/trabajos/{id}`, `POST …/cancelar` y lo que se env�
  en_cola ──▶ procesando ──▶ completado        (resultado != null, porcentaje = 100)
     │            │  └─────▶ error              (error != null)
     └────────────┴────────▶ cancelado          (tras POST …/cancelar)
+
+ procesando ──▶ esperando_datos ──▶ en_cola ──▶ procesando …   (solo con metadata.puede_preguntar; se responde con POST …/respuestas)
+                     └────────────▶ cancelado                    (POST …/cancelar, o sin respuesta tras el plazo del servidor)
 ```
+
+- `esperando_datos` **no es terminal** y no ocupa ningún proceso del servidor. El `porcentaje` se mantiene (no baja ni llega a 100) y `resultado` es `null`. Al responder, el trabajo vuelve a `en_cola` y retoma lo que quedaba.
+- Tras una pausa el porcentaje sigue sin bajar: la solicitud que preguntó se repite entera, pero sus contadores no avanzaron hasta terminarla.
 
 - Un estado terminal (`completado`, `error`, `cancelado`) **nunca cambia después**.
 - `completado` significa «hay un zip de resultado descargable». Si algunas secciones o tablas fallaron pero se pudo entregar el resto, el estado es **`completado`** y los fallos se listan en `advertencias` (y en `resumen.json` del zip); esas secciones quedan sin llenar y nosotros se lo indicamos al usuario. `error` se reserva para cuando **no hay nada útil que entregar**.
@@ -211,7 +245,7 @@ Es lo que devuelve `GET /v1/trabajos/{id}`, `POST …/cancelar` y lo que se env�
 4. **Solo llega a 100 cuando el resultado ya es descargable.** Mientras se arma/sube el zip, el máximo es `99` (y `etapa: "ensamblando_resultado"`).
 5. **`porcentaje = 100` ⇔ `estado = "completado"` ⇔ `resultado != null`.** Los tres cambian en la misma escritura; jamás se debe ver `100` con `resultado: null`.
 6. Un campo/tabla «completado» incluye también los que la IA respondió «no encontrado» o vacío: significa *procesado*, no *con dato*.
-7. En `en_cola`, `porcentaje: 0`. En `error`/`cancelado`, el último porcentaje alcanzado (no se pone a 0 ni a 100).
+7. En `en_cola` **sin haber empezado nunca** (`iniciado_en: null`), `porcentaje: 0`; un trabajo reanudado tras una pausa vuelve a `en_cola` **conservando** su porcentaje. En `esperando_datos`, el último alcanzado. En `error`/`cancelado`, el último porcentaje alcanzado (no se pone a 0 ni a 100).
 
 La plataforma muestra al usuario `porcentaje`, `mensaje` y la lista `secciones` tal cual; por eso el `mensaje` debe estar bien escrito.
 

@@ -54,7 +54,8 @@ export function cargarDeDisco() {
     if (!existsSync(f)) continue;
     try {
       const t = JSON.parse(readFileSync(f, 'utf8'));
-      if (!TERMINALES.includes(t.estado)) {
+      // `esperando_datos` no tiene ningún proceso corriendo: todo está en disco y espera la respuesta de la persona, así que sobrevive a un reinicio.
+      if (!TERMINALES.includes(t.estado) && t.estado !== 'esperando_datos') {
         t.estado = 'error';
         t.etapa = t.etapa ?? 'recibido';
         t.mensaje = 'El servidor se reinició durante el llenado. Envía el paquete de nuevo.';
@@ -91,7 +92,8 @@ export function totalesDe(t) {
 /** Porcentaje del contrato §3.4: monótono, tope 99 mientras no haya resultado publicado, 100 ⇔ completado. */
 export function porcentajeDe(t) {
   if (t.estado === 'completado') return 100;
-  if (t.estado === 'en_cola') return 0;
+  // En cola sin haber empezado nunca: 0. Un trabajo reanudado tras una pausa también está «en_cola», pero conserva su avance (nunca baja).
+  if (t.estado === 'en_cola' && !t.iniciado_en) return 0;
   const x = totalesDe(t);
   const total = x.campos_totales + x.tablas_totales;
   const bruto = total === 0 ? 0 : Math.floor((100 * (x.campos_completados + x.tablas_completadas)) / total);
@@ -135,5 +137,10 @@ export function aEstado(t) {
     resultado: t.estado === 'completado' ? t.resultado : null,
     error: t.estado === 'error' ? t.error : null,
     advertencias: (t.advertencias ?? []).slice(0, 200),
+    // Solo en `esperando_datos`: lo que la IA necesita saber para seguir (se responde con POST /v1/trabajos/{id}/respuestas).
+    preguntas: t.estado === 'esperando_datos'
+      ? (t.preguntas ?? []).map((p) => ({ id: p.id, pregunta: p.pregunta, motivo: p.motivo ?? '', campo_ids: p.campo_ids ?? [], opciones: p.opciones ?? [], seccion_id: p.seccion_id ?? null }))
+      : [],
+    pausas: t.pausas ?? 0,
   };
 }

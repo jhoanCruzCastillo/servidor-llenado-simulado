@@ -55,6 +55,10 @@ export const config = {
   conservarDiagnostico: env.CONSERVAR_DIAGNOSTICO !== '0',
   diagnosticoDias: Math.max(1, num(env.DIAGNOSTICO_DIAS, 3)),
   retencionDias: Math.min(7, Math.max(1, num(env.RETENCION_DIAS, 7))),
+  // Preguntas de la IA a la persona (solo si la plataforma manda metadata.puede_preguntar). `maxPausas`: cuántas veces puede pausarse un mismo trabajo
+  // (la plataforma puede pedir menos con metadata.max_pausas). `esperaDatosDias`: si nadie responde en ese plazo el trabajo se cancela solo.
+  maxPausas: Math.min(10, Math.max(0, num(env.MAX_PAUSAS, 3))),
+  esperaDatosDias: Math.max(1, num(env.ESPERA_DATOS_DIAS, 14)),
   webhookSecreto: env.WEBHOOK_SECRETO || 'dev-secreto-webhook',
   expiraResultadoHoras: num(env.EXPIRA_RESULTADO_HORAS, 24 * 7),
 };

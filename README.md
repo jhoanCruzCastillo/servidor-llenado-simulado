@@ -92,6 +92,9 @@ npm run probar -- <paquete.zip> --cancelar-en 20
 
 # 4) Regresión de errores de la ruta Claude (sin cuota): reintentos, límite de suscripción, sin sesión, Claude inexistente
 npm run probar:fallos
+
+# 5) Pausa para preguntar a la persona (sin cuota): esperando_datos, respuestas, omitir, cancelar, reinicio del servidor
+npm run probar:preguntas -- <paquete.zip>
 ```
 
 `probar.js` envía el paquete, muestra el avance (`%`, etapa, mensaje), descarga el resultado, verifica `bytes` y `sha256` y comprueba que `respuesta.json` cubre **todos** los campos y tablas que pedía el paquete. Paquetes de ejemplo en [`docs/servidor-llenado-externo/ejemplos/`](ejemplos/) (Educación EBR, Cuidado Diurno, Desarrollo Productivo).
@@ -143,7 +146,9 @@ El resultado es el **Excel oficial de la plantilla ya llenado** (`ficha_llenada.
 
 **Diagnóstico (mientras se afina el servicio).** Al recibir `DELETE` se borran los documentos del cliente y el paquete, pero se conservan unos días (`DIAGNOSTICO_DIAS`, 3) el log, las respuestas crudas de la IA y el resultado. Con `GET /v1/trabajos` (últimos 30) y `GET /v1/trabajos/{id}/diagnostico` se ve qué pasó: estado por sección, advertencias, qué devolvió la IA en cada llamada (resumen por estado de campo / filas por tabla + inicio del texto), el `resumen.json` del resultado y el log. `CONSERVAR_DIAGNOSTICO=0` borra todo en el acto.
 
-Endpoints: `POST /v1/trabajos` · `GET /v1/trabajos/{id}` · `POST /v1/trabajos/{id}/cancelar` · `DELETE /v1/trabajos/{id}` · `GET /v1/salud` — formatos exactos en [`01_CONTRATO_DEL_SERVIDOR.md`](docs/01_CONTRATO_DEL_SERVIDOR.md).
+**Preguntar a la persona (opt-in).** Con `metadata.puede_preguntar: true` en el envío, Claude dispone de la herramienta MCP `pedir_datos` para pedir un dato imprescindible que no consta en los documentos (naturaleza de intervención, unidad formuladora…). Al terminar esa llamada el trabajo pasa a `esperando_datos` con las `preguntas` en el estado: no queda ningún proceso corriendo (todo está en disco, sobrevive a reinicios) y la persona puede responder más tarde con `POST /v1/trabajos/{id}/respuestas` (o `omitir_pendientes: true` para «aplicar lo disponible»). El trabajo vuelve a la cola y retoma **desde la solicitud que preguntó**, con las respuestas en el prompt; lo ya llenado se conserva y el porcentaje no baja. Límites: `max_pausas` por trabajo (metadata; tope del servidor `MAX_PAUSAS`, 3) y `ESPERA_DATOS_DIAS` (14) sin respuesta → `cancelado`. Sin `puede_preguntar` nada cambia respecto a antes.
+
+Endpoints: `POST /v1/trabajos` · `GET /v1/trabajos/{id}` · `POST /v1/trabajos/{id}/cancelar` · `POST /v1/trabajos/{id}/respuestas` · `DELETE /v1/trabajos/{id}` · `GET /v1/salud` — formatos exactos en [`01_CONTRATO_DEL_SERVIDOR.md`](docs/01_CONTRATO_DEL_SERVIDOR.md).
 
 ## Límites de esta primera versión
 
