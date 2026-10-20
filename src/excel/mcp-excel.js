@@ -84,8 +84,8 @@ server.registerTool(
   async ({ seccion_id, campos }) => {
     try {
       const u = unidad();
-      if (u.tipo !== 'campos' || u.seccionId !== seccion_id) {
-        return falla(`Ahora no corresponde entregar campos de la sección «${seccion_id}». ${u.tipo === 'campos' ? `La sección en curso es ${u.seccionId}.` : 'Ahora se piden tablas: usa llenar_tablas.'}`);
+      if ((u.tipo !== 'campos' && u.tipo !== 'seccion') || u.seccionId !== seccion_id) {
+        return falla(`Ahora no corresponde entregar campos de la sección «${seccion_id}». ${u.tipo === 'campos' || u.tipo === 'seccion' ? `La sección en curso es ${u.seccionId}.` : 'Ahora se piden tablas: usa llenar_tablas.'}`);
       }
       const r = await sesion.guardarCampos(seccion_id, { campos });
       const informe = await informeCampos(sesion, seccion_id, r);
@@ -117,7 +117,7 @@ server.registerTool(
   async ({ tablas }) => {
     try {
       const u = unidad();
-      if (u.tipo !== 'tablas') return falla('Ahora se piden los campos de texto de la sección: usa llenar_campos.');
+      if (u.tipo !== 'tablas' && u.tipo !== 'seccion') return falla('Ahora se piden los campos de texto de la sección: usa llenar_campos.');
       const r = await sesion.guardarTablas(tablas, u.tablas);
       const informe = await informeTablas(sesion, u, r);
       sesion.registrar('llenar_tablas', { tablas }, informe);
@@ -157,7 +157,8 @@ server.registerTool(
       const u = unidad();
       const anotadas = sesion.anotarPreguntas(preguntas, { id: u.seccionId });
       sesion.registrar('pedir_datos', { preguntas }, `${anotadas.length} pregunta(s) anotada(s)`);
-      return texto(`Anotado: se le preguntará a la persona (${anotadas.length} pregunta(s)). No esperes la respuesta. Entrega ahora con ${u.tipo === 'campos' ? 'llenar_campos' : 'llenar_tablas'} lo que SÍ puedes llenar con lo que consta (deja sin inventar lo que depende de esos datos) y termina con «Listo»; se retomará cuando responda.`);
+      const entrega = u.tipo === 'campos' ? 'llenar_campos' : u.tipo === 'tablas' ? 'llenar_tablas' : 'llenar_campos y llenar_tablas';
+      return texto(`Anotado: se le preguntará a la persona (${anotadas.length} pregunta(s)). No esperes la respuesta. Entrega ahora con ${entrega} lo que SÍ puedes llenar con lo que consta (deja sin inventar lo que depende de esos datos) y termina con «Listo»; se retomará cuando responda.`);
     } catch (e) {
       return falla(e.message);
     }

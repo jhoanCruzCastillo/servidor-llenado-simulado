@@ -33,8 +33,8 @@ export const config = {
     binArgs: (env.CLAUDE_BIN_ARGS || '').split(' ').filter(Boolean).map((a) => (existsSync(a) ? resolve(a) : a)),
     modelo: env.CLAUDE_MODELO || 'sonnet',
     esfuerzo: env.CLAUDE_ESFUERZO || '',
-    maxTurnos: num(env.CLAUDE_MAX_TURNOS, 40),
-    timeoutMs: num(env.CLAUDE_TIMEOUT_MIN, 20) * 60_000,
+    maxTurnos: num(env.CLAUDE_MAX_TURNOS, 150),
+    timeoutMs: num(env.CLAUDE_TIMEOUT_MIN, 60) * 60_000,
     // Por defecto se IGNORA ANTHROPIC_API_KEY para que Claude Code use la suscripción. Con 1 se respeta (se paga por API).
     permitirApiKey: env.PERMITIR_API_KEY === '1',
   },
@@ -48,6 +48,9 @@ export const config = {
 
   tablasPorLlamada: Math.max(1, num(env.TABLAS_POR_LLAMADA, 4)),
   maxCaracteresPorLlamada: num(env.MAX_CARACTERES_POR_LLAMADA, 45_000),
+  // Una sola llamada a Claude por sección (campos + tablas). Evita 20 arranques en frío que releen el expediente.
+  // UNIDAD_POR_SECCION=0 vuelve al troceo antiguo (campos, luego tablas de a 4).
+  unidadPorSeccion: env.UNIDAD_POR_SECCION !== '0',
   reintentos: Math.max(0, num(env.REINTENTOS, 2)),
   concurrenciaTrabajos: Math.max(1, num(env.CONCURRENCIA_TRABAJOS, 1)),
   // Al recibir DELETE se borran los documentos del cliente y el paquete, pero (mientras se afina el servicio) se conservan el log, las respuestas crudas

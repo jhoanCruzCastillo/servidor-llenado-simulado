@@ -9,12 +9,12 @@
  *  - Credenciales: las de `claude login` en este equipo, o CLAUDE_CODE_OAUTH_TOKEN.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
-import { promptCampos, promptSistema, promptTablas } from '../prompts.js';
+import { promptSistema, promptUnidad } from '../prompts.js';
 import { ErrorRespuesta, extraerJsonTolerante } from '../validar.js';
 
 export class ErrorIA extends Error {
@@ -63,13 +63,14 @@ export function matarArbol(proc) {
 }
 
 /** Ejecuta `claude` con los argumentos dados y el prompt por stdin. Devuelve { stdout, stderr, code }. */
-export function ejecutarClaude(args, { stdin = '', cwd, timeoutMs, signal } = {}) {
+export function ejecutarClaude(args, { stdin = '', cwd, timeoutMs, signal, extraEnv } = {}) {
   const { cmd, args: previos, shell } = resolverBin();
   const todos = [...previos, ...args];
+  const env = extraEnv ? { ...entornoLimpio(), ...extraEnv } : entornoLimpio();
   return new Promise((resolve, reject) => {
     const proc = shell
-      ? spawn([comillas(cmd), ...todos.map(comillas)].join(' '), { cwd, env: entornoLimpio(), shell: true, windowsHide: true })
-      : spawn(cmd, todos, { cwd, env: entornoLimpio(), windowsHide: true });
+      ? spawn([comillas(cmd), ...todos.map(comillas)].join(' '), { cwd, env, shell: true, windowsHide: true })
+      : spawn(cmd, todos, { cwd, env, windowsHide: true });
     let stdout = '';
     let stderr = '';
     let terminado = false;
@@ -112,6 +113,9 @@ export function clasificarFallo(texto) {
   }
   if (/not logged in|please run .*login|invalid api key|authentication|oauth token|401|unauthorized/i.test(t)) {
     return new ErrorIA('ia_no_disponible', 'Claude Code no tiene sesión. Ejecuta `claude login` o define CLAUDE_CODE_OAUTH_TOKEN (claude setup-token).', { reintentable: false, detalle: t.slice(0, 400) });
+  }
+  if (/no conversation found|session .* not found|unknown session/i.test(t)) {
+    return new ErrorIA('sesion_ia_perdida', 'La sesión de Claude ya no existe; se reintentará desde cero.', { reintentable: true, detalle: t.slice(0, 400) });
   }
   if (/overloaded|529|503|502|timeout|timed out|econnreset|enotfound|network|rate.?limit|429/i.test(t)) {
     return new ErrorIA('ia_no_disponible', 'Claude no está disponible o respondió con sobrecarga.', { reintentable: true, detalle: t.slice(0, 400) });
@@ -217,7 +221,9 @@ export function crearIAClaude() {
     preparar(paq, dirTrabajo, { sesion, puedePreguntar = false } = {}) {
       const archivo = join(dirTrabajo, 'sistema.md');
       writeFileSync(archivo, promptSistema(paq, { excel: !!sesion, preguntas: !!sesion && puedePreguntar }), 'utf8');
-      const preparado = { archivoSistema: archivo };
+      const dirConfig = join(config.dataDir, 'claude-llenado');
+      mkdirSync(dirConfig, { recursive: true });
+      const preparado = { archivoSistema: archivo, dirConfig };
       if (sesion) {
         const mcpConfig = join(dirTrabajo, 'mcp.json');
         const servidor = resolve(dirname(fileURLToPath(import.meta.url)), '../excel/mcp-excel.js');
@@ -231,10 +237,8 @@ export function crearIAClaude() {
      * Resuelve una unidad de trabajo.
      * @returns {{bruto: object, uso: object}} bruto = JSON ya parseado de la respuesta (aún sin validar)
      */
-    async resolver(unidad, paq, { coherencia = '', correccion = '', signal, preparado, datos = '' }) {
-      const usuario = unidad.tipo === 'campos'
-        ? promptCampos(paq, unidad.seccion, coherencia, correccion, { datos })
-        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { datos });
+    async resolver(unidad, paq, { coherencia = '', correccion = '', signal, preparado, datos = '', sessionId = null }) {
+      const usuario = promptUnidad(unidad, paq, coherencia, correccion, { datos });
 
       const args = [
         '-p',
@@ -245,13 +249,14 @@ export function crearIAClaude() {
         '--allowedTools', 'Read,Glob,Grep',
         '--permission-mode', 'dontAsk',
         '--max-turns', String(c.maxTurnos),
-        '--no-session-persistence',
         '--setting-sources', 'project,local',
         '--strict-mcp-config',
       ];
+      if (sessionId) args.push('--resume', sessionId);
       if (c.esfuerzo) args.push('--effort', c.esfuerzo);
 
-      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal });
+      const extraEnv = preparado.dirConfig ? { CLAUDE_CONFIG_DIR: preparado.dirConfig } : undefined;
+      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal, extraEnv });
       let r;
       try {
         r = leerResultado(stdout);
@@ -271,7 +276,7 @@ export function crearIAClaude() {
         costo_usd_referencial: r.total_cost_usd ?? 0,
       };
       const { json, reparado } = extraerJsonTolerante(textoResultado);
-      return { bruto: json, uso, reparado };
+      return { bruto: json, uso, reparado, sessionId: r.session_id ?? sessionId ?? null };
     },
 
     /**
@@ -279,10 +284,8 @@ export function crearIAClaude() {
      * escriben en el Excel. No devuelve el contenido: queda en la sesión (`sesion.recargar()` y consultar), el llamador comprueba qué se entregó.
      * @returns {{uso: object}}
      */
-    async ejecutarUnidad(unidad, paq, { coherencia = '', correccion = '', signal, preparado, datos = '' }) {
-      const usuario = unidad.tipo === 'campos'
-        ? promptCampos(paq, unidad.seccion, coherencia, correccion, { excel: true, datos })
-        : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { excel: true, datos });
+    async ejecutarUnidad(unidad, paq, { coherencia = '', correccion = '', signal, preparado, datos = '', sessionId = null }) {
+      const usuario = promptUnidad(unidad, paq, coherencia, correccion, { excel: true, datos });
 
       const mcp = HERRAMIENTAS_MCP.map((h) => `mcp__${SERVIDOR_MCP}__${h}`);
       const args = [
@@ -296,12 +299,13 @@ export function crearIAClaude() {
         '--allowedTools', ['Read', 'Glob', 'Grep', ...mcp].join(','),
         '--permission-mode', 'dontAsk',
         '--max-turns', String(c.maxTurnos),
-        '--no-session-persistence',
         '--setting-sources', 'project,local',
       ];
+      if (sessionId) args.push('--resume', sessionId);
       if (c.esfuerzo) args.push('--effort', c.esfuerzo);
 
-      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal });
+      const extraEnv = preparado.dirConfig ? { CLAUDE_CONFIG_DIR: preparado.dirConfig } : undefined;
+      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal, extraEnv });
       let r;
       try {
         r = leerResultado(stdout);
@@ -325,6 +329,7 @@ ${r.subtype ?? ''}`);
         },
         agotoTurnos: r.subtype === 'error_max_turns',
         cierre: textoResultado.slice(0, 300),
+        sessionId: r.session_id ?? sessionId ?? null,
       };
     },
   };

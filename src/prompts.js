@@ -37,7 +37,7 @@ const GUIA_FUENTES = (paq) => `## Dónde está la información (rutas relativas 
 
 - \`04_proyecto_del_usuario/prompt_del_usuario.md\` — las notas de la persona. **Léelo completo primero.**
 - \`04_proyecto_del_usuario/documentos_texto/\` — copia en texto de cada documento (para leer y buscar con Grep).
-- \`04_proyecto_del_usuario/documentos/\` — los originales (PDF, Excel, imágenes…). Si el texto no alcanza o parece incompleto, lee el original (los PDF se leen con Read, por páginas).
+- \`04_proyecto_del_usuario/documentos/\` — los originales (PDF, Excel, imágenes…). **No los leas por defecto**: trabaja con \`documentos_texto/\`. Solo abre un original si el texto de ESE documento está claramente incompleto para un dato concreto.
 - \`06_datos_de_apoyo/\` — si existe: datos que resolvió la plataforma (p. ej. candidatos de código de local). Obligatorio leerlo si la guía de un campo lo menciona.
 - \`03_ejemplo_referencia/ejemplo.json\` — la misma ficha llenada en OTRO proyecto: solo para ver la forma y el nivel de detalle. NUNCA copies sus valores.
 - \`02_estructura_base/estructura.json\` — la ficha completa (solo consúltala si necesitas contexto de otros campos).
@@ -81,6 +81,47 @@ ${entrega}
 `;
 }
 
+/**
+ * Una sección entera (campos + tablas) en UNA solicitud. Claude lee las guías de tabla del disco
+ * (Read) en vez de incrustar 75 markdowns: así no hace falta trocear en 20 llamadas que releen el expediente.
+ */
+export function promptSeccion(paq, seccion, tablas, ctx, correccion, { excel = false, datos = '' } = {}) {
+  const m = paq.manifiesto;
+  const nCampos = seccion.campos.length;
+  const nTablas = tablas.length;
+  const listaTablas = tablas
+    .map((t) => `- \`${t.ruta || `${seccion.carpeta}/tablas/${t.id}.md`}\` — id \`${t.id}\`${t.etiqueta ? ` — ${t.etiqueta}` : ''}`)
+    .join('\n');
+  const idsLinea = `TABLAS_IDS: ${tablas.map((t) => t.id).join(', ')}`;
+  const entrega = excel
+    ? `## Cómo trabajar (UNA sesión: no vuelvas a leer el expediente entre tablas)
+
+1. Lee \`prompt_del_usuario.md\` y busca en \`documentos_texto/\` (Grep) lo que pide la guía. **No leas los PDF originales** salvo que el texto extraído esté claramente incompleto para UN dato concreto.
+2. ${seccion.hoja ? `Mira la hoja «${seccion.hoja}» con \`ver_hoja\` **una vez** (rango acotado, p. ej. A1:M40).` : 'Ubica los campos en el Excel con \`ver_hoja\` una vez.'}
+3. Si hay campos de texto (${nCampos}): llama a \`llenar_campos\` con \`seccion_id\` \`${seccion.id}\` y una entrada por cada campo de la guía (\`no_encontrado\` los que no tengan evidencia).
+4. Si hay tablas (${nTablas}): **no las leas de una en una**. Por cada grupo de 8–12, lee esas guías (Read) y llama a \`llenar_tablas\` con el grupo; corrige las rechazadas y pasa al siguiente. No vuelvas a Grep ni a leer PDF entre grupos.
+5. Cuando campos y tablas pendientes estén entregados, termina con «Listo».`
+    : `## Formato de la respuesta
+
+Un único JSON: campos de la sección y tablas de esta solicitud.
+
+{"seccion_id":"${seccion.id}","campos":[...],"tablas":[{"identificador":"<id>","valor":<forma de su tabla actual>,"fuente":"..."}]}`;
+
+  return `# Tarea: llenar la SECCIÓN ${seccion.numero} — «${seccion.nombre}» (campos y tablas, una sola sesión)
+
+Ficha: «${m.ficha.nombre}» · Plantilla: ${m.plantilla.nombre} (${m.plantilla.codigo})
+seccion_id: \`${seccion.id}\`${seccion.hoja ? ` · hoja: «${seccion.hoja}»` : ''}
+${nCampos} campos de texto · ${nTablas} tablas
+${idsLinea}
+
+${GUIA_FUENTES(paq)}
+${COHERENCIA(ctx)}${datos}${CORRECCION(correccion, excel)}
+${nCampos ? `## Guía de la sección (seccion.md)\n\n${seccion.seccionMd}\n` : ''}${seccion.contexto.length ? `\n## Guías propias de la sección (contexto/)\n\n${seccion.contexto.join('\n\n---\n\n')}\n` : ''}
+${nTablas ? `## Tablas a llenar\n\nLee cada archivo con Read cuando toque esa tabla (no las cargues todas de golpe).\n\n${listaTablas}\n` : ''}
+${entrega}
+`;
+}
+
 export function promptTablas(paq, seccion, tablas, ctx, correccion, { excel = false, datos = '' } = {}) {
   const m = paq.manifiesto;
   const ids = tablas.map((t) => t.id).join(', ');
@@ -110,4 +151,10 @@ ${entrega}
 
 ${tablas.map((t) => `\n=================== TABLA ${t.id} ===================\n\n${t.md}`).join('\n')}
 `;
+}
+
+export function promptUnidad(unidad, paq, ctx, correccion, opts = {}) {
+  if (unidad.tipo === 'seccion') return promptSeccion(paq, unidad.seccion, unidad.tablas ?? [], ctx, correccion, opts);
+  if (unidad.tipo === 'campos') return promptCampos(paq, unidad.seccion, ctx, correccion, opts);
+  return promptTablas(paq, unidad.seccion, unidad.tablas, ctx, correccion, opts);
 }

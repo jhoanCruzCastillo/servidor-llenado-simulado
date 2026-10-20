@@ -24,7 +24,7 @@ export function crearIASimulada() {
       const fuentes = paq.ejemplo.json?.fuentes && !Array.isArray(paq.ejemplo.json.fuentes) ? paq.ejemplo.json.fuentes : {};
       const uso = { llamadas: 1, tokens_entrada: 0, tokens_salida: 0, costo_usd_referencial: 0 };
 
-      if (unidad.tipo === 'campos') {
+      if (unidad.tipo === 'campos' || unidad.tipo === 'seccion') {
         // Para probar la pausa: con metadata.simulacion.preguntar_en = ["01", …] pregunta UNA vez en esas secciones (el pipeline solo la acepta si el trabajo
         // trae puede_preguntar). Con la respuesta de la persona ya recibida, la usa como valor del primer campo para poder comprobar que llegó a la ficha.
         const primero = unidad.seccion.campos[0];
@@ -49,18 +49,22 @@ export function crearIASimulada() {
             ? { id: def.identificador, valor_propuesto: String(v), estado: 'extraido', confianza: 0.95, fuente: String(fuentes[def.identificador] ?? 'Ficha de referencia del paquete'), evidencia: '' }
             : { id: def.identificador, valor_propuesto: null, estado: 'no_encontrado', confianza: 0, fuente: '', evidencia: '' };
         });
-        return { bruto: { seccion_id: unidad.seccion.id, campos }, uso };
+        if (unidad.tipo === 'campos') return { bruto: { seccion_id: unidad.seccion.id, campos }, uso };
+        const tablas = (unidad.tablas ?? []).map((t) => tablaDe(t, valores, fuentes));
+        return { bruto: { seccion_id: unidad.seccion.id, campos, tablas }, uso };
       }
 
-      const tablas = unidad.tablas.map((t) => {
-        let v = valores[t.id];
-        if (typeof v === 'string') {
-          try { v = JSON.parse(v); } catch { v = null; }
-        }
-        const lleno = Array.isArray(v) && v.length > 0;
-        return { identificador: t.id, valor: lleno ? v : t.base, fuente: lleno ? String(fuentes[t.id] ?? 'Ficha de referencia del paquete') : '' };
-      });
+      const tablas = unidad.tablas.map((t) => tablaDe(t, valores, fuentes));
       return { bruto: { tablas }, uso };
     },
   };
+}
+
+function tablaDe(t, valores, fuentes) {
+  let v = valores[t.id];
+  if (typeof v === 'string') {
+    try { v = JSON.parse(v); } catch { v = null; }
+  }
+  const lleno = Array.isArray(v) && v.length > 0;
+  return { identificador: t.id, valor: lleno ? v : t.base, fuente: lleno ? String(fuentes[t.id] ?? 'Ficha de referencia del paquete') : '' };
 }

@@ -131,7 +131,8 @@ export function cargarPaquete(rutaRaiz, manifiesto) {
             const id = f.slice(0, -3);
             const md = leerTexto(join(dirTablas, f));
             const filasGrandes = md.match(/con (\d+) filas en total, casi tod/);
-            return { id, md, base: baseTablas.get(id)?.base ?? [], etiqueta: baseTablas.get(id)?.etiqueta ?? id, grande: !!filasGrandes, filasMax: filasGrandes ? Number(filasGrandes[1]) : null };
+            const ruta = `${String(m.carpeta).replaceAll('\\', '/')}/tablas/${f}`;
+            return { id, md, ruta, base: baseTablas.get(id)?.base ?? [], etiqueta: baseTablas.get(id)?.etiqueta ?? id, grande: !!filasGrandes, filasMax: filasGrandes ? Number(filasGrandes[1]) : null };
           })
       : [];
     return {

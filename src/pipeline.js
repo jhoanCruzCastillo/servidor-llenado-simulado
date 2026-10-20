@@ -1,5 +1,5 @@
 /**
- * Ejecución de un trabajo: recorre el paquete por unidades (campos de una sección / lote de tablas), se las da a la IA,
+ * Ejecución de un trabajo: recorre el paquete por unidades (por defecto una sección entera por llamada; o campos / lote de tablas si UNIDAD_POR_SECCION=0), se las da a la IA,
  * valida y acumula lo aceptado, reporta el avance y al final ensambla el zip de resultado.
  * Estrategia recomendada en docs/servidor-llenado-externo/02_PAQUETE_QUE_ENVIAMOS.md §4.
  */
@@ -46,8 +46,13 @@ function crearLog(t) {
   };
 }
 
-/** Construye las unidades de trabajo en el orden del paquete: por sección, primero sus campos y luego sus tablas en lotes. */
+/** Construye las unidades de trabajo en el orden del paquete. Por defecto: una unidad por sección (campos + tablas, una sesión de Claude). */
 function construirUnidades(paq) {
+  if (config.unidadPorSeccion) {
+    return paq.secciones
+      .filter((sec) => sec.campos.length > 0 || sec.tablas.length > 0)
+      .map((sec) => ({ tipo: 'seccion', seccion: sec, tablas: sec.tablas }));
+  }
   const unidades = [];
   for (const sec of paq.secciones) {
     if (sec.campos.length > 0) unidades.push({ tipo: 'campos', seccion: sec });
@@ -85,6 +90,8 @@ export async function ejecutar(t, ia) {
   let llamadas = 0;
   let sesion = null;
   let conHerramientas = false;
+  /** Sesión de Claude Code (`--resume`) de la unidad en curso: misma conversación para reintentos y para retomar tras una pausa. */
+  let claudeSesion = null;
   /** Solicitud en curso (índice, sección y su contador al empezar): si la IA pregunta a mitad de una, se vuelve a este punto. */
   let actual = null;
 
@@ -113,6 +120,11 @@ export async function ejecutar(t, ia) {
         if (ctl.signal.aborted || e.codigo === 'cancelado') throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
         ultimo = e;
         if (e instanceof ErrorRespuesta) { correccion = e.message; log('respuesta_invalida', { seccion: unidad.seccion.numero, intento, motivo: e.message.slice(0, 200) }); continue; }
+        if (e instanceof ErrorIA && e.codigo === 'sesion_ia_perdida') {
+          claudeSesion = null;
+          log('sesion_ia_perdida', { seccion: unidad.seccion.numero, intento });
+          continue;
+        }
         if (e instanceof ErrorIA && e.reintentable && e.codigo !== 'limite_de_uso_ia') {
           const espera = 5000 * 2 ** intento;
           log('ia_reintento', { codigo: e.codigo, intento, espera_ms: espera, detalle: String(e.detalle ?? e.message).slice(0, 300) });
@@ -128,10 +140,12 @@ export async function ejecutar(t, ia) {
   /** Una llamada a la IA que responde un JSON. Devuelve lo que `validar` acepte; ErrorRespuesta agotado se relanza para que la unidad lo trate. */
   function llamarIA(unidad, paq, preparado, validar, correccionInicial = '') {
     return conReintentos(unidad, async (correccion) => {
-      const { bruto, uso, reparado } = await ia.resolver(unidad, paq, {
+      const { bruto, uso, reparado, sessionId } = await ia.resolver(unidad, paq, {
         coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado,
         datos: datosParaIA(), datosUsuario: t.datos_usuario ?? [], simulacion: t.simulacion ?? null, puedePreguntar: puedePreguntar(),
+        sessionId: claudeSesion,
       });
+      if (sessionId) claudeSesion = sessionId;
       sumarUso(uso);
       if (reparado) log('json_reparado', { seccion: unidad.seccion.numero, tipo: unidad.tipo });
       writeFileSync(join(salida, `${String(llamadas).padStart(3, '0')}_${unidad.seccion.numero}_${unidad.tipo}.json`), JSON.stringify(bruto, null, 2));
@@ -174,7 +188,8 @@ export async function ejecutar(t, ia) {
       sesion.escribirLimites({ puede_preguntar: puedePreguntar() });
       sesion.vaciarPreguntas();
       const antes = sesion.leerRegistro().length;
-      const r = await ia.ejecutarUnidad(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado, datos: datosParaIA() });
+      const r = await ia.ejecutarUnidad(unidad, paq, { coherencia: coherencia.join('\n').slice(0, 6000), correccion, signal: ctl.signal, preparado, datos: datosParaIA(), sessionId: claudeSesion });
+      if (r.sessionId) claudeSesion = r.sessionId;
       sumarUso(r.uso);
       sesion.recargar();
       // Lo que la IA entregó (entrada y respuesta de cada herramienta), en el mismo lugar donde se guardan las respuestas crudas, para diagnosticar.
@@ -228,6 +243,7 @@ export async function ejecutar(t, ia) {
       llamadas = reanudacion.llamadas ?? 0;
       for (const [id, v] of reanudacion.res?.campos ?? []) res.campos.set(id, v);
       for (const [id, v] of reanudacion.res?.tablas ?? []) res.tablas.set(id, v);
+      claudeSesion = reanudacion.claude_sesion ?? null;
       log('reanudado', { desde_unidad: inicio, respuestas: (t.datos_usuario ?? []).length });
     }
 
@@ -237,6 +253,7 @@ export async function ejecutar(t, ia) {
 
     for (let i = inicio; i < unidades.length; i++) {
       const unidad = unidades[i];
+      if (!(reanudacion && i === inicio)) claudeSesion = null;
       if (ctl.signal.aborted) throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
       const st = sec(unidad.seccion.id);
       actual = { i, st, antes: { ...st } }; // para volver aquí si la IA pregunta a mitad de esta solicitud
@@ -247,48 +264,93 @@ export async function ejecutar(t, ia) {
 
       if (omitir) {
         // Simulación acotada (para no gastar cuota): la unidad se da por resuelta sin llenar.
-        if (unidad.tipo === 'campos') st.campos_completados = st.campos_totales;
-        else st.tablas_completadas += unidad.tablas.length;
+        if (unidad.tipo === 'campos' || unidad.tipo === 'seccion') st.campos_completados = st.campos_totales;
+        if (unidad.tipo === 'tablas' || unidad.tipo === 'seccion') st.tablas_completadas += unidad.tablas?.length ?? 0;
         if (st.estado !== 'omitida') st.omitidas = (st.omitidas ?? 0) + 1;
         t.nota = 'Llenado ACOTADO por la simulación (metadata.simulacion): hay secciones/tablas sin llenar a propósito.';
-      } else if (unidad.tipo === 'campos') {
+      } else if (unidad.tipo === 'campos' || unidad.tipo === 'seccion') {
         t.etapa = 'llenando_secciones';
-        t.mensaje = `Procesando «${st.nombre}» — ${st.campos_totales} campos de texto`;
+        t.mensaje = unidad.tipo === 'seccion' && (unidad.tablas?.length ?? 0)
+          ? `Procesando «${st.nombre}» — ${st.campos_totales} campos y ${unidad.tablas.length} tablas (una sesión)`
+          : `Procesando «${st.nombre}» — ${st.campos_totales} campos de texto`;
         guardar(t);
+        let tablasJson = null;
         try {
           let campos;
           if (conHerramientas) {
             await llamarIAConHerramientas(unidad, paq, preparado, (r) => {
-              if (!sesion.res.campos.has(unidad.seccion.id)) {
+              const faltaCampos = unidad.seccion.campos.length > 0 && !sesion.res.campos.has(unidad.seccion.id);
+              if (unidad.tipo === 'seccion') {
+                const algunaTabla = (unidad.tablas ?? []).some((tb) => sesion.res.tablas.has(tb.id));
+                if (faltaCampos && !algunaTabla) {
+                  throw new ErrorRespuesta(`No entregaste la sección: llama a llenar_campos y llenar_tablas${r.agotoTurnos ? ' (se acabaron los turnos; trabaja más directo)' : ''}.`);
+                }
+              }
+              if (faltaCampos) {
                 throw new ErrorRespuesta(`No entregaste los campos de la sección: no llamaste a llenar_campos${r.agotoTurnos ? ' (se acabaron los turnos; trabaja más directo)' : ''}.`);
               }
             });
             campos = sesion.res.campos.get(unidad.seccion.id);
             recogerAdvertenciasDeSesion();
+            for (const tb of unidad.tablas ?? []) {
+              if (sesion.res.tablas.has(tb.id) && !res.tablas.has(tb.id)) {
+                res.tablas.set(tb.id, sesion.res.tablas.get(tb.id));
+                st.tablas_completadas++;
+              }
+            }
           } else {
-            const validado = await llamarIA(unidad, paq, preparado, (b) => validarCampos(b, unidad.seccion, paq.modo));
+            const validado = await llamarIA(unidad, paq, preparado, (b) => {
+              const c = unidad.seccion.campos.length ? validarCampos(b, unidad.seccion, paq.modo) : { campos: [], advertencias: [] };
+              return { campos: c.campos, advertencias: c.advertencias, tablas: unidad.tipo === 'seccion' ? (Array.isArray(b?.tablas) ? b.tablas : []) : null };
+            });
             campos = validado.campos;
             validado.advertencias.forEach(avisar);
-            if (aExcelDesdeJson()) {
+            tablasJson = validado.tablas;
+            if (aExcelDesdeJson() && unidad.seccion.campos.length) {
               await sesion.guardarCampos(unidad.seccion.id, campos, { yaValidado: true });
               recogerAdvertenciasDeSesion();
             }
           }
-          res.campos.set(unidad.seccion.id, campos);
-          coherencia.push(...lineasDeCoherencia(unidad.seccion, campos));
+          if (campos) {
+            res.campos.set(unidad.seccion.id, campos);
+            coherencia.push(...lineasDeCoherencia(unidad.seccion, campos));
+          }
         } catch (e) {
           if (!(e instanceof ErrorRespuesta)) throw e;
           avisar({ ambito: 'seccion', identificador: unidad.seccion.numero, mensaje: `No se pudo obtener una respuesta válida para los campos de texto: ${e.message.slice(0, 200)}` });
           st.fallos = (st.fallos ?? 0) + 1;
         }
-        st.campos_completados = st.campos_totales;
-      } else {
-        t.etapa = 'llenando_tablas';
-        let pend = unidad.tablas;
+        if (unidad.seccion.campos.length) st.campos_completados = st.campos_totales;
+        if (!conHerramientas && Array.isArray(tablasJson)) {
+          const buenas = [];
+          for (const tb of unidad.tablas ?? []) {
+            const e = tablasJson.find((x) => String(x?.identificador) === tb.id);
+            try {
+              if (!e) continue;
+              const { valor, advertencias } = validarTabla(e, tb);
+              res.tablas.set(tb.id, { valor, fuente: String(e.fuente ?? '').trim() });
+              advertencias.forEach(avisar);
+              buenas.push(e);
+              st.tablas_completadas++;
+            } catch (err) {
+              if (!(err instanceof ErrorRespuesta)) throw err;
+            }
+          }
+          if (aExcelDesdeJson() && buenas.length) {
+            await sesion.guardarTablas(buenas);
+            recogerAdvertenciasDeSesion();
+          }
+        }
+      }
+      if (!omitir && (unidad.tipo === 'tablas' || unidad.tipo === 'seccion')) {
+        t.etapa = unidad.tipo === 'seccion' ? t.etapa : 'llenando_tablas';
+        let pend = (unidad.tablas ?? []).filter((tb) => !res.tablas.has(tb.id));
         let motivo = '';
         for (let ronda = 0; ronda <= config.reintentos && pend.length > 0; ronda++) {
           const primera = st.tablas_completadas + 1;
-          t.mensaje = `Procesando «${st.nombre}» — tabla${pend.length > 1 ? 's' : ''} ${primera}${pend.length > 1 ? `–${primera + pend.length - 1}` : ''} de ${st.tablas_totales}`;
+          t.mensaje = unidad.tipo === 'seccion'
+            ? `Procesando «${st.nombre}» — faltan ${pend.length} tabla${pend.length === 1 ? '' : 's'} (misma sesión)`
+            : `Procesando «${st.nombre}» — tabla${pend.length > 1 ? 's' : ''} ${primera}${pend.length > 1 ? `–${primera + pend.length - 1}` : ''} de ${st.tablas_totales}`;
           guardar(t);
           const lote = { ...unidad, tablas: pend };
           const fallidas = [];
@@ -395,7 +457,7 @@ export async function ejecutar(t, ia) {
       t.preguntas_total = hechas + t.preguntas.length;
       t.pausas = (t.pausas ?? 0) + 1;
       t.pausado_en = ahora();
-      t.reanudacion = { unidad: actual.i, coherencia, llamadas, res: { campos: [...res.campos], tablas: [...res.tablas] } };
+      t.reanudacion = { unidad: actual.i, coherencia, llamadas, claude_sesion: claudeSesion, res: { campos: [...res.campos], tablas: [...res.tablas] } };
       t.estado = 'esperando_datos';
       t.etapa = 'esperando_datos';
       t.mensaje = `Necesito ${t.preguntas.length === 1 ? 'un dato' : `${t.preguntas.length} datos`} para continuar.`;

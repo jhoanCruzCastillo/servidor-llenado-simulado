@@ -27,10 +27,45 @@ tocar(() => writeFileSync(contador, String(n)));
 
 const salida = (result, extra = {}) => {
   console.log(JSON.stringify({
-    type: 'result', subtype: 'success', is_error: false, result, num_turns: 1, total_cost_usd: 0,
+    type: 'result', subtype: 'success', is_error: false, result, num_turns: 1, total_cost_usd: 0, session_id: extra.session_id ?? 'falso-sesion',
     usage: { input_tokens: 1000, output_tokens: 500, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }, ...extra,
   }));
 };
+
+function extraerCampos(prompt) {
+  return [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)].map((m) => {
+    const opcion = m[2]?.split(' | ')[0]?.trim();
+    return opcion
+      ? { id: m[1], valor_propuesto: opcion, estado: 'extraido', confianza: 0.9, fuente: 'falso', evidencia: '' }
+      : { id: m[1], valor_propuesto: null, estado: 'no_encontrado', confianza: 0, fuente: '', evidencia: '' };
+  });
+}
+
+function extraerTablas(prompt) {
+  const idsLinea = prompt.match(/TABLAS_IDS: ([^\n]+)/)?.[1];
+  if (idsLinea) {
+    const rutas = [...prompt.matchAll(/- `([^`]+)` — id `([^`]+)`/g)];
+    return idsLinea.split(',').map((s) => s.trim()).filter(Boolean).map((id) => {
+      const ruta = rutas.find((m) => m[2] === id)?.[1];
+      let valor = [];
+      if (ruta) {
+        try {
+          const md = readFileSync(ruta, 'utf8');
+          const actual = md.split(/^Tabla actual[^\n]*\n/m)[1]?.split('\n')[0];
+          try { valor = JSON.parse(actual); } catch { /* sin tabla actual */ }
+        } catch { /* guía no leíble */ }
+      }
+      return { identificador: id, valor, fuente: 'falso' };
+    });
+  }
+  return prompt.split(/={19} TABLA /).slice(1).map((b) => {
+    const identificador = b.match(/^(\S+) =+/)?.[1];
+    const actual = b.split(/^Tabla actual[^\n]*\n/m)[1]?.split('\n')[0];
+    let valor = [];
+    try { valor = JSON.parse(actual); } catch { /* sin tabla actual */ }
+    return { identificador, valor, fuente: 'falso' };
+  });
+}
 
 // ── Modo chat: `--output-format stream-json` (misma forma de eventos que el Claude Code real) ──────────────────────────
 if (args.includes('stream-json')) {
@@ -123,23 +158,19 @@ if (iMcp >= 0) {
     salida(texto(r).match(/B1 = "([^"]+)"/)?.[1] ?? 'no pude leer B1');
     process.exit(0);
   }
-  if (/# Tarea: llenar los CAMPOS/.test(prompt)) {
+  const esSeccion = /# Tarea: llenar la SECCIÓN/.test(prompt);
+  const esCampos = /# Tarea: llenar los CAMPOS/.test(prompt);
+  if (esSeccion || esCampos) {
     const id = prompt.match(/seccion_id: `([^`]+)`/)?.[1];
-    const hoja = prompt.match(/Mira la hoja «([^»]+)»/)?.[1];
+    const hoja = prompt.match(/Mira la hoja «([^»]+)»/)?.[1] ?? prompt.match(/hoja: «([^»]+)»/)?.[1];
     if (hoja) await cliente.callTool({ name: 'ver_hoja', arguments: { hoja, rango: 'A1:T20' } });
-    const campos = [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)].map((m) => {
-      const opcion = m[2]?.split(' | ')[0]?.trim();
-      return opcion
-        ? { id: m[1], valor_propuesto: opcion, estado: 'extraido', confianza: 0.9, fuente: 'falso', evidencia: '' }
-        : { id: m[1], valor_propuesto: null, estado: 'no_encontrado', confianza: 0, fuente: '', evidencia: '' };
-    });
+    const campos = extraerCampos(prompt);
     // FALSO_PREGUNTAR=1: como la IA real ante un dato que falta, llama a pedir_datos (una vez: tras la respuesta el prompt trae «Datos que la persona respondió»)
     // y usa esa respuesta como valor del primer campo para poder comprobar que llegó hasta la ficha.
     if (process.env.FALSO_PREGUNTAR === '1' && campos.length) {
       const respuestaPersona = prompt.match(/Respuesta de la persona \(dato del proyecto\): (.+)/)?.[1]?.trim();
       const sinDato = /La persona NO tiene este dato/.test(prompt);
       if (!respuestaPersona && !sinDato) {
-        // Si el campo es de catálogo (desplegable), la pregunta lleva sus opciones: la respuesta tiene que ser una de ellas.
         const opciones = [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)][0]?.[2]?.split(' | ').map((o) => o.trim()).filter(Boolean) ?? [];
         const r = await cliente.callTool({ name: 'pedir_datos', arguments: { preguntas: [{ pregunta: `Prueba MCP: ¿qué va en el campo ${campos[0].id}?`, motivo: 'No consta en los documentos.', campo_ids: [campos[0].id], opciones }] } });
         console.error(texto(r).slice(0, 200));
@@ -147,17 +178,19 @@ if (iMcp >= 0) {
         campos[0] = { id: campos[0].id, valor_propuesto: respuestaPersona, estado: 'extraido', confianza: 1, fuente: 'Respuesta de la persona', evidencia: '' };
       }
     }
-    const r = await cliente.callTool({ name: 'llenar_campos', arguments: { seccion_id: id, campos } });
-    console.error(texto(r).slice(0, 300));
+    if (campos.length) {
+      const r = await cliente.callTool({ name: 'llenar_campos', arguments: { seccion_id: id, campos } });
+      console.error(texto(r).slice(0, 300));
+    }
+    if (esSeccion) {
+      const tablas = extraerTablas(prompt);
+      if (tablas.length) {
+        const r = await cliente.callTool({ name: 'llenar_tablas', arguments: { tablas } });
+        console.error(texto(r).slice(0, 300));
+      }
+    }
   } else {
-    const bloques = prompt.split(/={19} TABLA /).slice(1);
-    const tablas = bloques.map((b) => {
-      const identificador = b.match(/^(\S+) =+/)?.[1];
-      const actual = b.split(/^Tabla actual[^\n]*\n/m)[1]?.split('\n')[0];
-      let valor = [];
-      try { valor = JSON.parse(actual); } catch { /* sin «tabla actual» legible */ }
-      return { identificador, valor, fuente: 'falso' };
-    });
+    const tablas = extraerTablas(prompt);
     const r = await cliente.callTool({ name: 'llenar_tablas', arguments: { tablas } });
     console.error(texto(r).slice(0, 300));
   }
@@ -166,23 +199,12 @@ if (iMcp >= 0) {
   process.exit(0);
 }
 
-if (/# Tarea: llenar los CAMPOS/.test(prompt)) {
+if (/# Tarea: llenar la SECCIÓN/.test(prompt)) {
   const id = prompt.match(/seccion_id: `([^`]+)`/)?.[1];
-  const campos = [...prompt.matchAll(/^- (\S+) — "[^\n]*?"(?: \(tipo: [^)]*\))?(?: — opciones válidas: ([^\n]*?))?(?: — |$)/gm)].map((m) => {
-    const opcion = m[2]?.split(' | ')[0]?.trim();
-    return opcion
-      ? { id: m[1], valor_propuesto: opcion, estado: 'extraido', confianza: 0.9, fuente: 'falso', evidencia: '' }
-      : { id: m[1], valor_propuesto: null, estado: 'no_encontrado', confianza: 0, fuente: '', evidencia: '' };
-  });
-  salida(JSON.stringify({ seccion_id: id, campos }));
+  salida(JSON.stringify({ seccion_id: id, campos: extraerCampos(prompt), tablas: extraerTablas(prompt) }));
+} else if (/# Tarea: llenar los CAMPOS/.test(prompt)) {
+  const id = prompt.match(/seccion_id: `([^`]+)`/)?.[1];
+  salida(JSON.stringify({ seccion_id: id, campos: extraerCampos(prompt) }));
 } else {
-  const bloques = prompt.split(/={19} TABLA /).slice(1);
-  const tablas = bloques.map((b) => {
-    const identificador = b.match(/^(\S+) =+/)?.[1];
-    const actual = b.split(/^Tabla actual[^\n]*\n/m)[1]?.split('\n')[0];
-    let valor = [];
-    try { valor = JSON.parse(actual); } catch { /* tabla sin «tabla actual» legible */ }
-    return { identificador, valor, fuente: '' };
-  });
-  salida(JSON.stringify({ tablas }));
+  salida(JSON.stringify({ tablas: extraerTablas(prompt) }));
 }
