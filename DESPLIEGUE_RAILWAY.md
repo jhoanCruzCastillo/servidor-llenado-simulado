@@ -47,7 +47,7 @@ Sin volumen funciona, pero cada redespliegue borra paquetes, resultados y estado
 | `SERVIDOR_TOKEN` | Una clave larga y aleatoria. Genérala con: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. La plataforma la enviará como `Authorization: Bearer …`. **Obligatoria**: sin ella (o con menos de 16 caracteres) el servidor no arranca. |
 | `IA` | `claude` |
 | `CLAUDE_CODE_OAUTH_TOKEN` | El token del paso 2 |
-| `CLAUDE_MODELO` | `sonnet` (cuida la cuota; `opus` gasta mucho más) |
+| `CLAUDE_MODELO` | `haiku` (el que menos cuota gasta). `sonnet` si el llenado sale flojo; `opus` gasta mucho más. |
 | `WEBHOOK_SECRETO` | Opcional (otra clave aleatoria) si más adelante usas el webhook |
 
 Ya vienen por defecto en la imagen: `DATA_DIR=/data`, `RETENCION_DIAS=2`, `NODE_ENV=production`. `PORT` lo pone Railway. El resto de opciones están en `.env.example`.

@@ -14,6 +14,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY src ./src
+COPY claude-plugin ./claude-plugin
 # Código de Excel de la plataforma empaquetado para Node (tools/excel-node → npm run build); se commitea ya generado.
 COPY vendor ./vendor
 COPY scripts ./scripts

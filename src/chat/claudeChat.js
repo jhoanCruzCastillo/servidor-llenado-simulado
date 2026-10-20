@@ -16,9 +16,9 @@ import { clasificarFallo, entornoLimpio, ErrorIA, matarArbol, resolverBin } from
 import { bloqueAdjuntos, dirConversacion } from './archivos.js';
 
 export const MODELOS = [
-  { id: 'sonnet', nombre: 'Sonnet', descripcion: 'Equilibrado y rápido; el que menos cuota gasta' },
+  { id: 'haiku', nombre: 'Haiku', descripcion: 'El que menos cuota gasta; rápido y ligero' },
+  { id: 'sonnet', nombre: 'Sonnet', descripcion: 'Equilibrado; gasta más cuota que Haiku' },
   { id: 'opus', nombre: 'Opus', descripcion: 'El más capaz; gasta bastante más cuota' },
-  { id: 'haiku', nombre: 'Haiku', descripcion: 'El más ligero y veloz' },
 ];
 export const modeloValido = (m) => MODELOS.some((x) => x.id === m);
 

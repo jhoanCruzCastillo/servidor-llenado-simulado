@@ -31,7 +31,7 @@ export const config = {
     bin: env.CLAUDE_BIN || 'claude',
     // Los argumentos que son rutas de archivos existentes se vuelven absolutos: Claude se lanza con otro directorio de trabajo.
     binArgs: (env.CLAUDE_BIN_ARGS || '').split(' ').filter(Boolean).map((a) => (existsSync(a) ? resolve(a) : a)),
-    modelo: env.CLAUDE_MODELO || 'sonnet',
+    modelo: env.CLAUDE_MODELO || 'haiku',
     esfuerzo: env.CLAUDE_ESFUERZO || '',
     maxTurnos: num(env.CLAUDE_MAX_TURNOS, 150),
     timeoutMs: num(env.CLAUDE_TIMEOUT_MIN, 60) * 60_000,

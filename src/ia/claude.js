@@ -9,11 +9,12 @@
  *  - Credenciales: las de `claude login` en este equipo, o CLAUDE_CODE_OAUTH_TOKEN.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
+import { argsExtensiones, HERRAMIENTAS_ARCHIVO, prepararExtensiones } from './extensiones.js';
 import { promptSistema, promptUnidad } from '../prompts.js';
 import { ErrorRespuesta, extraerJsonTolerante } from '../validar.js';
 
@@ -222,8 +223,8 @@ export function crearIAClaude() {
       const archivo = join(dirTrabajo, 'sistema.md');
       writeFileSync(archivo, promptSistema(paq, { excel: !!sesion, preguntas: !!sesion && puedePreguntar }), 'utf8');
       const dirConfig = join(config.dataDir, 'claude-llenado');
-      mkdirSync(dirConfig, { recursive: true });
-      const preparado = { archivoSistema: archivo, dirConfig };
+      const { pluginDir } = prepararExtensiones(dirConfig);
+      const preparado = { archivoSistema: archivo, dirConfig, pluginDir };
       if (sesion) {
         const mcpConfig = join(dirTrabajo, 'mcp.json');
         const servidor = resolve(dirname(fileURLToPath(import.meta.url)), '../excel/mcp-excel.js');
@@ -245,12 +246,12 @@ export function crearIAClaude() {
         '--output-format', 'json',
         '--model', c.modelo,
         '--append-system-prompt-file', preparado.archivoSistema,
-        '--tools', 'Read,Glob,Grep',
-        '--allowedTools', 'Read,Glob,Grep',
+        '--tools', HERRAMIENTAS_ARCHIVO.join(','),
+        '--allowedTools', HERRAMIENTAS_ARCHIVO.join(','),
         '--permission-mode', 'dontAsk',
         '--max-turns', String(c.maxTurnos),
-        '--setting-sources', 'project,local',
         '--strict-mcp-config',
+        ...argsExtensiones(preparado),
       ];
       if (sessionId) args.push('--resume', sessionId);
       if (c.esfuerzo) args.push('--effort', c.esfuerzo);
@@ -295,11 +296,11 @@ export function crearIAClaude() {
         '--append-system-prompt-file', preparado.archivoSistema,
         '--mcp-config', preparado.mcpConfig,
         '--strict-mcp-config',
-        '--tools', 'Read,Glob,Grep',
-        '--allowedTools', ['Read', 'Glob', 'Grep', ...mcp].join(','),
+        '--tools', HERRAMIENTAS_ARCHIVO.join(','),
+        '--allowedTools', [...HERRAMIENTAS_ARCHIVO, ...mcp].join(','),
         '--permission-mode', 'dontAsk',
         '--max-turns', String(c.maxTurnos),
-        '--setting-sources', 'project,local',
+        ...argsExtensiones(preparado),
       ];
       if (sessionId) args.push('--resume', sessionId);
       if (c.esfuerzo) args.push('--effort', c.esfuerzo);

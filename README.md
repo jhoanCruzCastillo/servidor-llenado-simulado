@@ -67,12 +67,12 @@ Cómo se garantiza que gasta suscripción y no API de pago:
 
 - **No se usa `--bare`**: ese modo ignora el login y solo acepta `ANTHROPIC_API_KEY`.
 - Al proceso hijo se le **quitan** `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` y `ANTHROPIC_BASE_URL` (si estuvieran definidas, Claude Code las preferiría y cobraría por API) y las variables `CLAUDE_CODE_*` de otra sesión. Solo `PERMITIR_API_KEY=1` lo desactiva.
-- Claude Code arranca **sin tu configuración de usuario** (`--setting-sources project,local`, sin MCP), con **solo lectura** (`--tools Read,Glob,Grep`) y sin guardar sesiones: no hereda hooks, plugins ni `CLAUDE.md` personales.
+- Claude Code del llenado usa un `CLAUDE_CONFIG_DIR` propio (`DATA_DIR/claude-llenado`), **Haiku** por defecto, el plugin local `claude-plugin/` (skills `buscar-expediente` y `llenar-seccion-excel`) y `disableBundledSkills`: no se instalan plugins del marketplace (su catálogo gasta cuota en cada turno aunque no se usen). Herramientas: Read, Glob, Grep, Skill y el MCP del Excel.
 
 Límites a tener presentes (plan Pro):
 
-- La cuota es por ventana de ~5 h y semanal, compartida con tu uso normal de Claude. Una ficha completa de Educación (66 campos + 118 tablas ≈ 40–60 llamadas, cada una leyendo documentos) **puede agotarla**. Si pasa, el trabajo termina en `error` con `limite_de_uso_ia` (reintentable) y hay que esperar a que se reinicie la ventana.
-- Por eso se puede **acotar** el llenado para pruebas (ver `probar.js` abajo) y el modelo por defecto es `sonnet` (`CLAUDE_MODELO`).
+- La cuota es por ventana de ~5 h y semanal, compartida con tu uso normal de Claude. Una ficha de Educación sigue pudiendo agotarla; el trabajo termina en `error` con `limite_de_uso_ia` (reintentable) hasta que se reinicie la ventana.
+- Por eso se puede **acotar** el llenado para pruebas (ver `probar.js` abajo) y el modelo por defecto es `haiku` (`CLAUDE_MODELO`). `sonnet` llena mejor y gasta más; `opus`, mucho más.
 - Una sola llamada a la vez (`CONCURRENCIA_TRABAJOS=1`): no se paraleliza para no quemar la cuota.
 - Es para **desarrollo y pruebas nuestras**. Un servicio de producción que atienda a clientes no debería correr sobre una suscripción personal; ahí corresponde la API (o el plan que Anthropic indique para ese uso).
 
