@@ -8,17 +8,16 @@ Qué debe contener el `.zip` al que apunta `resultado.url` cuando el trabajo lle
 
 ```
 resultado-llenado-ia_<trabajo_id>/            ← un único directorio raíz (recomendado; también aceptamos los archivos en la raíz del zip)
-├── respuesta.json        OBLIGATORIO · Los datos llenados. Es lo que la plataforma aplica a la ficha.
-├── ficha_llenada.xlsx    ESPERADO   · El Excel oficial con esos mismos datos escritos. Copia de respaldo / descarga.
-│                         (.xlsm si el formato base lo es, como en FTE-DESARROLLO-PROD: `ficha_llenada.xlsm`)
-└── resumen.json          OBLIGATORIO · Metadatos del trabajo: conteos, modelos usados, advertencias.
+├── respuesta.json        OBLIGATORIO · Lo que la plataforma escribe en la ficha.
+├── resumen.json          OBLIGATORIO · Metadatos del trabajo: conteos, modelos usados, advertencias.
+└── ficha_llenada.xlsx    OPCIONAL   · El Excel oficial ya escrito. La plataforma no lo aplica.
 ```
 
 | Archivo | Obligatorio | Para qué lo usamos |
 |---|---|---|
-| `respuesta.json` | **Sí** | **Fuente de verdad del resultado.** Lo validamos y lo escribimos en la ficha del usuario, campo por campo y tabla por tabla. Si falta o es inválido, el trabajo se considera fallido. |
-| `ficha_llenada.xlsx` | Esperado («ambos, por si acaso») | Lo guardamos junto a la ficha como Excel generado por el servidor para revisión y descarga, y como respaldo si el usuario quiere contrastar. **No sobrescribe** los datos de la ficha: manda `respuesta.json`. Si el servidor no puede generarlo, se omite y se declara en `resumen.json → excel.incluido: false`; el trabajo igual se aplica. |
+| `respuesta.json` | **Sí** | **Fuente de verdad del resultado.** Al 100% se valida y se guarda en la ficha (mismas reglas que el llenado directo). Si falta, el trabajo se considera fallido. |
 | `resumen.json` | **Sí** | Auditoría: cuánto se llenó, con qué modelos, qué advertencias hubo. Lo mostramos en el detalle del llenado. |
+| `ficha_llenada.xlsx` | No | No se escribe en la ficha. Si viene, se ignora. |
 
 Reglas del zip: UTF-8; sin rutas absolutas ni `..`; sin archivos extra (si agregan alguno, lo ignoramos); tamaño razonable (el ejemplo pesa 8 MB, casi todo el Excel).
 
@@ -222,6 +221,6 @@ Aunque confíen en la IA, **la plataforma valida todo** antes de escribir en la 
 - [ ] En modo `estricto`: ningún `estado: "inferido"` y ninguna celda con dato sin respaldo en un documento real.
 - [ ] Ids exactos (`identificador`, no UUID, en campos; ids de columna reales en tablas).
 - [ ] Opciones idénticas al catálogo; números sin miles; una celda = un dato.
-- [ ] `ficha_llenada.xlsx` parte del formato base y abre sin reparación (o `excel.incluido: false` con motivo).
+- [ ] `ficha_llenada.xlsx` es opcional; si viene, no bloquea el apply.
 - [ ] `resumen.json` coherente con `respuesta.json` (los conteos suman).
 - [ ] `sha256` y `bytes` informados en el estado coinciden con el zip publicado.

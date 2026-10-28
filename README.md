@@ -121,7 +121,7 @@ Pruebas sin cuota: `npm run probar:chat` (streaming, reanudar, sesión perdida, 
 
 ## El Excel es el entregable (modo `SALIDA=excel`, el normal)
 
-El resultado es el **Excel oficial de la plantilla ya llenado** (`ficha_llenada.xlsx`/`.xlsm` dentro del zip); `respuesta.json` lo acompaña con el detalle (estado, confianza, fuente de cada campo) y como respaldo. La plataforma lee ese Excel con el volcado del superusuario.
+El zip de resultado trae `respuesta.json` (lo que la plataforma **aplica** a la ficha) y, si el modo lo genera, `ficha_llenada.xlsx`/`.xlsm` como adjunto. La plataforma no depende del Excel.
 
 - **La IA ve y llena el Excel.** Claude Code recibe tres herramientas (servidor MCP propio, `src/excel/mcp-excel.js`): `ver_hoja` (una hoja tal como está: etiquetas, valores, lo que calculan las fórmulas, desplegables con sus opciones, fusiones), `llenar_campos` y `llenar_tablas`. Las guías del paquete (`seccion.md`, tablas, `estructura.json`) siguen siendo su ayuda para saber qué va en cada campo, pero el Excel manda en celdas, formatos y opciones.
 - **Entrega con herramientas, no con texto**: los argumentos tienen esquema, así que ya no puede devolver un JSON roto. Cada entrega se valida (ids, opciones, forma exacta de las tablas) y se **escribe en el Excel**; la respuesta de la herramienta le dice qué quedó escrito, qué se descartó y por qué, y puede corregir dentro de la misma conversación.
