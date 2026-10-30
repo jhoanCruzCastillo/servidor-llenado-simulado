@@ -7,15 +7,20 @@
  *   GET    /v1/chat/conversaciones/:id                     con todos sus mensajes
  *   PATCH  /v1/chat/conversaciones/:id      {titulo?, modelo?}
  *   DELETE /v1/chat/conversaciones/:id
- *   POST   /v1/chat/conversaciones/:id/mensajes   {contenido, modelo?}   → respuesta en streaming (SSE)
- *   POST   /v1/chat/conversaciones/:id/regenerar  {modelo?}              → vuelve a responder al último mensaje (SSE)
+ *   POST   /v1/chat/conversaciones/:id/mensajes   {contenido, modelo?, archivos?}   → SSE
+ *   POST   /v1/chat/conversaciones/:id/regenerar  {modelo?}                         → SSE
+ *   POST   /v1/chat/conversaciones/:id/archivos?nombre=…   cuerpo crudo del archivo
+ *   GET    /v1/chat/conversaciones/:id/archivos/:archivoId
+ *   DELETE /v1/chat/conversaciones/:id/archivos/:archivoId
  *
  * SSE: Content-Type text/event-stream; eventos `inicio`, `delta` {texto}, `fin` {mensaje, conversacion}, `error` {codigo, mensaje, reintentable}.
  * Si el cliente corta la conexión, se detiene Claude y lo ya generado se guarda como respuesta «interrumpida».
  */
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { config } from '../config.js';
 import { ErrorIA } from '../ia/claude.js';
 import * as almacen from './almacen.js';
+import * as archivos from './archivos.js';
 import { generar, modeloValido, MODELOS } from './claudeChat.js';
 
 const MAX_MENSAJE = 20_000;
@@ -46,6 +51,17 @@ async function leerJson(req, max = 1_000_000) {
   }
 }
 
+async function leerBinario(req, max) {
+  let tam = 0;
+  const trozos = [];
+  for await (const t of req) {
+    tam += t.length;
+    if (tam > max) throw Object.assign(new Error('Archivo demasiado grande.'), { http: 413, codigo: 'archivo_muy_grande' });
+    trozos.push(t);
+  }
+  return Buffer.concat(trozos);
+}
+
 /** Comprueba, ANTES de modificar la conversación, que se puede generar ahora. Responde el error y devuelve false si no. */
 function hayCapacidad(res, conv) {
   if (activos.has(conv.id)) { fallo(res, 409, 'respuesta_en_curso', 'Esta conversación ya está generando una respuesta.'); return false; }
@@ -64,6 +80,12 @@ async function responder(req, res, conv, { modelo, reiniciar }) {
   const ctl = new AbortController();
   res.on('close', () => { if (!res.writableEnded) ctl.abort(); });
 
+  const hayArchivos = archivos.hay(conv.id);
+  if (hayArchivos !== !!conv.session_con_archivos) {
+    conv.session_id = null;
+    reiniciar = true;
+  }
+
   let parcial = '';
   try {
     sse('inicio', { conversacion: almacen.resumen(conv), modelo });
@@ -72,12 +94,14 @@ async function responder(req, res, conv, { modelo, reiniciar }) {
       sessionId: conv.session_id,
       modelo,
       reiniciar,
+      dirArchivos: hayArchivos ? archivos.dirDe(conv.id) : null,
       signal: ctl.signal,
       onDelta: (texto) => { parcial += texto; sse('delta', { texto }); },
     });
     const m = almacen.nuevoMensaje('asistente', r.texto, { modelo, uso: r.uso });
     conv.mensajes.push(m);
     conv.session_id = r.sessionId ?? conv.session_id;
+    conv.session_con_archivos = hayArchivos;
     almacen.guardar(conv);
     sse('fin', { mensaje: m, conversacion: almacen.resumen(conv) });
   } catch (e) {
@@ -107,7 +131,7 @@ export async function manejarChat(req, res, ruta) {
 
   try {
     if (req.method === 'GET' && ruta === '/v1/chat/modelos') {
-      json(res, 200, { modelos: MODELOS, predeterminado: config.claude.modelo });
+      json(res, 200, { modelos: MODELOS, predeterminado: config.claude.modelo, adjuntos: archivos.limites() });
       return true;
     }
 
@@ -122,7 +146,7 @@ export async function manejarChat(req, res, ruta) {
       }
     }
 
-    if ((m = /^\/v1\/chat\/conversaciones\/(cnv_[0-9a-f]{12})(\/mensajes|\/regenerar)?$/.exec(ruta))) {
+    if ((m = /^\/v1\/chat\/conversaciones\/(cnv_[0-9a-f]{12})(\/mensajes|\/regenerar|\/archivos(?:\/(arc_[0-9a-f]{16}))?)?$/.exec(ruta))) {
       const conv = almacen.obtener(m[1]);
       if (!conv) { fallo(res, 404, 'conversacion_no_encontrada', 'La conversación no existe.'); return true; }
 
@@ -141,19 +165,56 @@ export async function manejarChat(req, res, ruta) {
         }
       }
 
+      if (m[2] === '/archivos' && req.method === 'POST') {
+        const q = new URL(req.url, 'http://localhost').searchParams;
+        const nombre = (q.get('nombre') || '').trim();
+        if (!nombre) { fallo(res, 400, 'nombre_faltante', 'Falta el nombre del archivo (?nombre=).'); return true; }
+        const cuerpo = await leerBinario(req, archivos.limites().max_bytes_por_archivo);
+        const adjunto = archivos.guardar(conv.id, { nombre, tipo: req.headers['content-type'] || '', cuerpo });
+        json(res, 201, adjunto);
+        return true;
+      }
+
+      if (m[2]?.startsWith('/archivos/') && m[3]) {
+        if (req.method === 'GET') {
+          const rutaBin = archivos.rutaBinaria(conv.id, m[3]);
+          const meta = archivos.obtener(conv.id, m[3]);
+          if (!rutaBin || !meta || !existsSync(rutaBin)) { fallo(res, 404, 'archivo_no_encontrado', 'El archivo no existe.'); return true; }
+          res.writeHead(200, {
+            'Content-Type': meta.tipo || 'application/octet-stream',
+            'Content-Length': statSync(rutaBin).size,
+            'Content-Disposition': `inline; filename="${meta.nombre.replace(/"/g, '')}"`,
+          });
+          createReadStream(rutaBin).pipe(res);
+          return true;
+        }
+        if (req.method === 'DELETE') {
+          if (!archivos.quitar(conv.id, m[3])) { fallo(res, 404, 'archivo_no_encontrado', 'El archivo no existe.'); return true; }
+          res.writeHead(204);
+          res.end();
+          return true;
+        }
+      }
+
       if (req.method === 'POST' && m[2] === '/mensajes') {
         const b = await leerJson(req);
         const contenido = typeof b.contenido === 'string' ? b.contenido.trim() : '';
-        if (!contenido) { fallo(res, 400, 'mensaje_vacio', 'El mensaje está vacío.'); return true; }
+        const idsArchivos = Array.isArray(b.archivos) ? b.archivos.filter((id) => typeof id === 'string') : [];
+        if (!contenido && idsArchivos.length === 0) { fallo(res, 400, 'mensaje_vacio', 'El mensaje está vacío.'); return true; }
         if (contenido.length > MAX_MENSAJE) { fallo(res, 413, 'mensaje_muy_largo', `El mensaje supera ${MAX_MENSAJE} caracteres.`); return true; }
+        if (idsArchivos.length > config.chatMaxArchivos) { fallo(res, 413, 'demasiados_archivos', `Máximo ${config.chatMaxArchivos} archivos por mensaje.`); return true; }
         const modelo = b.modelo ?? conv.modelo ?? config.claude.modelo;
         if (!modeloValido(modelo)) { fallo(res, 400, 'modelo_invalido', `Modelo no válido: ${modelo}.`); return true; }
         if (!hayCapacidad(res, conv)) return true;
         if (conv.mensajes.at(-1)?.rol === 'usuario') { fallo(res, 409, 'respuesta_pendiente', 'El último mensaje no tiene respuesta: usa «regenerar».'); return true; }
 
-        conv.mensajes.push(almacen.nuevoMensaje('usuario', contenido));
+        const adjuntos = archivos.deIds(conv.id, idsArchivos);
+        const texto = contenido || (adjuntos.length === 1 ? `Revisa el archivo «${adjuntos[0].nombre}».` : 'Revisa los archivos adjuntos.');
+        conv.mensajes.push(almacen.nuevoMensaje('usuario', texto, adjuntos.length ? { archivos: adjuntos } : {}));
         conv.modelo = modelo;
-        if (conv.tituloAutomatico && conv.mensajes.length === 1) conv.titulo = almacen.tituloDesde(contenido);
+        if (conv.tituloAutomatico && conv.mensajes.length === 1) {
+          conv.titulo = almacen.tituloDesde(contenido || adjuntos[0]?.nombre || 'Archivo');
+        }
         almacen.guardar(conv);
         await responder(req, res, conv, { modelo, reiniciar: false });
         return true;
@@ -174,7 +235,7 @@ export async function manejarChat(req, res, ruta) {
       }
     }
   } catch (e) {
-    if (!res.headersSent) fallo(res, e.http ?? 500, e.http ? 'solicitud_invalida' : 'interno', e.message);
+    if (!res.headersSent) fallo(res, e.http ?? 500, e.codigo ?? (e.http ? 'solicitud_invalida' : 'interno'), e.message);
     else res.end();
     return true;
   }

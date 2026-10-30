@@ -110,8 +110,10 @@ Además del llenado, el servidor expone un chat sobre Claude Code (streaming, si
 | `GET /v1/chat/conversaciones/{id}` | Conversación con todos sus mensajes |
 | `PATCH /v1/chat/conversaciones/{id}` `{titulo?, modelo?}` | Renombra / cambia de modelo |
 | `DELETE /v1/chat/conversaciones/{id}` | Elimina |
-| `POST /v1/chat/conversaciones/{id}/mensajes` `{contenido, modelo?}` | Responde en **streaming (SSE)** |
+| `POST /v1/chat/conversaciones/{id}/mensajes` `{contenido, modelo?, archivos?}` | Responde en **streaming (SSE)**. `archivos` son ids subidos antes. Se puede enviar solo un archivo, sin texto. |
 | `POST /v1/chat/conversaciones/{id}/regenerar` `{modelo?}` | Vuelve a responder al último mensaje (SSE) |
+| `POST /v1/chat/conversaciones/{id}/archivos?nombre=…` | Sube un archivo (cuerpo crudo). Claude lo lee con `Read` desde la carpeta de la conversación. |
+| `GET / DELETE /v1/chat/conversaciones/{id}/archivos/{archivoId}` | Descarga o quita un adjunto |
 
 **SSE:** eventos `inicio`, `delta` `{texto}`, `fin` `{mensaje, conversacion}` y `error` `{codigo, mensaje, reintentable}`. Si el cliente corta la conexión se detiene Claude y lo generado se guarda como respuesta *interrumpida*.
 

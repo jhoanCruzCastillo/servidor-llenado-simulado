@@ -11,6 +11,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, w
 import { join } from 'node:path';
 import { config } from '../config.js';
 import { ahora } from '../store.js';
+import * as archivos from './archivos.js';
 
 const dir = join(config.dataDir, 'chat');
 mkdirSync(dir, { recursive: true });
@@ -50,7 +51,9 @@ export function crear({ titulo, modelo }) {
 }
 
 export function eliminar(id) {
-  if (idValido(id)) rmSync(ruta(id), { force: true });
+  if (!idValido(id)) return;
+  rmSync(ruta(id), { force: true });
+  archivos.eliminarDe(id);
 }
 
 /** Resumen para la lista (sin los mensajes), de la más reciente a la más antigua. */

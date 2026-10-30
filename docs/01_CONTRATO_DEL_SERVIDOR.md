@@ -69,7 +69,8 @@ Cabeceras que enviamos:
 {
   "referencia": { "ficha_id": 140, "plantilla_codigo": "FTE-EBR-V03" },
   "callback_url": "https://api.proyectafacil.example/api/llenado-externo/webhook",
-  "solicitado_por": "usuario-123"
+  "solicitado_por": "usuario-123",
+  "oauth_token": "sk-ant-oat01-… (opcional; suscripción Claude del cliente. El servidor NO lo ecoa ni lo guarda en el estado público.)"
 }
 ```
 

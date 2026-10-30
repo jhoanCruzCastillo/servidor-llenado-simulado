@@ -44,6 +44,8 @@ export const config = {
 
   // Chat de prueba (UI en React): respuestas simultáneas permitidas y orígenes web que pueden llamar a la API (CORS).
   chatConcurrencia: Math.max(1, num(env.CHAT_CONCURRENCIA, 2)),
+  chatMaxArchivoMB: Math.max(1, num(env.CHAT_MAX_ARCHIVO_MB, 100)),
+  chatMaxArchivos: Math.max(1, num(env.CHAT_MAX_ARCHIVOS, 20)),
   corsOrigenes: (env.CORS_ORIGENES || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean),
 
   tablasPorLlamada: Math.max(1, num(env.TABLAS_POR_LLAMADA, 4)),

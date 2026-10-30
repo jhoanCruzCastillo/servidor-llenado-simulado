@@ -67,6 +67,12 @@ function mensajeCola(t) {
   return delante > 0 ? `En cola — posición ${delante + 1}` : 'En cola…';
 }
 
+/** Token de la suscripción del cliente. No se ecoa en el estado ni se escribe en disco. */
+function extraerOAuth(metadata) {
+  const t = typeof metadata?.oauth_token === 'string' ? metadata.oauth_token.trim() : '';
+  return t.startsWith('sk-ant-oat') ? t : null;
+}
+
 // ── Crear trabajo ─────────────────────────────────────────────────────────────
 async function leerMultipart(req) {
   const web = new Request(`http://localhost${req.url}`, { method: 'POST', headers: req.headers, body: Readable.toWeb(req), duplex: 'half' });
@@ -126,6 +132,7 @@ async function crearTrabajo(req, res) {
       referencia: metadata.referencia ?? null,
       callback_url: typeof metadata.callback_url === 'string' ? metadata.callback_url : null,
       simulacion: metadata.simulacion ?? null,
+      oauth_token: extraerOAuth(metadata),
       rutaRaiz,
       manifiesto,
       secciones: paq.secciones.map((s) => ({

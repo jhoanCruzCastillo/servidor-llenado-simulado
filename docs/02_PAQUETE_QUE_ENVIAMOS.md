@@ -91,7 +91,8 @@ Lo primero que debe leer el servidor (y lo que validan en `POST /v1/trabajos`):
 | `secciones[]` | arreglo | Por sección: `id`, `numero`, `nombre`, `carpeta`, `campos_de_texto`, `tablas`. **Esta lista define el trabajo y los totales del porcentaje** (`campos_de_texto` + `tablas` de cada una). |
 | `documentos[]` | arreglo | Documentos del usuario: `nombre` original, `extension`, `caracteres_de_texto` y, si aplica, `texto_recortado`. |
 | `tablas_omitidas[]` | arreglo | Tablas que **no** se piden (con motivo). No deben aparecer en la respuesta. |
-| `advertencias[]` | arreglo | Problemas al armar el paquete (p. ej. «el original de X no pudo descargarse; solo hay copia en texto»). Léanlas: pueden explicar una carencia. |
+| `advertencias[]` | arreglo | Problemas al armar el paquete (p. ej. ejemplo de referencia ausente, texto extraído recortado). Léanlas: pueden explicar una carencia. |
+| `errores_binarios[]` | arreglo | Si no está vacío, **la plataforma no envía el zip**: faltó bajar el Excel base o un documento de la fuente de la verdad (S3/Cloudinary). El otro lado no debería ver este caso. |
 | `archivos[]` | arreglo | **Todos** los archivos del zip: `ruta` (relativa a la raíz), `bytes`, `sha256`. Sirve para verificar integridad. |
 
 ### 3.3 `01_instrucciones/` — cómo debe comportarse la IA
@@ -156,7 +157,7 @@ Sirven para ver la **forma, el nivel de detalle y el estilo** de redacción. **N
 
 1. Si caben en la ventana de contexto del modelo: pasar los originales (PDF/imágenes/texto) completos a cada solicitud, usando caché de prompt para no pagar de más.
 2. Si no caben: extraer el texto (o usar `documentos_texto/`), dividirlo en fragmentos y recuperar por relevancia los que correspondan a cada sección/tabla (búsqueda por palabras clave o embeddings), siempre incluyendo `prompt_del_usuario.md` completo.
-3. Para PDFs escaneados o con planos/tablas: pasar páginas como imagen al modelo, o usar OCR.
+3. Para PDFs escaneados o con planos/tablas: pasar el PDF original al modelo (o rasterizarlo / OCR del lado del servidor de llenado). El paquete no trae JPEG de páginas: solo los originales en `documentos/`.
 
 La calidad del llenado depende sobre todo de esta parte; prueben con el paquete de ejemplo (sus 4 documentos son pequeños, pero la ficha real del cliente puede traer decenas de MB).
 

@@ -6,7 +6,7 @@
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { config } from './config.js';
-import { ErrorIA } from './ia/claude.js';
+import { ErrorIA, conTokenOAuth } from './ia/claude.js';
 import { ensamblar } from './resultado.js';
 import { ahora, dirDe, guardar } from './store.js';
 import { cargarPaquete } from './paquete.js';
@@ -60,6 +60,11 @@ function lineasDeCoherencia(sec, campos) {
 }
 
 export async function ejecutar(t, ia) {
+  const token = typeof t.oauth_token === 'string' && t.oauth_token.startsWith('sk-ant-oat') ? t.oauth_token : null;
+  return conTokenOAuth(token, () => ejecutarCuerpo(t, ia));
+}
+
+async function ejecutarCuerpo(t, ia) {
   const ctl = new AbortController();
   controles.set(t.id, ctl);
   const log = crearLog(t);

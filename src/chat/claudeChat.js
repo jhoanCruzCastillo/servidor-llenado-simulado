@@ -1,6 +1,6 @@
 /**
  * Chat con Claude Code (CLI) en modo streaming (`claude -p --output-format stream-json`), con la misma credencial de suscripción
- * que el resto del servidor. Es un chat sin herramientas: Claude Code se usa como motor de conversación.
+ * que el resto del servidor. Sin archivos es un chat sin herramientas; con adjuntos, Claude lee desde la carpeta de la conversación.
  *
  * Eventos que se leen de stdout (una línea JSON cada uno):
  *   {"type":"system","subtype":"init","session_id":…}                                  → id de sesión (para --resume)
@@ -26,6 +26,13 @@ const SISTEMA =
   + 'Usa Markdown cuando ayude (listas, tablas, bloques de código indicando el lenguaje). '
   + 'No tienes herramientas ni acceso a archivos, internet ni a ejecutar código en esta conversación: no finjas hacerlo. Si no sabes algo, dilo.';
 
+const SISTEMA_CON_ARCHIVOS =
+  'Esta es una conversación de chat. La persona puede adjuntar archivos; están en tu directorio de trabajo, con sus nombres originales. '
+  + 'Usa la herramienta Read para abrirlos (PDF, imágenes, texto; de Word/Excel/PowerPoint hay un .txt extraído al lado). '
+  + 'No hay Excel de ficha ni JSON de plantilla: solo lo que la persona puso en este chat. '
+  + 'Responde en el idioma de la persona (por defecto español). Markdown cuando ayude. '
+  + 'No ejecutes comandos ni escribas archivos. Si un archivo no se puede leer, dilo.';
+
 // Por defecto el chat usa la MISMA configuración de Claude Code que el resto del servidor (HOME del usuario). Con CHAT_CONFIG_DIR las sesiones
 // pueden vivir en otro directorio (p. ej. el volumen) para sobrevivir a redespliegues; sin ello se reconstruyen con el historial.
 const dirConfig = process.env.CHAT_CONFIG_DIR || null;
@@ -42,37 +49,55 @@ export function prepararChat() {
 
 const comillas = (s) => `"${String(s).replaceAll('"', '\\"')}"`;
 
+function textoDeMensaje(m) {
+  const nombres = (m.archivos ?? []).map((a) => a.nombre).filter(Boolean);
+  const texto = String(m.contenido ?? '').trim();
+  if (nombres.length === 0) return texto;
+  const lista = nombres.map((n) => `«${n}»`).join(', ');
+  return texto ? `${texto}\n[Archivos: ${lista}]` : `[Archivos: ${lista}]`;
+}
+
+function bloqueArchivos(adjuntos) {
+  const nombres = (adjuntos ?? []).map((a) => a.nombre).filter(Boolean);
+  if (nombres.length === 0) return '';
+  return '\n\nArchivos en el directorio de trabajo (ábrelo con Read; no hay Excel ni JSON de ficha, solo lo adjunto):\n'
+    + nombres.map((n) => `- ${n}`).join('\n');
+}
+
 /** Historial como texto, para reanudar una conversación cuando la sesión de Claude Code ya no existe o se regenera una respuesta. */
 function promptConHistorial(mensajes) {
   const previos = mensajes.slice(0, -1);
   const ultimo = mensajes.at(-1);
-  if (previos.length === 0) return ultimo.contenido;
-  const hist = previos.map((m) => `${m.rol === 'usuario' ? 'Persona' : 'Asistente'}: ${m.contenido}`).join('\n\n');
-  return `Esta es la conversación hasta ahora:\n\n${hist}\n\n---\nContinúa la conversación respondiendo al último mensaje de la persona, sin mencionar este resumen.\n\nPersona: ${ultimo.contenido}`;
+  const cierre = textoDeMensaje(ultimo) + bloqueArchivos(ultimo.archivos);
+  if (previos.length === 0) return cierre;
+  const hist = previos.map((m) => `${m.rol === 'usuario' ? 'Persona' : 'Asistente'}: ${textoDeMensaje(m)}`).join('\n\n');
+  return `Esta es la conversación hasta ahora:\n\n${hist}\n\n---\nContinúa la conversación respondiendo al último mensaje de la persona, sin mencionar este resumen.\n\nPersona: ${cierre}`;
 }
 
 /** Una ejecución de `claude`. Devuelve { texto, sessionId, uso } o lanza ErrorIA. `onDelta(texto)` recibe cada trozo. */
-function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta }) {
+function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta, cwd, conArchivos }) {
   const args = [
     '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--model', modelo,
-    '--append-system-prompt', SISTEMA,
-    '--tools', '',
+    '--append-system-prompt', conArchivos ? SISTEMA_CON_ARCHIVOS : SISTEMA,
+    '--tools', conArchivos ? 'Read,Glob' : '',
     '--permission-mode', 'dontAsk',
-    '--max-turns', '3',
+    '--max-turns', conArchivos ? '12' : '3',
     '--setting-sources', 'project,local',
     '--strict-mcp-config',
   ];
+  if (conArchivos) args.push('--allowedTools', 'Read,Glob');
   if (resumeId) args.push('--resume', resumeId);
 
   const { cmd, args: previos, shell } = resolverBin();
   const todos = [...previos, ...args];
   const env = dirConfig ? { ...entornoLimpio(), CLAUDE_CONFIG_DIR: dirConfig } : entornoLimpio();
+  const cwdFinal = cwd || dirTrabajo;
 
   return new Promise((resolve, reject) => {
     const proc = shell
-      ? spawn([comillas(cmd), ...todos.map(comillas)].join(' '), { cwd: dirTrabajo, env, shell: true, windowsHide: true })
-      : spawn(cmd, todos, { cwd: dirTrabajo, env, windowsHide: true });
+      ? spawn([comillas(cmd), ...todos.map(comillas)].join(' '), { cwd: cwdFinal, env, shell: true, windowsHide: true })
+      : spawn(cmd, todos, { cwd: cwdFinal, env, windowsHide: true });
 
     let buffer = '';
     let stderr = '';
@@ -140,16 +165,18 @@ function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta }) {
  * Genera la respuesta a la última entrada de `mensajes` (que debe ser de la persona).
  * Reanuda la sesión de Claude Code si existe; si ya no existe (o se pide `reiniciar`, p. ej. al regenerar), reconstruye el contexto con el historial.
  */
-export async function generar({ mensajes, sessionId, modelo, reiniciar = false, signal, onDelta }) {
+export async function generar({ mensajes, sessionId, modelo, reiniciar = false, signal, onDelta, dirArchivos = null }) {
   const ultimo = mensajes.at(-1);
+  const conArchivos = !!dirArchivos;
+  const extras = { modelo, signal, onDelta, cwd: dirArchivos, conArchivos };
   if (!reiniciar && sessionId) {
     try {
-      return await ejecutarUnaVez({ prompt: ultimo.contenido, resumeId: sessionId, modelo, signal, onDelta });
+      return await ejecutarUnaVez({ prompt: textoDeMensaje(ultimo) + bloqueArchivos(ultimo.archivos), resumeId: sessionId, ...extras });
     } catch (e) {
       const sesionPerdida = e instanceof ErrorIA && /no conversation found|session.*(not found|does not exist)/i.test(`${e.detalle ?? ''} ${e.message}`);
       if (!sesionPerdida) throw e;
     }
   }
-  return ejecutarUnaVez({ prompt: promptConHistorial(mensajes), resumeId: null, modelo, signal, onDelta });
+  return ejecutarUnaVez({ prompt: promptConHistorial(mensajes), resumeId: null, ...extras });
 }
 

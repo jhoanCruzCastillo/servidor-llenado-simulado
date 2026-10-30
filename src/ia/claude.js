@@ -8,6 +8,7 @@
  *    Claude Code la preferiría sobre la suscripción y se cobraría por API.
  *  - Credenciales: las de `claude login` en este equipo, o CLAUDE_CODE_OAUTH_TOKEN.
  */
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,6 +17,13 @@ import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
 import { promptCampos, promptSistema, promptTablas } from '../prompts.js';
 import { ErrorRespuesta, extraerJsonTolerante } from '../validar.js';
+
+/** Token OAuth del cliente para ESTE trabajo (metadata.oauth_token). Si no hay, se usa CLAUDE_CODE_OAUTH_TOKEN del servidor. */
+const oauthAls = new AsyncLocalStorage();
+
+export function conTokenOAuth(token, fn) {
+  return oauthAls.run(token || null, fn);
+}
 
 export class ErrorIA extends Error {
   constructor(codigo, mensaje, { reintentable = false, detalle = null } = {}) {
@@ -35,6 +43,10 @@ export function entornoLimpio(proceso = process.env, permitirApiKey = config.cla
     if (k.startsWith('CLAUDE_CODE_') && k !== 'CLAUDE_CODE_OAUTH_TOKEN') continue;
     if (k === 'CLAUDECODE') continue;
     env[k] = v;
+  }
+  const extra = oauthAls.getStore();
+  if (typeof extra === 'string' && extra.startsWith('sk-ant-oat')) {
+    env.CLAUDE_CODE_OAUTH_TOKEN = extra;
   }
   return env;
 }

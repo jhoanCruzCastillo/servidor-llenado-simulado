@@ -20,7 +20,9 @@ export const TERMINALES = ['completado', 'error', 'cancelado'];
 
 export function guardar(t) {
   t.actualizado_en = ahora();
-  writeFileSync(join(dirDe(t.id), 'estado.json'), JSON.stringify(t, null, 2));
+  const copia = { ...t };
+  delete copia.oauth_token;
+  writeFileSync(join(dirDe(t.id), 'estado.json'), JSON.stringify(copia, null, 2));
 }
 
 export function registrar(t) {
