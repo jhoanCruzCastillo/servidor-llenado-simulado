@@ -15,6 +15,7 @@ import { Readable } from 'node:stream';
 import { config } from './config.js';
 import { crearIAClaude, infoClaude, probarClaude, probarClaudeExcel } from './ia/claude.js';
 import { crearIASimulada } from './ia/simulada.js';
+import { crearIALocal, infoLocal } from './ia/local.js';
 import { cargarPaquete, ErrorPaquete, validarYExtraer } from './paquete.js';
 import { prepararChat } from './chat/claudeChat.js';
 import { manejarChat } from './chat/rutas.js';
@@ -30,9 +31,9 @@ if (config.enProduccion && (config.token === 'dev-token-cambiar' || config.token
   process.exit(1);
 }
 
-const ia = config.ia === 'simulada' ? crearIASimulada() : crearIAClaude();
-/** Estado de Claude Code, calculado una vez al arrancar (se muestra en /v1/salud). */
-let estadoIA = config.ia === 'simulada' ? { tipo: 'simulada' } : { tipo: 'claude', instalado: null };
+const ia = config.ia === 'simulada' ? crearIASimulada() : config.ia === 'local' ? crearIALocal() : crearIAClaude();
+/** Estado de la IA (Claude Code u Ollama), calculado una vez al arrancar (se muestra en /v1/salud). */
+let estadoIA = config.ia === 'simulada' ? { tipo: 'simulada' } : { tipo: config.ia === 'local' ? 'local' : 'claude', instalado: null };
 
 // ── Respuestas ────────────────────────────────────────────────────────────────
 const enviar = (res, codigo, cuerpo, cabeceras = {}) => {
@@ -71,6 +72,10 @@ function mensajeCola(t) {
 function extraerOAuth(metadata) {
   const t = typeof metadata?.oauth_token === 'string' ? metadata.oauth_token.trim() : '';
   return t.startsWith('sk-ant-oat') ? t : null;
+}
+
+function extraerMotor(metadata) {
+  return metadata?.motor_llenado === 'skill' ? 'skill' : 'estructura';
 }
 
 // ── Crear trabajo ─────────────────────────────────────────────────────────────
@@ -133,6 +138,7 @@ async function crearTrabajo(req, res) {
       callback_url: typeof metadata.callback_url === 'string' ? metadata.callback_url : null,
       simulacion: metadata.simulacion ?? null,
       oauth_token: extraerOAuth(metadata),
+      motor_llenado: extraerMotor(metadata),
       rutaRaiz,
       manifiesto,
       secciones: paq.secciones.map((s) => ({
@@ -212,14 +218,14 @@ async function manejar(req, res) {
 
   // Comprueba que la credencial de Claude funciona (una llamada mínima real; gasta una fracción ínfima de cuota).
   if (req.method === 'POST' && ruta === '/v1/diagnostico/claude') {
-    if (config.ia !== 'claude') return enviar(res, 200, { ok: true, mensaje: 'La IA configurada es «simulada»; no hay nada que probar.' });
+    if (config.ia !== 'claude') return enviar(res, 200, { ok: true, mensaje: `La IA configurada es «${config.ia}»; esta prueba es solo para Claude Code.` });
     const r = await probarClaude();
     return enviar(res, r.ok ? 200 : 502, { ...r, claude: estadoIA });
   }
 
   // Prueba real de las herramientas con Excel: Claude Code llama a ver_hoja sobre un Excel de prueba (confirma permisos, MCP y nombres de herramientas).
   if (req.method === 'POST' && ruta === '/v1/diagnostico/claude-excel') {
-    if (config.ia !== 'claude') return enviar(res, 200, { ok: true, mensaje: 'La IA configurada es «simulada»; no hay nada que probar.' });
+    if (config.ia !== 'claude') return enviar(res, 200, { ok: true, mensaje: `La IA configurada es «${config.ia}»; esta prueba es solo para Claude Code.` });
     const r = await probarClaudeExcel();
     return enviar(res, r.ok ? 200 : 502, r);
   }
@@ -294,6 +300,7 @@ prepararChat();
 barrer();
 setInterval(barrer, 3600_000).unref();
 if (config.ia === 'claude') infoClaude().then((i) => { estadoIA = { tipo: 'claude', ...i }; console.log('Claude Code:', JSON.stringify(i)); });
+if (config.ia === 'local') infoLocal().then((i) => { estadoIA = { tipo: 'local', ...i }; console.log('IA local:', JSON.stringify(i)); });
 
 const servidor = createServer((req, res) => {
   manejar(req, res).catch((e) => {
@@ -305,9 +312,25 @@ const servidor = createServer((req, res) => {
 servidor.listen(config.puerto, () => {
   console.log(`Servidor de llenado simulado escuchando en el puerto ${config.puerto}  ·  URL: ${config.urlPublica}  ·  IA: ${ia.nombre}  ·  datos: ${config.dataDir}`);
   if (config.token === 'dev-token-cambiar') console.log('  (token de desarrollo: dev-token-cambiar — cámbialo en .env con SERVIDOR_TOKEN)');
+  procesarCola();
 });
 
-// Railway envía SIGTERM al redesplegar: se deja de aceptar conexiones. Los trabajos en curso se marcan como error reintentable al volver a arrancar.
+// Claude Code (cmd.exe en Windows) a veces manda Ctrl+C al grupo de consola al terminar un `-p`.
+// Eso no debe tumbar el servidor ni el llenado en curso.
+for (const senal of ['SIGINT', 'SIGBREAK', 'SIGHUP']) {
+  process.on(senal, () => {
+    console.log(`${senal}: ignorado; el servidor de llenado sigue.`);
+  });
+}
+process.on('uncaughtException', (e) => {
+  console.error('uncaughtException (el servidor sigue):', e);
+});
+process.on('unhandledRejection', (e) => {
+  console.error('unhandledRejection (el servidor sigue):', e);
+});
+process.stdin?.on?.('error', () => {});
+
+// Railway envía SIGTERM al redesplegar. Los trabajos a medias se reencolan al volver a arrancar.
 process.on('SIGTERM', () => {
   console.log('SIGTERM: cerrando…');
   servidor.close(() => process.exit(0));

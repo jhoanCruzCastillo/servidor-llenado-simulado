@@ -3,14 +3,17 @@
  * valida y acumula lo aceptado, reporta el avance y al final ensambla el zip de resultado.
  * Estrategia recomendada en docs/servidor-llenado-externo/02_PAQUETE_QUE_ENVIAMOS.md §4.
  */
-import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { config } from './config.js';
 import { ErrorIA, conTokenOAuth } from './ia/claude.js';
 import { ensamblar } from './resultado.js';
 import { ahora, dirDe, guardar } from './store.js';
 import { cargarPaquete } from './paquete.js';
-import { Sesion } from './excel/sesion.js';
+import { cosecharConocimiento, escribirSettingsAgente } from './conocimiento.js';
+import { hallarExcelLlenado } from './excel/hallarLlenado.js';
+import { formatoDelPaquete, Sesion } from './excel/sesion.js';
+import { prepararVistaSkill } from './vistaSkill.js';
 import { ErrorRespuesta, validarCampos, validarTabla } from './validar.js';
 import { notificar } from './webhook.js';
 
@@ -177,14 +180,107 @@ async function ejecutarCuerpo(t, ia) {
     sesion = new Sesion(paq, join(dirDe(t.id), 'excel'));
     const aExcel = config.salida === 'excel' && sesion.disponible;
     conHerramientas = aExcel && typeof ia.ejecutarUnidad === 'function';
-    const preparado = ia.preparar(paq, dirDe(t.id), { sesion: conHerramientas ? sesion : undefined });
-    log('inicio', { ia: ia.nombre, secciones: paq.secciones.length, modo: paq.modo, salida: conHerramientas ? 'excel_con_herramientas' : aExcel ? 'excel_desde_json' : 'json' });
+    const motor = t.motor_llenado === 'skill' || paq.motor === 'skill' ? 'skill' : 'estructura';
+    let cwdClaude = paq.rutaRaiz;
+    if (motor === 'skill') {
+      cwdClaude = join(dirDe(t.id), 'claude-vista');
+      prepararVistaSkill(paq, cwdClaude);
+      escribirSettingsAgente(cwdClaude);
+    }
+    const preparado = ia.preparar(paq, dirDe(t.id), {
+      sesion: motor === 'skill' ? undefined : (conHerramientas ? sesion : undefined),
+      motor,
+      cwdClaude,
+    });
+    log('inicio', { ia: ia.nombre, secciones: paq.secciones.length, modo: paq.modo, motor, salida: motor === 'skill' ? 'excel_agente_libre' : conHerramientas ? 'excel_con_herramientas' : aExcel ? 'excel_desde_json' : 'json' });
 
     // Los números de sección pueden venir como "2" o "02" según la plantilla: se comparan sin ceros a la izquierda.
     const normNum = (x) => (/^\d+$/.test(String(x)) ? String(Number(x)) : String(x));
     const filtro = t.simulacion?.secciones ? new Set(t.simulacion.secciones.map(normNum)) : null;
     const maxLlamadas = t.simulacion?.max_unidades ?? Infinity;
     const unidades = construirUnidades(paq);
+
+    if (motor === 'skill' && typeof ia.ejecutarLibre === 'function') {
+      t.etapa = 'llenando_secciones';
+      t.mensaje = 'Claude está razonando cómo llenar la ficha…';
+      guardar(t);
+      const desdeMs = Date.now();
+      const formato = formatoDelPaquete(paq.rutaRaiz);
+      const ejemplo = ['ejemplo.xlsx', 'ejemplo.xlsm'].map((n) => join(paq.rutaRaiz, '03_ejemplo_referencia', n)).find((p) => existsSync(p)) ?? null;
+
+      const pollCtl = new AbortController();
+      const poller = (async () => {
+        while (!pollCtl.signal.aborted) {
+          try {
+            const hayExcel = !!hallarExcelLlenado(cwdClaude, { formato, ejemplo, desdeMs });
+            let notas = 0;
+            try { notas = readdirSync(join(cwdClaude, 'conocimiento')).length; } catch { /* aún no hay carpeta */ }
+            t.mensaje = hayExcel
+              ? 'Claude está escribiendo el Excel…'
+              : notas > 0
+                ? 'Claude está documentando el llenado…'
+                : 'Claude está razonando cómo llenar la ficha…';
+            for (const s of t.secciones) if (s.estado === 'pendiente') s.estado = 'en_curso';
+            guardar(t);
+          } catch { /* el progreso no puede tumbar el llenado */ }
+          try { await dormir(4000, pollCtl.signal); } catch { break; }
+        }
+      })();
+
+      let falloLibre = null;
+      try {
+        llamadas++;
+        const r = await ia.ejecutarLibre(paq, { signal: ctl.signal, preparado });
+        sumarUso(r.uso);
+        if (r.agotoTurnos) avisar({ ambito: 'ficha', identificador: 'ficha', mensaje: 'Se agotaron los turnos; se entrega lo que haya en el Excel.' });
+      } catch (e) {
+        falloLibre = e;
+      } finally {
+        pollCtl.abort();
+        await poller.catch(() => {});
+      }
+
+      const excel = hallarExcelLlenado(cwdClaude, { formato, ejemplo, desdeMs });
+      if (!excel) throw falloLibre ?? new ErrorRespuesta('Claude terminó sin dejar un Excel llenado (ficha_llenada.xlsx).');
+      if (falloLibre && falloLibre.codigo !== 'cancelado') {
+        avisar({ ambito: 'ficha', identificador: 'ficha', mensaje: `Claude se detuvo (${falloLibre.message?.slice(0, 140) ?? 'error'}); se entrega el Excel que alcanzó a escribir.` });
+      }
+      if (falloLibre?.codigo === 'cancelado' || ctl.signal.aborted) throw Object.assign(new Error('Cancelado.'), { codigo: 'cancelado' });
+      sesion.adoptarExcel(excel);
+      try {
+        await sesion.aplicarVolcado();
+      } catch (e) {
+        avisar({ ambito: 'ficha', identificador: 'ficha', mensaje: `Se entregó el Excel, pero no se pudo volcar a JSON: ${String(e.message).slice(0, 180)}` });
+      }
+
+      const originales = new Set((t.manifiesto?.archivos ?? []).map((a) => String(a.ruta || '').replaceAll('\\', '/')));
+      const cosechados = cosecharConocimiento(cwdClaude, join(dirDe(t.id), 'conocimiento-cosechado'), originales);
+      log('conocimiento_cosechado', { archivos: cosechados.length });
+
+      for (const s of paq.secciones) {
+        const st = sec(s.id);
+        const campos = sesion.res.campos.get(s.id);
+        if (campos) {
+          res.campos.set(s.id, campos);
+          coherencia.push(...lineasDeCoherencia(s, campos));
+        }
+        const conValor = (campos ?? []).filter((c) => c && c.valor_propuesto).length;
+        st.campos_completados = conValor;
+        let tablasEntregadas = 0;
+        for (const tb of s.tablas) {
+          if (sesion.res.tablas.has(tb.id)) {
+            res.tablas.set(tb.id, sesion.res.tablas.get(tb.id));
+            tablasEntregadas++;
+          }
+        }
+        st.tablas_completadas = tablasEntregadas;
+        if ((s.campos.length > 0 || s.tablas.length > 0) && conValor === 0 && tablasEntregadas === 0) {
+          st.fallos = (st.fallos ?? 0) + 1;
+        }
+        st.estado = st.fallos ? 'con_errores' : 'completada';
+      }
+      guardar(t);
+    } else {
 
     // Cuántas unidades le quedan a cada sección, para saber cuándo cierra.
     const pendientes = new Map();
@@ -323,6 +419,8 @@ async function ejecutarCuerpo(t, ia) {
         else if (st.omitidas) avisar({ ambito: 'seccion', identificador: st.numero, mensaje: `${st.omitidas} bloque(s) de la sección quedaron sin llenar por el límite de la simulación.` });
       }
       guardar(t);
+    }
+
     }
 
     // Ensamblado y publicación (el estado solo pasa a «completado» cuando el zip ya es descargable).

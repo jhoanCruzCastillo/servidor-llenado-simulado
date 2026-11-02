@@ -1,0 +1,2439 @@
+{
+ "plantilla": "FTE-EBR-V03",
+ "campos": {
+  "01.01.3": "MEJORAMIENTO Y AMPLIACIÓN",
+  "01.01.4": {
+   "no": "X"
+  },
+  "01.02.3": "0105 Educación Secundaria",
+  "01.03.1": {
+   "nivel": "Gobierno Local",
+   "entidad": "Municipalidad Provincial de Jaén",
+   "nombre": "Oficina de Programación Multianual de Inversiones — MP Jaén",
+   "responsable": "Econ. Patricia Huamán Vásquez"
+  },
+  "01.03.2": {
+   "nivel": "Gobierno Local",
+   "entidad": "Municipalidad Provincial de Jaén",
+   "nombre": "Unidad Formuladora — Municipalidad Provincial de Jaén",
+   "responsable": "Arq. Miguel Ángel Ruiz Tello"
+  },
+  "01.03.3": {
+   "nivel": "Gobierno Local",
+   "entidad": "Municipalidad Provincial de Jaén",
+   "nombre": "Unidad Ejecutora de Inversiones — Municipalidad Provincial de Jaén",
+   "responsable": "Ing. César Augusto Delgado Díaz CIP 154821"
+  },
+  "01.03.4": "Municipalidad Provincial de Jaén",
+  "01.04.1": {
+   "primaria": "X",
+   "secundaria": "X"
+  },
+  "01.04.2": "X",
+  "01.04.3": "X",
+  "01.04.4": {
+   "primaria": {
+    "espacio": "Distrito",
+    "anio": 2025,
+    "valor": 1,
+    "contribucion": 1
+   },
+   "secundaria": {
+    "espacio": "Distrito",
+    "anio": 2025,
+    "valor": 1,
+    "contribucion": 1
+   }
+  },
+  "01.04.6": {
+   "primaria": {
+    "espacio": "Distrito",
+    "anio": 2025,
+    "valor": 12,
+    "contribucion": 12
+   },
+   "secundaria": {
+    "espacio": "Distrito",
+    "anio": 2025,
+    "valor": 38,
+    "contribucion": 38
+   }
+  },
+  "01.05.4": 121808,
+  "01.05.5": {
+   "ie1": {
+    "interviene": "Sí"
+   }
+  },
+  "01.05.6": {
+   "1": {
+    "altitud": 842,
+    "interviene": "Sí"
+   },
+   "2": {
+    "altitud": 842,
+    "interviene": "Sí"
+   }
+  },
+  "01.05.7": {
+   "ampliacion": "-",
+   "recuperacion": "-",
+   "mejoramiento": "-",
+   "mejoramiento_y_ampliacion": "X"
+  },
+  "01.06.1": {
+   "1": {
+    "localidad": "Bellavista / caserío El Palto"
+   }
+  },
+  "01.06.2": "El área de influencia es el distrito de Bellavista (Jaén, Cajamarca), rural. La única I.E. pública de Primaria y Secundaria en un radio de 6 km es la 16021. Caminata de estudiantes de primaria: 10–25 min (hasta 1,4 km). Secundaria: 15–40 min (hasta 2,8 km). No hay I.E. privada. No se incluye Inicial ni EBA en este local.",
+  "01.07.1": "Población distrital ~12 400 (INEI proyección 2025). Economía: café, cacao, ganadería menor. Matrícula 2025 de la I.E.: 156 primaria + 94 secundaria = 250. 38 adolescentes de 12-16 años no matriculados en secundaria (padrón UGEL Jaén 2025) y 12 niños de 6-11 años no matriculados en primaria. Idioma predominante: castellano. Organizaciones: APAFA, ronda campesina El Palto.",
+  "01.08.1": {
+   "agua": {
+    "red_localidad": "No",
+    "ie01": "No",
+    "provision_alt": "Sí",
+    "tipo_alt": "(1) Pozo Propio ",
+    "comentario": "Pozo 18 m; no potable continua"
+   },
+   "desague": {
+    "red_localidad": "No",
+    "ie01": "No",
+    "provision_alt": "Sí",
+    "tipo_alt": "(5) Pozo sin tratamiento",
+    "comentario": "Letrinas; se reemplaza por PTAR compacta"
+   },
+   "electricidad": {
+    "red_localidad": "Sí",
+    "ie01": "Sí",
+    "provision_alt": "No",
+    "comentario": "Red SEAL; acometida sobrecargada"
+   },
+   "alumbrado": {
+    "red_localidad": "No",
+    "ie01": "No",
+    "provision_alt": "No",
+    "comentario": "Sin postes en el tramo final"
+   },
+   "telefonia": {
+    "red_localidad": "Sí",
+    "ie01": "Sí",
+    "provision_alt": "Sí",
+    "tipo_alt": "(2) Señal de Celular",
+    "comentario": "Claro 3G intermitente"
+   },
+   "internet": {
+    "red_localidad": "No",
+    "ie01": "No",
+    "provision_alt": "Sí",
+    "tipo_alt": "(2) Señal de Celular",
+    "comentario": "Datos del director; AIP no opera"
+   },
+   "residuos": {
+    "red_localidad": "No",
+    "ie01": "No",
+    "provision_alt": "Sí",
+    "tipo_alt": "(1) Recolección y quemado en la IE",
+    "comentario": "Quema semanal"
+   },
+   "gas": {
+    "red_localidad": "No",
+    "ie01": "No",
+    "provision_alt": "No",
+    "comentario": "No hay red ni balones institucionales"
+   }
+  },
+  "01.08.3": {
+   "t01": {
+    "adjunta": "Sí"
+   }
+  },
+  "01.08.7": {
+   "t01": {
+    "area": 2850,
+    "area_util": 2610,
+    "perimetro": 218
+   }
+  },
+  "01.08.4": {
+   "t01": {
+    "limites": "Sí"
+   }
+  },
+  "01.08.8": {
+   "t01": {
+    "x": 758420,
+    "y": 9373110
+   }
+  },
+  "01.08.5": {
+   "t01": {
+    "cerco": "(3) No Cuenta con Cerco"
+   }
+  },
+  "01.08.6": {
+   "t01": {
+    "forma": "(2) Irregular"
+   }
+  },
+  "01.08.9": {
+   "llano": {
+    "t01": "-"
+   },
+   "inclinado": {
+    "t01": "X"
+   },
+   "muy_inclinado": {
+    "t01": "-"
+   },
+   "accidentado": {
+    "t01": "-"
+   }
+  },
+  "01.08.10": {
+   "t01": {
+    "adjunta": "SI"
+   }
+  },
+  "01.08.11": {
+   "t01": {
+    "kg_cm2": 1.42
+   }
+  },
+  "01.08.12": {
+   "t01": {
+    "m": 4.8
+   }
+  },
+  "01.08.13": {
+   "grava": {
+    "t01": "-"
+   },
+   "arena": {
+    "t01": "-"
+   },
+   "limos_baja": {
+    "t01": "X"
+   },
+   "limos_alta": {
+    "t01": "-"
+   },
+   "organicos": {
+    "t01": "-"
+   }
+  },
+  "01.08.14": {
+   "profesional": "Ing. Rosa Elena Culqui Díaz",
+   "cip": "186432"
+  },
+  "01.08.15": "3 pabellones de adobe y quincha (1994-2005): 4 aulas de primaria, 3 de secundaria (un aula en 2.° turno), dirección, 2 SSHH precarios, kiosco APAFA. Material predominante adobe. Se requiere demolición total de los 3 pabellones. No hay laboratorio, biblioteca, AIP, tópico ni cerco.",
+  "01.08.16": {
+   "estructuras": "Muros de adobe con fisuras a 45°, sin diafragma rígido; no reforzable (E.030). Demolición.",
+   "electricas": "Acometida 220 V, 1 tablero oxidado, cableado expuesto; no operativa para 12 aulas.",
+   "sanitarias": "Pozo y letrinas; no hay red de desagüe ni reserva elevada suficiente."
+  },
+  "01.08.17": {
+   "ini_aula": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "ini_psicomotricidad": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "ini_sum": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "pri_aula": {
+    "total": 4,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 4,
+    "comentario": "Adobe y quincha (1994-2005); fisuras 45°; demolición total"
+   },
+   "pri_aip": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "pri_lab": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "pri_biblioteca": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "pri_auditorio": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "pri_sum": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "sec_aula": {
+    "total": 3,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 3,
+    "comentario": "Adobe; un aula funciona en 2.° turno; demolición total"
+   },
+   "sec_aip": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "sec_lab": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "sec_biblioteca": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "sec_auditorio": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "sec_sum": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "administracion": {
+    "total": 1,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 1,
+    "comentario": "Dirección en pabellón de adobe; demolición"
+   },
+   "cocina": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "servicios_generales": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "deposito": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "residencia": {
+    "total": 0,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 0
+   },
+   "sshh": {
+    "total": 2,
+    "no_interv": 0,
+    "construccion": 0,
+    "reforzamiento": 0,
+    "remodelacion": 0,
+    "reparacion": 0,
+    "demoler": 2,
+    "comentario": "SSHH precarios (letrinas); demolición"
+   }
+  },
+  "01.08.18": {
+   "cercos": {
+    "cuenta": "No",
+    "requiere": "Sí",
+    "construccion": "X",
+    "reforzamiento": "-",
+    "remodelacion": "-",
+    "reparacion": "-",
+    "demolicion": "-",
+    "comentario": "No cuenta con cerco; se construye cerco de malla + portada"
+   },
+   "muro": {
+    "cuenta": "No",
+    "requiere": "Sí",
+    "construccion": "X",
+    "reforzamiento": "-",
+    "remodelacion": "-",
+    "reparacion": "-",
+    "demolicion": "-",
+    "comentario": "Se construye muro de contención en ladera sur"
+   },
+   "deportivo_sin_cob": {
+    "cuenta": "No",
+    "requiere": "Sí",
+    "construccion": "X",
+    "reforzamiento": "-",
+    "remodelacion": "-",
+    "reparacion": "-",
+    "demolicion": "-",
+    "comentario": "No cuenta con losa formal; se construye losa sin cobertura"
+   },
+   "deportivo_con_cob": {
+    "cuenta": "No",
+    "requiere": "No",
+    "construccion": "-",
+    "reforzamiento": "-",
+    "remodelacion": "-",
+    "reparacion": "-",
+    "demolicion": "-",
+    "comentario": "No se interviene"
+   },
+   "inst_exteriores": {
+    "cuenta": "No",
+    "requiere": "Sí",
+    "construccion": "X",
+    "reforzamiento": "-",
+    "remodelacion": "-",
+    "reparacion": "-",
+    "demolicion": "-",
+    "comentario": "Sin redes exteriores formales; se construyen redes de agua, desagüe y energía"
+   },
+   "espacios_exteriores": {
+    "cuenta": "No",
+    "requiere": "Sí",
+    "construccion": "X",
+    "reforzamiento": "-",
+    "remodelacion": "-",
+    "reparacion": "-",
+    "demolicion": "-",
+    "comentario": "Sin patio ni veredas formales; se construyen"
+   }
+  },
+  "01.08.19": {
+   "mobiliario": "210 carpetas 1998-2005, 62% fracturadas; 7 escritorios; 7 pizarras. Reposición total en 12 aulas nuevas + biblioteca + laboratorio + AIP + tópico + gestión.",
+   "equipo": "1 laptop 2019, 1 impresora fuera de servicio, 1 TV 32\", 4 parlantes APAFA. No hay kit de laboratorio ni AIP. Se dota laboratorio, AIP (20 PCs), tópico y aulas de secundaria."
+  },
+  "01.08.21": {
+   "sismos": {
+    "existe": "Sí",
+    "nivel": "Medio",
+    "antecedentes": "No",
+    "especificar": "Zona sísmica intermedia-alta",
+    "afectado": "No",
+    "mitigable": "Sí"
+   },
+   "tsunamis": {
+    "existe": "No"
+   },
+   "heladas": {
+    "existe": "No"
+   },
+   "friajes": {
+    "existe": "No"
+   },
+   "erupciones": {
+    "existe": "No"
+   },
+   "sequias": {
+    "existe": "No"
+   },
+   "granizadas": {
+    "existe": "No"
+   },
+   "lluvias": {
+    "existe": "Sí",
+    "nivel": "Alto",
+    "antecedentes": "Sí",
+    "especificar": "2017 (cada dic-mar)",
+    "afectado": "Sí",
+    "mitigable": "Sí"
+   },
+   "avalanchas": {
+    "existe": "No"
+   },
+   "huaycos": {
+    "existe": "No"
+   },
+   "deslizamientos": {
+    "existe": "No",
+    "nivel": "Bajo",
+    "antecedentes": "No",
+    "especificar": "Fuera del predio (sí en la trocha)",
+    "afectado": "No",
+    "mitigable": "Sí"
+   },
+   "erosion": {
+    "existe": "No"
+   },
+   "inundaciones": {
+    "existe": "No",
+    "antecedentes": "No",
+    "especificar": "No aplica: 18 m sobre la quebrada",
+    "afectado": "No"
+   },
+   "vientos": {
+    "existe": "No"
+   },
+   "incendios_urbanos": {
+    "existe": "No"
+   },
+   "incendios_forestales": {
+    "existe": "No"
+   },
+   "radiacion": {
+    "existe": "No"
+   }
+  },
+  "01.08.22": {
+   "aulas": {
+    "afectada": "Sí"
+   },
+   "computadoras": {
+    "afectada": "No"
+   },
+   "administrativo": {
+    "afectada": "Sí"
+   },
+   "otros_ambientes": {
+    "afectada": "Sí"
+   },
+   "redes_exteriores": {
+    "afectada": "No"
+   },
+   "cerco": {
+    "afectada": "No"
+   },
+   "mobiliarios": {
+    "afectada": "Sí"
+   },
+   "equipamientos": {
+    "afectada": "No"
+   }
+  },
+  "01.08.23": {
+   "fen": "No",
+   "peligro_mayor": "Lluvias intensas",
+   "anio": 2017
+  },
+  "01.09.1": "Sí",
+  "01.09.2": {
+   "p01": {
+    "adjunta_partida": "Sí",
+    "partida": "11067231",
+    "oficina": "Zona Registral II – Sede Chiclayo, Oficina Jaén",
+    "area": 2850,
+    "comentario": "Donación comunal 1994 inscrita"
+   }
+  },
+  "01.09.3": {
+   "p01": {
+    "area_levantamiento": 2850,
+    "compatibles": "Sí",
+    "rectificar": "No",
+    "comentario": "Variación 0 m2 (0%); área y linderos compatibles"
+   }
+  },
+  "01.09.4": {
+   "p01": {
+    "margesi": "No",
+    "comentario": "No registrado en el Margesí de Bienes Inmuebles del MINEDU"
+   }
+  },
+  "01.09.5": {
+   "p01": {
+    "minedu_titular": "Sí",
+    "entidad_titular": "-",
+    "derecho_inscrito": "No",
+    "tipo_derecho": "-",
+    "saneado_minedu": "Sí",
+    "sustentar_arreglos": "No",
+    "comentario": "Terreno saneado a favor de MINEDU; no hay derechos de terceros"
+   }
+  },
+  "01.09.6": {
+   "p01": {
+    "problema_titularidad": "No",
+    "problema_areas": "No",
+    "saneamiento_completo": "Sí",
+    "comentario": "No se requieren acciones complementarias (predio saneado)."
+   }
+  },
+  "01.09.7": {
+   "arreglos": "No",
+   "comentario_arreglos": "No aplican: el predio ya está inscrito a favor de la I.E. / MINEDU.",
+   "disponibilidad": "Sí",
+   "documento_disponibilidad": "Acta de verificación de predio libre N.° 014-2026-MPJ/UF del 03/03/2026."
+  },
+  "01.09.11": {
+   "saneamiento": "Sí",
+   "arreglos": "No aplica",
+   "disponibilidad": "Sí"
+  },
+  "01.10.1": [
+   {
+    "actor": "Estudiantes y familias",
+    "ambito": "Local",
+    "entidad": "I.E. 16021 Nuestra Señora de Guadalupe",
+    "posicion": "Beneficiario",
+    "intereses": "Percepción: hacinamiento y adobe en riesgo. Interés: mejora del servicio; no perder clases",
+    "contribucion": "Asistencia y compromiso de matrícula"
+   },
+   {
+    "actor": "APAFA I.E. 16021 y Comunidad El Palto",
+    "ambito": "Local",
+    "entidad": "APAFA / Comunidad El Palto",
+    "posicion": "Cooperante",
+    "intereses": "Percepción: deterioro cada lluvia; terreno donado en 1994. Interés: participar en O&M, conservar kiosco; uso educativo exclusivo",
+    "contribucion": "Apoyo en limpieza y O&M; respaldo al uso educativo del predio"
+   },
+   {
+    "actor": "Dirección / UGEL Jaén / DRE Cajamarca",
+    "ambito": "Regional",
+    "entidad": "UGEL Jaén / DRE Cajamarca",
+    "posicion": "Cooperante",
+    "intereses": "Percepción: incumplimiento de norma de infraestructura educativa. Interés: plazas docentes y continuidad pedagógica",
+    "contribucion": "Asignación de plazas docentes y gestión pedagógica"
+   },
+   {
+    "actor": "MP Jaén (UF, UEI, UEP, OPMI)",
+    "ambito": "Local",
+    "entidad": "Municipalidad Provincial de Jaén",
+    "posicion": "Cooperante",
+    "intereses": "Percepción: brecha rural en Bellavista. Interés: ejecutar por contrata; asumir O&M",
+    "contribucion": "Formulación, financiamiento, ejecución y O&M"
+   },
+   {
+    "actor": "MINEDU / DISAFIL / PRONIED",
+    "ambito": "Nacional",
+    "entidad": "Ministerio de Educación",
+    "posicion": "Cooperante",
+    "intereses": "Percepción: predio inscrito; mantenimiento. Interés: diseño según criterios de infraestructura educativa",
+    "contribucion": "Normativa técnica y mantenimiento anual post liquidación"
+   }
+  ],
+  "01.11.2": {
+   "causa_infra": "X",
+   "causa_mobiliario": "X",
+   "causa_equipo": "X",
+   "efecto_riesgo": "X",
+   "efecto_bajo_nivel": "X",
+   "efecto_baja_cobertura": "X"
+  },
+  "01.12.2": {
+   "medio_infra": "X",
+   "medio_mobiliario": "X",
+   "medio_equipo": "X",
+   "fin_seguridad": "X",
+   "fin_nivel": "X",
+   "fin_cobertura": "X"
+  },
+  "01.12.4": "Demolición solo del pabellón B + reforzamiento del adobe del pabellón A (incidencia 50%) + 1 pabellón nuevo de secundaria. Se descarta: el adobe remanente no cumple la E.030 ni cierra la brecha de calidad.",
+  "01.13.1": {
+   "contratacion_et": 0,
+   "elaboracion_et": 4,
+   "revision_aprobacion_et": 3,
+   "otro_a": 2
+  },
+  "01.13.4": {
+   "contratacion_ejecucion": 0,
+   "ejecucion": 12,
+   "recepcion_liquidacion": 3,
+   "otro_b": 1
+  },
+  "01.14.1": {
+   "fuentes": "SIAGIE 2021-2025; padrón de no matriculados UGEL Jaén 2025; Censo 2017 + 1,3% de crecimiento INEI.",
+   "parametros": "Crecimiento 1,3%/año. 30 alumnos/aula (rural). Zona rural. Tasa de transición primaria-secundaria 71% → 84% al año 4.",
+   "vive_area_influencia": "X",
+   "mismas_caracteristicas": "X",
+   "otros_supuestos": "X",
+   "otros_texto": "El 2.° turno de secundaria desaparece con las aulas nuevas. No se crea Inicial ni EBA. No es JEC."
+  },
+  "01.14.8": {
+   "0_1_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "0_1_demanda": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "1_2_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "1_2_demanda": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "2_3_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "2_3_demanda": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "3_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "3_demanda": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "4_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "4_demanda": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "5_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "5_demanda": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "01.14.10": {
+   "g1_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g1_demanda": [
+    27,
+    27,
+    27,
+    28,
+    28,
+    28,
+    28,
+    28,
+    28,
+    28
+   ],
+   "g2_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g2_demanda": [
+    27,
+    27,
+    27,
+    27,
+    28,
+    28,
+    28,
+    28,
+    28,
+    28
+   ],
+   "g3_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g3_demanda": [
+    27,
+    27,
+    27,
+    27,
+    27,
+    28,
+    28,
+    28,
+    28,
+    28
+   ],
+   "g4_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g4_demanda": [
+    27,
+    27,
+    27,
+    27,
+    27,
+    27,
+    28,
+    28,
+    28,
+    28
+   ],
+   "g5_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g5_demanda": [
+    26,
+    27,
+    27,
+    27,
+    27,
+    27,
+    27,
+    27,
+    28,
+    28
+   ],
+   "g6_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g6_demanda": [
+    26,
+    26,
+    27,
+    27,
+    27,
+    27,
+    27,
+    27,
+    27,
+    28
+   ]
+  },
+  "01.14.11": {
+   "g1_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g1_demanda": [
+    24,
+    25,
+    26,
+    28,
+    28,
+    28,
+    28,
+    29,
+    29,
+    29
+   ],
+   "g2_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g2_demanda": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    28,
+    28,
+    28,
+    28,
+    29
+   ],
+   "g3_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g3_demanda": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    28,
+    28,
+    28,
+    28,
+    28
+   ],
+   "g4_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g4_demanda": [
+    23,
+    25,
+    26,
+    27,
+    27,
+    28,
+    28,
+    28,
+    28,
+    28
+   ],
+   "g5_oferta": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "g5_demanda": [
+    23,
+    24,
+    26,
+    27,
+    27,
+    27,
+    28,
+    28,
+    28,
+    28
+   ]
+  },
+  "01.14.12": {
+   "primaria": {
+    "unidad": "Estudiantes"
+   },
+   "secundaria": {
+    "unidad": "Estudiantes"
+   }
+  },
+  "01.14.16": {
+   "inicial_c1": {
+    "actual": 0
+   },
+   "inicial_c2": {
+    "actual": 0
+   },
+   "primaria": {
+    "actual": 156,
+    "aulas_optimizadas": 0,
+    "max_optimizada": 30,
+    "aulas_proyecto": 6,
+    "max_proyecto": 30
+   },
+   "secundaria": {
+    "actual": 94,
+    "aulas_optimizadas": 0,
+    "max_optimizada": 30,
+    "aulas_proyecto": 5,
+    "max_proyecto": 30
+   }
+  },
+  "01.15.1": {
+   "oferta_aulas": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "max_por_aula": [
+    20,
+    20,
+    20,
+    20,
+    20,
+    20
+   ],
+   "secciones_manana": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "01.15.2": {
+   "oferta_aulas": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "max_por_aula": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+   ],
+   "secciones_manana": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ]
+  },
+  "01.15.3": {
+   "oferta_aulas": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "max_por_aula": [
+    30,
+    30,
+    30,
+    30,
+    30
+   ],
+   "secciones_manana": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ]
+  },
+  "01.15.5": [
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2028-03-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-01-02",
+    "ejec_fin": "2028-05-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-01-02",
+    "ejec_fin": "2028-05-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-01-02",
+    "ejec_fin": "2028-05-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-01-02",
+    "ejec_fin": "2028-05-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-01-02",
+    "ejec_fin": "2028-05-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-02-02",
+    "ejec_fin": "2028-06-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-02-02",
+    "ejec_fin": "2028-06-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-02-02",
+    "ejec_fin": "2028-06-01"
+   },
+   {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-02-02",
+    "ejec_fin": "2028-06-01"
+   }
+  ],
+  "01.15.6": {
+   "otras_infra": {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2027-03-02",
+    "ejec_fin": "2027-07-01"
+   },
+   "otras_mobiliario": {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-01-02",
+    "ejec_fin": "2028-05-01"
+   },
+   "otras_equipo": {
+    "et_inicio": "2026-06-02",
+    "et_fin": "2027-03-01",
+    "ejec_inicio": "2028-02-02",
+    "ejec_fin": "2028-06-01"
+   }
+  },
+  "01.15.11": "12 aulas nuevas (6P+6S). Demolición de 7 aulas de adobe. Metas de m2 en Anexo 02.",
+  "01.16.7": {
+   "gestion": 18000,
+   "expediente": 148000,
+   "supervision": 142000,
+   "liquidacion": 16784
+  },
+  "01.16.9": 0,
+  "01.16.10": {
+   "mobiliario_equipo": -0.01
+  },
+  "01.16.11": {
+   "fecha_inicio": "2027-03-02",
+   "tipo_periodo": "trimestres",
+   "numero_periodos": 6
+  },
+  "01.16.14": {
+   "obras_civiles": [
+    1084919.76,
+    1084919.76,
+    1084919.76,
+    1084919.78
+   ],
+   "contingencia": [
+    192593.7,
+    64197.9
+   ],
+   "mobiliario": [
+    null,
+    null,
+    null,
+    68828.29,
+    68828.28
+   ],
+   "equipo": [
+    null,
+    null,
+    null,
+    21158.99,
+    63476.95
+   ],
+   "gestion": [
+    3375,
+    3375,
+    3375,
+    3375,
+    3375,
+    1125
+   ],
+   "expediente": [
+    148000
+   ],
+   "supervision": [
+    32769.23,
+    32769.23,
+    32769.23,
+    32769.23,
+    10923.08
+   ],
+   "liquidacion": [
+    null,
+    null,
+    null,
+    null,
+    11189.33,
+    5594.67
+   ]
+  },
+  "01.16.16": {
+   "aporte_no": "X",
+   "aporte_monto": 0,
+   "recursos_publicos": 5143547.17
+  },
+  "01.16.21": {
+   "inicio_om": "2028-07-01",
+   "horizonte": 10
+  },
+  "01.16.23": {
+   "operacion_sin": [
+    52000,
+    52000,
+    52000,
+    52000,
+    52000,
+    52000,
+    52000,
+    52000,
+    52000,
+    52000
+   ],
+   "mantenimiento_sin": [
+    34400,
+    34400,
+    34400,
+    34400,
+    34400,
+    34400,
+    34400,
+    34400,
+    34400,
+    34400
+   ],
+   "operacion_con": [
+    71200,
+    71200,
+    71200,
+    71200,
+    71200,
+    71200,
+    71200,
+    71200,
+    71200,
+    71200
+   ],
+   "mantenimiento_con": [
+    47300,
+    47300,
+    47300,
+    47300,
+    47300,
+    47300,
+    47300,
+    47300,
+    47300,
+    47300
+   ]
+  },
+  "01.17.1": "Aulas seguras (concreto confinado), fin del doble turno, laboratorio y AIP, SSHH con agua, 310 estudiantes al año 10, menor deserción en secundaria.",
+  "01.17.2": 4120000,
+  "01.18.1": "O&M: Oficio 092-2026-MPJ/GM. UEI con 3 obras educativas 2022-2025. APAFA aporta limpieza. PRONIED mantenimiento anual post liquidación.",
+  "01.18.2": {
+   "sismos": {
+    "afecta": "Sí",
+    "peligro": "Medio",
+    "vulnerabilidad": "Alto",
+    "riesgo": "Alto",
+    "medidas": "Sistema de pórticos de concreto armado confinado según E.030",
+    "en_presupuesto": "Sí"
+   },
+   "tsunamis": {
+    "afecta": "No"
+   },
+   "heladas": {
+    "afecta": "No"
+   },
+   "friajes": {
+    "afecta": "No"
+   },
+   "erupciones": {
+    "afecta": "No"
+   },
+   "sequias": {
+    "afecta": "No"
+   },
+   "granizadas": {
+    "afecta": "No"
+   },
+   "lluvias": {
+    "afecta": "Sí",
+    "peligro": "Alto",
+    "vulnerabilidad": "Alto",
+    "riesgo": "Alto",
+    "medidas": "Drenaje perimetral y muro bajo en ladera sur",
+    "en_presupuesto": "Sí"
+   },
+   "avalanchas": {
+    "afecta": "No"
+   },
+   "huaycos": {
+    "afecta": "No"
+   },
+   "deslizamientos": {
+    "afecta": "No",
+    "peligro": "Bajo",
+    "vulnerabilidad": "Bajo",
+    "riesgo": "Bajo",
+    "medidas": "No se interviene la trocha (competencia provincial)",
+    "en_presupuesto": "No"
+   },
+   "erosion": {
+    "afecta": "No"
+   },
+   "inundaciones": {
+    "afecta": "No",
+    "peligro": "Bajo",
+    "vulnerabilidad": "Bajo",
+    "riesgo": "Bajo",
+    "medidas": "No aplica (18 m sobre la quebrada)",
+    "en_presupuesto": "No"
+   },
+   "vientos": {
+    "afecta": "No"
+   },
+   "incendios_urbanos": {
+    "afecta": "No"
+   },
+   "incendios_forestales": {
+    "afecta": "No"
+   },
+   "radiacion": {
+    "afecta": "No"
+   }
+  },
+  "01.18.4": "Municipalidad Provincial de Jaén (con UGEL Jaén en personal docente)",
+  "01.18.6": {
+   "organo_tecnico": {
+    "entidad": "Municipalidad Provincial de Jaén",
+    "compromiso": "Oficio N.° 092-2026-MPJ/GM: compromiso de asumir la O&M"
+   },
+   "disponibilidad_recursos": {
+    "entidad": "MP Jaén / APAFA I.E. 16021",
+    "compromiso": "Acta APAFA del 11/03/2026: APAFA aporta limpieza; UEI con 3 obras educativas 2022-2025"
+   },
+   "arreglos_funcionamiento": {
+    "entidad": "MINEDU / PRONIED / UGEL Jaén",
+    "compromiso": "Predio inscrito (partida 11067231); PRONIED mantenimiento anual post liquidación; informe de suelos EMS-MPJ-2026-11"
+   }
+  },
+  "01.19.1": {
+   "adm_directa": {
+    "expediente": "X"
+   },
+   "contrata": {
+    "obra": "X"
+   }
+  },
+  "01.20.1": {
+   "ordinarios": "X",
+   "determinados": "X"
+  },
+  "01.21.1": {
+   "adm_directa": "X"
+  },
+  "01.21.2": [
+   {
+    "nombre": "Arq. Miguel Ángel Ruiz Tello (UF)",
+    "especialidad": "Arquitecto"
+   },
+   {
+    "nombre": "Econ. Patricia Huamán Vásquez (OPMI)",
+    "especialidad": "Economista"
+   },
+   {
+    "nombre": "Ing. César Augusto Delgado Díaz (UEI)",
+    "especialidad": "Ing. Civil",
+    "colegiatura": "CIP 154821"
+   }
+  ],
+  "01.23.1": {
+   "viable": "X",
+   "argumentos": "Cierra 1 local de calidad + 50 persona/año de cobertura; predio saneado; UF/UEI con experiencia; O&M comprometido; la Alternativa 1 cumple la norma; la Alternativa 2 se descarta.",
+   "lecciones": "No reforzar adobe: el diagnóstico estructural de 2017 ya lo desaconsejaba.",
+   "recomendaciones": "Licitar expediente y obra por separado. Aulas prefabricadas durante 4 meses. No ocupar la losa como aula."
+  },
+  "01.24.1": {
+   "ficha_firmada": "X",
+   "anexo01": "X",
+   "anexo02": "X",
+   "anexo03": "X",
+   "anexo04": "X",
+   "anexo05": "X",
+   "formato07a": "X",
+   "diagnostico": "X",
+   "oferta_demanda": "X",
+   "propuesta_tecnica": "X",
+   "propuesta_costos": "X",
+   "evaluacion": "X"
+  },
+  "02.01.1": {
+   "fuente": "COSTOS REFERENCIALES SEGÚN RATIOS DE LA ENTIDAD",
+   "gg": 0.1,
+   "utilidad": 0.07,
+   "fecha": "2026-03-15",
+   "igv": 0.18,
+   "justificacion": "Se adoptan ratios PRONIED 2026; zona rural Bellavista, último tramo de trocha, suelo limo-arcilloso 1,42 kg/cm²."
+  },
+  "02.01.6": {
+   "Aula de Educación Primaria": {
+    "cu_uf": 2650
+   },
+   "Aula de Educación Secundaria": {
+    "cu_uf": 2650
+   },
+   "Aula de Innovación Pedagógica": {
+    "cu_uf": 2950
+   },
+   "Laboratorios y/o Talleres": {
+    "cu_uf": 2980
+   },
+   "Biblioteca Escolar": {
+    "cu_uf": 2950
+   },
+   "Espacios de circulación interior": {
+    "cu_uf": 2650
+   },
+   "Espacios de circulación interior (escalera)": {
+    "cu_uf": 3940
+   },
+   "Ambiente de Administración y/o Gestión Pedagógica": {
+    "cu_uf": 2950
+   },
+   "Ambientes de Servicios Generales": {
+    "cu_uf": 2980
+   },
+   "Depósito": {
+    "cu_uf": 2980
+   },
+   "SS.HH. y/o vestidores (SS.HH.)": {
+    "cu_uf": 5000
+   }
+  },
+  "03.01.3": 3,
+  "03.01.4": [
+   {
+    "pisos": 2,
+    "niveles": "P",
+    "nombre": "Pabellón de aulas de Primaria"
+   },
+   {
+    "pisos": 2,
+    "niveles": "S",
+    "nombre": "Pabellón de aulas de Secundaria, laboratorio, AIP y biblioteca"
+   },
+   {
+    "pisos": 1,
+    "niveles": "PS",
+    "nombre": "Pabellón de administración, tópico, depósito y SSHH generales"
+   }
+  ],
+  "03.03.1": [
+   {
+    "edificacion": 1,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Aula Primaria 1°",
+    "metrado": 54,
+    "activo": "Aula de Educación Primaria",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Aula Primaria 2°",
+    "metrado": 54,
+    "activo": "Aula de Educación Primaria",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Aula Primaria 3°",
+    "metrado": 54,
+    "activo": "Aula de Educación Primaria",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "SSHH Primaria varones/mujeres",
+    "metrado": 28,
+    "activo": "SS.HH. y/o vestidores (SS.HH.)",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Circulación 1P Primaria",
+    "metrado": 42,
+    "activo": "Espacios de circulación interior",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Aula Primaria 4°",
+    "metrado": 54,
+    "activo": "Aula de Educación Primaria",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Aula Primaria 5°",
+    "metrado": 54,
+    "activo": "Aula de Educación Primaria",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Aula Primaria 6°",
+    "metrado": 54,
+    "activo": "Aula de Educación Primaria",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Circulación 2P Primaria",
+    "metrado": 42,
+    "activo": "Espacios de circulación interior",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 1,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Escalera Primaria",
+    "metrado": 18,
+    "activo": "Espacios de circulación interior (escalera)",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Aula Secundaria 1°",
+    "metrado": 54,
+    "activo": "Aula de Educación Secundaria",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Aula Secundaria 2°",
+    "metrado": 54,
+    "activo": "Aula de Educación Secundaria",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Aula Secundaria 3°",
+    "metrado": 54,
+    "activo": "Aula de Educación Secundaria",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Laboratorio de ciencias",
+    "metrado": 72,
+    "activo": "Laboratorios y/o Talleres",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "SSHH Secundaria",
+    "metrado": 28,
+    "activo": "SS.HH. y/o vestidores (SS.HH.)",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Circulación 1P Secundaria",
+    "metrado": 48,
+    "activo": "Espacios de circulación interior",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Aula Secundaria 4°",
+    "metrado": 54,
+    "activo": "Aula de Educación Secundaria",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Aula Secundaria 5°",
+    "metrado": 54,
+    "activo": "Aula de Educación Secundaria",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Aula de Innovación Pedagógica",
+    "metrado": 64,
+    "activo": "Aula de Innovación Pedagógica",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Biblioteca Escolar",
+    "metrado": 56,
+    "activo": "Biblioteca Escolar",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 2,
+    "naturaleza": 1,
+    "ambiente": "Circulación 2P Secundaria",
+    "metrado": 48,
+    "activo": "Espacios de circulación interior",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 2,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Escalera Secundaria",
+    "metrado": 18,
+    "activo": "Espacios de circulación interior (escalera)",
+    "nivel": "S"
+   },
+   {
+    "edificacion": 3,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Dirección",
+    "metrado": 24,
+    "activo": "Ambiente de Administración y/o Gestión Pedagógica",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 3,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Secretaría / archivo",
+    "metrado": 20,
+    "activo": "Ambiente de Administración y/o Gestión Pedagógica",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 3,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Sala de docentes",
+    "metrado": 32,
+    "activo": "Ambiente de Administración y/o Gestión Pedagógica",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 3,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Tópico",
+    "metrado": 18,
+    "activo": "Ambientes de Servicios Generales",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 3,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "Depósito general",
+    "metrado": 22,
+    "activo": "Depósito",
+    "nivel": "P"
+   },
+   {
+    "edificacion": 3,
+    "piso": 1,
+    "naturaleza": 1,
+    "ambiente": "SSHH administración / inclusivo",
+    "metrado": 16,
+    "activo": "SS.HH. y/o vestidores (SS.HH.)",
+    "nivel": "P"
+   }
+  ],
+  "03.03.2": "Se verifica que la cantidad de aulas de la propuesta técnica del proyecto contempla la totalidad de la cantidad de aulas demandadas para el servicio de educación primaria y secundaria.",
+  "03.03.3": {
+   "cercos": {
+    "piso": 1,
+    "naturaleza": 1,
+    "nombre": "Cerco perimétrico de malla + portada",
+    "nivel": "P"
+   },
+   "muro": {
+    "piso": 1,
+    "naturaleza": 1,
+    "nombre": "Muro de contención ladera sur",
+    "nivel": "P"
+   },
+   "deportivo_sin_cob": {
+    "piso": 1,
+    "naturaleza": 1,
+    "nombre": "Losa deportiva sin cobertura",
+    "nivel": "P"
+   },
+   "espacios_exteriores": {
+    "piso": 1,
+    "naturaleza": 1,
+    "nombre": "Patio y veredas",
+    "nivel": "P"
+   },
+   "inst_exteriores": {
+    "piso": 1,
+    "naturaleza": 1,
+    "nombre": "Redes exteriores agua, desagüe, energía",
+    "nivel": "P"
+   }
+  },
+  "03.03.4": [
+   {
+    "naturaleza": 1,
+    "nombre": "Cerco perimétrico de malla + portada",
+    "metrado": 218,
+    "unidad": "ml",
+    "activo": "Cercos y/o Portadas",
+    "nivel": "P",
+    "cu_directo": 420
+   },
+   {
+    "naturaleza": 1,
+    "nombre": "Muro de contención ladera sur",
+    "metrado": 42,
+    "unidad": "ml",
+    "activo": "Muro de contención",
+    "nivel": "P",
+    "cu_directo": 980
+   },
+   {
+    "naturaleza": 1,
+    "nombre": "Losa deportiva sin cobertura",
+    "metrado": 288,
+    "unidad": "m2",
+    "activo": "Espacios Deportivos - sin cobertura",
+    "nivel": "P",
+    "cu_directo": 280
+   },
+   {
+    "naturaleza": 1,
+    "nombre": "Patio y veredas",
+    "metrado": 420,
+    "unidad": "m2",
+    "activo": "Espacios Exteriores",
+    "nivel": "P",
+    "cu_directo": 95
+   },
+   {
+    "naturaleza": 1,
+    "nombre": "Redes exteriores agua, desagüe, energía",
+    "metrado": 1,
+    "unidad": "glb",
+    "activo": "Instalaciones exteriores de Servicios Básicos",
+    "nivel": "P",
+    "cu_directo": 86000
+   }
+  ],
+  "03.03.5": [
+   {
+    "naturaleza": 1,
+    "actividad": "Obras provisionales (caseta, almacén)",
+    "metrado": 0.04,
+    "unidad": "%EDIF",
+    "tipo": "otros",
+    "nivel": "P"
+   },
+   {
+    "naturaleza": 1,
+    "actividad": "Demolición de adobe y retiro de escombros",
+    "metrado": 620,
+    "unidad": "m2",
+    "tipo": "otros",
+    "nivel": "P",
+    "cu_directo": 85
+   },
+   {
+    "naturaleza": 1,
+    "actividad": "Movimiento de tierras / plataforma",
+    "metrado": 2610,
+    "unidad": "m2",
+    "tipo": "otros",
+    "nivel": "P",
+    "cu_directo": 28
+   },
+   {
+    "naturaleza": 1,
+    "actividad": "Seguridad y salud (plan SSO)",
+    "metrado": 0.02,
+    "unidad": "%EDIF",
+    "tipo": "otros",
+    "nivel": "P"
+   },
+   {
+    "naturaleza": 1,
+    "actividad": "Mitigación ambiental (drenaje temporal)",
+    "metrado": 1,
+    "unidad": "glb",
+    "tipo": "otros",
+    "nivel": "P",
+    "cu_directo": 18000
+   }
+  ],
+  "03.03.6": [
+   {
+    "actividad": "Aulas prefabricadas (4 ambientes)",
+    "cantidad": 4,
+    "unidad": "amb",
+    "metrado": 216,
+    "um": "m2",
+    "nivel": "P",
+    "cu_directo": 777.7777777777778
+   },
+   {
+    "actividad": "Traslado temporal de mobiliario",
+    "cantidad": 1,
+    "unidad": "glb",
+    "metrado": 1,
+    "um": "glb",
+    "nivel": "P",
+    "cu_directo": 18000
+   }
+  ],
+  "03.03.8": {
+   "gg_obras": 314332.83,
+   "gg_contingencia": 18600,
+   "gg_mobiliario_equipo": 16101.15,
+   "utilidad_obras": 0.07,
+   "utilidad_contingencia": 0.07,
+   "utilidad_mobiliario_equipo": 0.07
+  },
+  "04.03.1": 0.08,
+  "04.02.1": {
+   "primaria": {
+    "kits": 6
+   },
+   "secundaria": {
+    "kits": 6
+   },
+   "aip": {
+    "kits": 1
+   },
+   "laboratorio": {
+    "kits": 1
+   },
+   "topico": {
+    "kits": 1
+   },
+   "otros_espacios": {
+    "kits": 1
+   }
+  },
+  "04.02.2": {
+   "secundaria": {
+    "kits": 6
+   },
+   "aip": {
+    "kits": 1
+   },
+   "laboratorio": {
+    "kits": 1
+   },
+   "topico": {
+    "kits": 1
+   }
+  },
+  "04.03.3": [
+   {
+    "ambiente": "Aula de Educación Primaria",
+    "bien": "Carpeta unipersonal de Primaria",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 30,
+    "pu": 185
+   },
+   {
+    "ambiente": "Aula de Educación Primaria",
+    "bien": "Escritorio de docente",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 420
+   },
+   {
+    "ambiente": "Aula de Educación Primaria",
+    "bien": "Silla de docente",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 95
+   },
+   {
+    "ambiente": "Aula de Educación Primaria",
+    "bien": "Pizarra acrílica",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 380
+   },
+   {
+    "ambiente": "Aula de Educación Secundaria",
+    "bien": "Carpeta unipersonal de Secundaria",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 30,
+    "pu": 195
+   },
+   {
+    "ambiente": "Aula de Educación Secundaria",
+    "bien": "Escritorio de docente",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 420
+   },
+   {
+    "ambiente": "Aula de Educación Secundaria",
+    "bien": "Silla de docente",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 95
+   },
+   {
+    "ambiente": "Aula de Educación Secundaria",
+    "bien": "Pizarra acrílica",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 380
+   },
+   {
+    "ambiente": "Aula de Educación Secundaria",
+    "bien": "Televisor 50 pulgadas / proyector",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 6,
+    "cantidad": 1,
+    "pu": 1450
+   },
+   {
+    "ambiente": "Laboratorio",
+    "bien": "Mesón de ciencias",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 8,
+    "pu": 980
+   },
+   {
+    "ambiente": "Laboratorio",
+    "bien": "Taburete de laboratorio",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 24,
+    "pu": 75
+   },
+   {
+    "ambiente": "Laboratorio",
+    "bien": "Kit de equipos de laboratorio de ciencias",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 1,
+    "pu": 12800
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Estantería metálica (Biblioteca Escolar)",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 8,
+    "pu": 520
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Mesa de lectura (Biblioteca Escolar)",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 6,
+    "pu": 340
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Silla de lectura (Biblioteca Escolar)",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 24,
+    "pu": 85
+   },
+   {
+    "ambiente": "Aula de Innovación Pedagógica",
+    "bien": "Mesa de cómputo",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 20,
+    "pu": 290
+   },
+   {
+    "ambiente": "Aula de Innovación Pedagógica",
+    "bien": "Silla de cómputo",
+    "es_ae": "Si",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 20,
+    "pu": 110
+   },
+   {
+    "ambiente": "Aula de Innovación Pedagógica",
+    "bien": "Computadora de estudiante",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 20,
+    "pu": 1850
+   },
+   {
+    "ambiente": "Aula de Innovación Pedagógica",
+    "bien": "Proyector y pizarra interactiva",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 1,
+    "pu": 4200
+   },
+   {
+    "ambiente": "Aula de Innovación Pedagógica",
+    "bien": "Switch y cableado de red",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 1,
+    "pu": 1600
+   },
+   {
+    "ambiente": "Tópico",
+    "bien": "Camilla",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 1,
+    "pu": 780
+   },
+   {
+    "ambiente": "Tópico",
+    "bien": "Botiquín equipado",
+    "es_ae": "Si",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 1,
+    "pu": 650
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Escritorio administrativo",
+    "es_ae": "No",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 4,
+    "pu": 390
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Silla administrativa",
+    "es_ae": "No",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 8,
+    "pu": 90
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Estante de archivo",
+    "es_ae": "No",
+    "tipo": "M",
+    "n_ambientes": 1,
+    "cantidad": 4,
+    "pu": 410
+   },
+   {
+    "ambiente": "Otros Espacios",
+    "bien": "Impresora multifuncional",
+    "es_ae": "No",
+    "tipo": "E",
+    "n_ambientes": 1,
+    "cantidad": 1,
+    "pu": 1250
+   }
+  ],
+  "06.01": {
+   "tsd": 0.08,
+   "factor_inversion": 0.79,
+   "factor_om": 0.75,
+   "residual_pct": 0.040827855380589424
+  },
+  "06.02": {
+   "tsd": 0.08,
+   "factor_inversion": 0.79,
+   "factor_om": 0.75,
+   "residual_pct": 0.023058252427184466,
+   "om_sin_proyecto": 86400,
+   "om_con_proyecto": 102000
+  }
+ },
+ "celdas": {}
+}

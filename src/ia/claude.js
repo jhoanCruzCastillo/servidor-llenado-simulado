@@ -10,12 +10,12 @@
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
-import { promptCampos, promptSistema, promptTablas } from '../prompts.js';
+import { promptCampos, promptFichaLibre, promptSistema, promptTablas } from '../prompts.js';
 import { ErrorRespuesta, extraerJsonTolerante } from '../validar.js';
 
 /** Token OAuth del cliente para ESTE trabajo (metadata.oauth_token). Si no hay, se usa CLAUDE_CODE_OAUTH_TOKEN del servidor. */
@@ -60,7 +60,7 @@ export function resolverBin() {
   if (process.platform === 'win32' && !/[\\/]/.test(bin) && !/\.[a-z]+$/i.test(bin)) {
     const r = spawnSync('where', [bin], { encoding: 'utf8' });
     const hallados = (r.stdout || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-    ruta = hallados.find((p) => /\.exe$/i.test(p)) ?? hallados[0] ?? bin;
+    ruta = hallados.find((p) => /\.exe$/i.test(p)) ?? hallados.find((p) => /\.(cmd|bat)$/i.test(p)) ?? hallados[0] ?? bin;
   }
   binResuelto = { cmd: ruta, args: binArgs, shell: process.platform === 'win32' && /\.(cmd|bat)$/i.test(ruta) };
   return binResuelto;
@@ -72,6 +72,13 @@ export function matarArbol(proc) {
   if (!proc.pid) return;
   if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F']);
   else proc.kill('SIGKILL');
+}
+
+/** Skill aprendida (fte-ebr-v03-llenado). No inyecta llenar-fichas-mef ni MCP. */
+export function argsSkillHost() {
+  const host = config.claude.skillAprendido;
+  if (!existsSync(join(host, '.claude', 'skills', 'fte-ebr-v03-llenado', 'SKILL.md'))) return [];
+  return ['--add-dir', host];
 }
 
 /** Ejecuta `claude` con los argumentos dados y el prompt por stdin. Devuelve { stdout, stderr, code }. */
@@ -98,7 +105,11 @@ export function ejecutarClaude(args, { stdin = '', cwd, timeoutMs, signal } = {}
     proc.stdout.on('data', (d) => { stdout += d; });
     proc.stderr.on('data', (d) => { stderr += d; });
     proc.on('error', (e) => fin(reject, new ErrorIA('ia_no_disponible', e.code === 'ENOENT' ? `No se encontró Claude Code («${cmd}»). Instálalo o define CLAUDE_BIN en .env.` : `No se pudo lanzar Claude Code: ${e.message}`)));
-    proc.on('close', (code) => fin(resolve, { stdout, stderr, code }));
+    proc.on('close', (code) => {
+      const vacio = !String(stdout).trim() && !String(stderr).trim();
+      const extra = code !== 0 && vacio ? `Claude Code salió con código ${code} sin stdout/stderr.` : '';
+      fin(resolve, { stdout, stderr: extra ? `${stderr}${extra}` : stderr, code });
+    });
     proc.stdin.on('error', () => {}); // el hijo puede cerrar stdin antes de leerlo todo
     proc.stdin.end(stdin);
   });
@@ -119,7 +130,7 @@ export function leerResultado(stdout) {
 /** Clasifica un fallo de Claude Code (texto de error de la suscripción o de la red). */
 export function clasificarFallo(texto) {
   const t = String(texto ?? '');
-  if (/usage limit|limit reached|limit will reset|out of extra usage|reached your .*limit|weekly limit|5-hour limit/i.test(t)) {
+  if (/usage limit|limit reached|limit will reset|out of extra usage|reached your .*limit|weekly limit|5-hour limit|session limit/i.test(t)) {
     return new ErrorIA('limite_de_uso_ia', 'Se alcanzó el límite de uso de la suscripción de Claude. Hay que esperar a que se reinicie la ventana.', { reintentable: true, detalle: t.slice(0, 400) });
   }
   if (/not logged in|please run .*login|invalid api key|authentication|oauth token|401|unauthorized/i.test(t)) {
@@ -135,10 +146,12 @@ export function clasificarFallo(texto) {
 export async function infoClaude() {
   try {
     const r = await ejecutarClaude(['--version'], { timeoutMs: 30_000 });
+    const version = (r.stdout || '').trim();
     if (r.code !== 0) return { instalado: false, mensaje: `--version terminó con código ${r.code}` };
+    if (!version) return { instalado: false, mensaje: '--version no devolvió texto (el proceso hijo no arrancó bien)' };
     const env = entornoLimpio();
     const credencial = env.CLAUDE_CODE_OAUTH_TOKEN ? 'token_de_suscripcion' : env.ANTHROPIC_API_KEY ? 'api_key' : 'login_local';
-    return { instalado: true, version: r.stdout.trim(), credencial };
+    return { instalado: true, version, credencial };
   } catch (e) {
     return { instalado: false, mensaje: e.message };
   }
@@ -226,11 +239,11 @@ export function crearIAClaude() {
      * Escribe el prompt del sistema del trabajo en un archivo (supera el límite de longitud de la línea de comandos).
      * Con `sesion` (modo Excel) también deja la configuración MCP que lanza la «mesa de trabajo» del Excel (src/excel/mcp-excel.js).
      */
-    preparar(paq, dirTrabajo, { sesion } = {}) {
+    preparar(paq, dirTrabajo, { sesion, motor = 'estructura', cwdClaude } = {}) {
       const archivo = join(dirTrabajo, 'sistema.md');
-      writeFileSync(archivo, promptSistema(paq, { excel: !!sesion }), 'utf8');
-      const preparado = { archivoSistema: archivo };
-      if (sesion) {
+      writeFileSync(archivo, promptSistema(paq, { excel: !!sesion, motor }), 'utf8');
+      const preparado = { archivoSistema: archivo, motor, cwdClaude: cwdClaude ?? paq.rutaRaiz };
+      if (sesion && motor !== 'skill') {
         const mcpConfig = join(dirTrabajo, 'mcp.json');
         const servidor = resolve(dirname(fileURLToPath(import.meta.url)), '../excel/mcp-excel.js');
         writeFileSync(mcpConfig, JSON.stringify({ mcpServers: { [SERVIDOR_MCP]: { type: 'stdio', command: process.execPath, args: [servidor, '--raiz', paq.rutaRaiz, '--sesion', sesion.dir], env: {} } } }, null, 2));
@@ -263,7 +276,7 @@ export function crearIAClaude() {
       ];
       if (c.esfuerzo) args.push('--effort', c.esfuerzo);
 
-      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal });
+      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: preparado.cwdClaude ?? paq.rutaRaiz, timeoutMs: c.timeoutMs, signal });
       let r;
       try {
         r = leerResultado(stdout);
@@ -295,6 +308,8 @@ export function crearIAClaude() {
       const usuario = unidad.tipo === 'campos'
         ? promptCampos(paq, unidad.seccion, coherencia, correccion, { excel: true })
         : promptTablas(paq, unidad.seccion, unidad.tablas, coherencia, correccion, { excel: true });
+      const maxTurnos = c.maxTurnos;
+      const timeoutMs = c.timeoutMs;
 
       const mcp = HERRAMIENTAS_MCP.map((h) => `mcp__${SERVIDOR_MCP}__${h}`);
       const args = [
@@ -307,13 +322,13 @@ export function crearIAClaude() {
         '--tools', 'Read,Glob,Grep',
         '--allowedTools', ['Read', 'Glob', 'Grep', ...mcp].join(','),
         '--permission-mode', 'dontAsk',
-        '--max-turns', String(c.maxTurnos),
+        '--max-turns', String(maxTurnos),
         '--no-session-persistence',
         '--setting-sources', 'project,local',
       ];
       if (c.esfuerzo) args.push('--effort', c.esfuerzo);
 
-      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: paq.rutaRaiz, timeoutMs: c.timeoutMs, signal });
+      const { stdout, stderr, code } = await ejecutarClaude(args, { stdin: usuario, cwd: preparado.cwdClaude ?? paq.rutaRaiz, timeoutMs, signal });
       let r;
       try {
         r = leerResultado(stdout);
@@ -337,6 +352,60 @@ ${r.subtype ?? ''}`);
         },
         agotoTurnos: r.subtype === 'error_max_turns',
         cierre: textoResultado.slice(0, 300),
+      };
+    },
+
+    /**
+     * Un solo `claude -p` con el paquete como cwd, herramientas completas (Bash, Write, instalar deps)
+     * y un mensaje corto. Skill aprendida fte-ebr-v03-llenado (COM/pasadas), sin skill MEF ni MCP.
+     */
+    async ejecutarLibre(paq, { signal, preparado }) {
+      const usuario = promptFichaLibre(paq);
+      const maxTurnos = Math.max(c.maxTurnos, 100);
+      const timeoutMs = Math.max(c.timeoutMs, 40 * 60_000);
+      const args = [
+        '-p',
+        '--output-format', 'json',
+        '--model', c.modelo,
+        '--tools', 'default',
+        '--permission-mode', 'bypassPermissions',
+        '--allow-dangerously-skip-permissions',
+        '--dangerously-skip-permissions',
+        '--max-turns', String(maxTurnos),
+        '--no-session-persistence',
+        '--setting-sources', 'project,local',
+        ...argsSkillHost(),
+      ];
+      if (c.esfuerzo) args.push('--effort', c.esfuerzo);
+
+      const { stdout, stderr, code } = await ejecutarClaude(args, {
+        stdin: usuario,
+        cwd: preparado.cwdClaude ?? paq.rutaRaiz,
+        timeoutMs,
+        signal,
+      });
+      let r;
+      try {
+        r = leerResultado(stdout);
+      } catch (e) {
+        if (code !== 0) throw clasificarFallo(`${stderr}\n${stdout}`);
+        throw e;
+      }
+      const textoResultado = typeof r.result === 'string' ? r.result : '';
+      const agotoTurnos = r.subtype === 'error_max_turns';
+      if ((r.is_error || code !== 0) && !agotoTurnos && !textoResultado) {
+        throw clasificarFallo(`${textoResultado}\n${stderr}\n${r.subtype ?? ''}`);
+      }
+      const u = r.usage ?? {};
+      return {
+        uso: {
+          llamadas: 1,
+          tokens_entrada: (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0),
+          tokens_salida: u.output_tokens ?? 0,
+          costo_usd_referencial: r.total_cost_usd ?? 0,
+        },
+        agotoTurnos,
+        cierre: textoResultado.slice(0, 500),
       };
     },
   };

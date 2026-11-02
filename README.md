@@ -67,7 +67,8 @@ Cómo se garantiza que gasta suscripción y no API de pago:
 
 - **No se usa `--bare`**: ese modo ignora el login y solo acepta `ANTHROPIC_API_KEY`.
 - Al proceso hijo se le **quitan** `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` y `ANTHROPIC_BASE_URL` (si estuvieran definidas, Claude Code las preferiría y cobraría por API) y las variables `CLAUDE_CODE_*` de otra sesión. Solo `PERMITIR_API_KEY=1` lo desactiva.
-- Claude Code arranca **sin tu configuración de usuario** (`--setting-sources project,local`, sin MCP), con **solo lectura** (`--tools Read,Glob,Grep`) y sin guardar sesiones: no hereda hooks, plugins ni `CLAUDE.md` personales.
+- Claude Code arranca **sin tu configuración de usuario** (`--setting-sources project,local`) y sin guardar sesiones. En motor `skill` ve el Excel en blanco, los ejemplos, los PDFs y la skill aprendida `fte-ebr-v03-llenado` (`conocimiento-plantillas/`, `--add-dir`): escribe el libro con Excel COM, no con la skill MEF ni con MCP. El token OAuth es el del cliente.
+- `metadata.motor_llenado`: `estructura` (default) recorre sección por sección con el JSON de estructura. `skill` llena de una vez; `estructura.json` y las notas no entran al directorio de Claude. El mensaje es el chat del asesor.
 
 Límites a tener presentes (plan Pro):
 

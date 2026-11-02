@@ -1,0 +1,29 @@
+{
+  "skill_name": "llenar-fichas-mef",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Llena esta ficha (excel) según el instructivo y la fuente de la verdad (PDFs). También te paso un ejemplo de llenado. [adjuntos: 1_FORMATO_FTE_EBR_MINEDU.xlsx, 2_INSTRUCTIVO_FTE_EBR_MINEDU.pdf, 4_EJEMPLO_LLENADO.pdf, 00-LEEME.pdf, 01-aspectos-generales.pdf, 02-anexo01.pdf, 03-anexo02.pdf, 04-anexo03.pdf, 05-anexo04-y-05.pdf]",
+      "expected_output": "Detecta FTE-EBR-V03 y usa fichas/FTE-EBR-V03 (notas.md + indice.md) sin volver a inventariar el Excel. Escribe datos.json por identificador, ejecuta flujo.py en al menos dos pasadas (GG como monto a partir del CD calculado; cronograma que suma cada total; corrección -0.01 si U789 da X; recursos públicos = costo total) y entrega el .xlsx con todas las verificaciones del mapa en OK y 0 errores nuevos. Las listas desplegables x14 siguen en el archivo (no se guardó con openpyxl). El reporte da el monto calculado frente al de la fuente y las decisiones (trimestres, aulas 5 vs 6, capacidad optimizada 0, Inicial 0 secciones, kits, Biblioteca → Otros Espacios) y los vacíos (CUI, DNI, plano) e insumos faltantes (A, B y C).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Tengo la FTE de saneamiento urbano (FTE-SAN-URBANO) en blanco y su instructivo. Prepárala para que la skill pueda llenarla en el futuro.",
+      "expected_output": "Sigue references/nueva-ficha.md: ejecuta inventario.py por hojas y tramos, identifica las celdas de entrada, las listas (incluidas x14 y por fila), las columnas ocultas, las celdas de verificación y los errores heredados (recalculando la plantilla vacía). Crea fichas/FTE-SAN-URBANO/ con mapa.json (tipos celda/grupo/filas/lista/anual, desc con la trampa principal), indice.md generado con indice_mapa.py y notas.md desde la plantilla, y actualiza la tabla de fichas de SKILL.md. Si recibió un caso, lo prueba de ida y vuelta y lo guarda en examples/.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Ya llenaste la FTE-EBR para la I.E. 16021. Ahora tengo otro colegio con la misma ficha: te paso solo los PDFs nuevos. Reutiliza lo que puedas.",
+      "expected_output": "Usa extraer_datos.py o examples/fte-ebr-v03-ie16021/datos.json solo como referencia de formato, y construye un datos.json nuevo con los valores del nuevo colegio (no arrastra datos del caso anterior: código de local, matrícula, montos, actores). Ejecuta las pasadas y entrega con las verificaciones en OK. Tarda claramente menos que el primer llenado porque no explora el Excel.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "La ficha que me diste no cuadra: el PDF dice que la inversión es S/ 6 385 200 y el Excel dice 5 143 547. Pon 6 385 200.",
+      "expected_output": "No sobrescribe celdas calculadas ni altera CU o metrados para forzar el monto. Explica de dónde sale el total calculado (anexos 01-03 + otros costos) y qué subtotales de la fuente no salen de sus propios anexos. Ofrece las opciones legítimas (corregir los datos de origen si el usuario confirma otros CU, metrados o bienes) y, si el usuario confirma datos nuevos, recalcula con flujo.py.",
+      "files": []
+    }
+  ]
+}

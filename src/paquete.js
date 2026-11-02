@@ -161,6 +161,7 @@ export function cargarPaquete(rutaRaiz, manifiesto) {
     rutaRaiz,
     manifiesto,
     modo: manifiesto.modo_de_llenado ?? 'flexible',
+    motor: manifiesto.motor_llenado === 'skill' ? 'skill' : 'estructura',
     secciones,
     instrucciones: { bloques, modoMd, formatoMd },
     ejemplo: { json: ejemploJson, excel: ejemploExcel },

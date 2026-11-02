@@ -1,0 +1,2647 @@
+{
+ "plantilla": "FTE-EBR-V03",
+ "nombre": "FTE para el mejoramiento, ampliación y/o recuperación de los servicios de Educación Inicial, Primaria y Secundaria (MINEDU, v03)",
+ "hojas_ocultas_relevantes": {
+  "Padron_web": "padrón de locales (lookups desde FICHA!H100)",
+  "Data": "listas",
+  "Formato 7A": "formato de registro"
+ },
+ "columnas_ocultas": {
+  "FICHA": [
+   "B",
+   "J"
+  ]
+ },
+ "campos": {
+  "01.01.2": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "L16",
+   "desc": "Código CUI (lo asigna el aplicativo; normalmente vacío)"
+  },
+  "01.01.3": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "L18",
+   "desc": "Naturaleza de intervención (alimenta el nombre del PI)",
+   "opciones": [
+    "AMPLIACIÓN",
+    "RECUPERACIÓN",
+    "MEJORAMIENTO",
+    "MEJORAMIENTO Y AMPLIACIÓN"
+   ]
+  },
+  "01.01.4": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "si": "L20",
+    "no": "N20"
+   },
+   "desc": "¿Pertenece a un programa de inversión? marcar X",
+   "opciones": {
+    "si": [
+     "X",
+     "-"
+    ],
+    "no": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.01.6": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "L23",
+   "desc": "Código del programa de inversión"
+  },
+  "01.02.3": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "G31",
+   "desc": "Grupo funcional (lista)",
+   "opciones": [
+    "0103 Educación Inicial",
+    " 0104 Educación Primaria",
+    " 0105 Educación Secundaria",
+    " 0106 Educación Básica Alternativa"
+   ]
+  },
+  "01.03.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "nivel": "I39",
+    "entidad": "I40",
+    "nombre": "I41",
+    "responsable": "I42"
+   },
+   "desc": "Institucionalidad OPMI"
+  },
+  "01.03.2": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "nivel": "I47",
+    "entidad": "I48",
+    "nombre": "I49",
+    "responsable": "I50"
+   },
+   "desc": "Institucionalidad UF"
+  },
+  "01.03.3": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "nivel": "I55",
+    "entidad": "I56",
+    "nombre": "I57",
+    "responsable": "I58"
+   },
+   "desc": "Institucionalidad UEI"
+  },
+  "01.03.4": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "I63",
+   "desc": "Nombre de la UEP"
+  },
+  "01.04.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "inicial": "K70",
+    "primaria": "K71",
+    "secundaria": "K72",
+    "eba": "K73"
+   },
+   "desc": "Servicios intervenidos (X)",
+   "opciones": {
+    "inicial": [
+     "X",
+     "-"
+    ],
+    "primaria": [
+     "X",
+     "-"
+    ],
+    "secundaria": [
+     "X",
+     "-"
+    ],
+    "eba": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.04.2": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "P70",
+   "desc": "Brecha de calidad (X)",
+   "opciones": [
+    "X",
+    "-"
+   ]
+  },
+  "01.04.3": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "P72",
+   "desc": "Brecha de cobertura (X)",
+   "opciones": [
+    "X",
+    "-"
+   ]
+  },
+  "01.04.4": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "inicial": 80,
+    "primaria": 81,
+    "secundaria": 82,
+    "eba": 83
+   },
+   "columnas": {
+    "espacio": "I",
+    "anio": "L",
+    "valor": "M",
+    "contribucion": "O"
+   },
+   "desc": "Indicadores de calidad por servicio (valor en formato %, contribución en N° IE = ítem 4.3)",
+   "opciones": {
+    "espacio": [
+     "Distrito",
+     " Provincia",
+     " Departamento",
+     " Nacional"
+    ]
+   }
+  },
+  "01.04.6": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "inicial": 88,
+    "primaria": 89,
+    "secundaria": 90,
+    "eba": 91
+   },
+   "columnas": {
+    "espacio": "I",
+    "anio": "L",
+    "valor": "M",
+    "contribucion": "O"
+   },
+   "desc": "Indicadores de cobertura por servicio (contribución en persona/año = ítem 4.3)",
+   "opciones": {
+    "espacio": [
+     "Distrito",
+     " Provincia",
+     " Departamento",
+     " Nacional"
+    ]
+   }
+  },
+  "01.05.4": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "H100",
+   "desc": "Código de local ESCALE (número). Llena ubicación, IE y modulares desde Padron_web"
+  },
+  "01.05.5": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "ie1": 106,
+    "ie2": 107,
+    "ie3": 108
+   },
+   "columnas": {
+    "interviene": "L"
+   },
+   "desc": "¿Se interviene la IE? (nombre y zona son fórmulas)",
+   "opciones": {
+    "interviene": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.05.6": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "1": 118,
+    "2": 119,
+    "3": 120,
+    "4": 121,
+    "5": 122,
+    "6": 123,
+    "7": 124,
+    "8": 125
+   },
+   "columnas": {
+    "altitud": "K",
+    "interviene": "L"
+   },
+   "desc": "Áreas productivas: altitud y ¿se interviene? (modular, nivel, lat/long son fórmulas del padrón)",
+   "opciones": {
+    "interviene": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.05.7": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "ampliacion": "G131",
+    "recuperacion": "G132",
+    "mejoramiento": "G133",
+    "mejoramiento_y_ampliacion": "G134"
+   },
+   "desc": "C1.3 Naturaleza de intervención en el servicio: una X, el resto \"-\"",
+   "opciones": {
+    "ampliacion": [
+     "X",
+     "-"
+    ],
+    "recuperacion": [
+     "X",
+     "-"
+    ],
+    "mejoramiento": [
+     "X",
+     "-"
+    ],
+    "mejoramiento_y_ampliacion": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.06.1": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "1": 144,
+    "2": 145,
+    "3": 146,
+    "4": 147,
+    "5": 148
+   },
+   "columnas": {
+    "localidad": "N"
+   },
+   "desc": "Localización del área de influencia: localidad (dpto/prov/distrito son fórmulas en 1-3)"
+  },
+  "01.06.2": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "D152",
+   "desc": "Descripción del área de estudio / influencia"
+  },
+  "01.07.1": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "F161",
+   "desc": "Población afectada"
+  },
+  "01.08.1": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "agua": 178,
+    "desague": 179,
+    "electricidad": 180,
+    "alumbrado": 181,
+    "telefonia": 182,
+    "internet": 183,
+    "residuos": 184,
+    "gas": 185
+   },
+   "columnas": {
+    "red_localidad": "E",
+    "ie01": "G",
+    "ie02": "H",
+    "ie03": "I",
+    "provision_alt": "K",
+    "tipo_alt": "M",
+    "comentario": "O"
+   },
+   "desc": "Servicios básicos. tipo_alt debe copiarse EXACTO de la lista (ej. \"(1) Pozo Propio \" con espacio final)",
+   "opciones": {
+    "red_localidad": [
+     "Sí",
+     "No"
+    ],
+    "ie01": [
+     "Sí",
+     "No"
+    ],
+    "ie02": [
+     "Sí",
+     "No"
+    ],
+    "ie03": [
+     "Sí",
+     "No"
+    ],
+    "provision_alt": [
+     "Sí",
+     "No"
+    ]
+   },
+   "opciones_por_fila": {
+    "tipo_alt": {
+     "agua": [
+      "(1) Pozo Propio ",
+      "(2) Río, acequia, manantial, etc.",
+      "(3) Camión Cisterna",
+      "(4) Pilón de uso público (agua potable)",
+      "(5) Otros"
+     ],
+     "desague": [
+      "(1) Tanque Séptico/Tanque Imhoff",
+      "(2) Pozo Percolador",
+      "(3) Zanja de Filtración",
+      "(4) Pozo con tratamiento",
+      "(5) Pozo sin tratamiento"
+     ],
+     "electricidad": [
+      "(1) Generador Eléctrico",
+      "(2) Motor Eléctrico",
+      "(3) Paneles Solares",
+      "(5) Otros"
+     ],
+     "alumbrado": [
+      "(1) Generador Eléctrico",
+      "(2) Motor Eléctrico",
+      "(3) Paneles Solares",
+      "(5) Otros"
+     ],
+     "telefonia": [
+      "(1) Red inalámbrica",
+      "(2) Señal de Celular",
+      "(2) Señal Satelital",
+      "(3) Red de Fibra óptica",
+      "(5) Otros"
+     ],
+     "internet": [
+      "(1) Red inalámbrica",
+      "(2) Señal de Celular",
+      "(2) Señal Satelital",
+      "(3) Red de Fibra óptica",
+      "(5) Otros"
+     ],
+     "residuos": [
+      "(1) Recolección y quemado en la IE",
+      "(2) Traslado privado a botadero ",
+      "(5) Otros"
+     ],
+     "gas": [
+      "(1) Balón de Gas",
+      "(5) Otros"
+     ]
+    }
+   }
+  },
+  "01.08.3": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 203,
+    "t02": 204,
+    "t03": 205
+   },
+   "columnas": {
+    "adjunta": "F"
+   },
+   "desc": "¿Se adjunta estudio topográfico? por terreno",
+   "opciones": {
+    "adjunta": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.08.7": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 203,
+    "t02": 204,
+    "t03": 205
+   },
+   "columnas": {
+    "area": "L",
+    "area_util": "N",
+    "perimetro": "P"
+   },
+   "desc": "Medidas del terreno (m2, m2, m)"
+  },
+  "01.08.4": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 209,
+    "t02": 210,
+    "t03": 211
+   },
+   "columnas": {
+    "limites": "F"
+   },
+   "desc": "¿Límites definidos?",
+   "opciones": {
+    "limites": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.08.8": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 212,
+    "t02": 213,
+    "t03": 214
+   },
+   "columnas": {
+    "x": "L",
+    "y": "O"
+   },
+   "desc": "Coordenadas UTM"
+  },
+  "01.08.5": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 216,
+    "t02": 217,
+    "t03": 218
+   },
+   "columnas": {
+    "cerco": "F"
+   },
+   "desc": "Cerco perimétrico (lista)",
+   "opciones": {
+    "cerco": [
+     "(1) Si cuenta - completo",
+     " (2) Si cuenta - Incompleto",
+     " (3) No Cuenta con Cerco"
+    ]
+   }
+  },
+  "01.08.6": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 222,
+    "t02": 223,
+    "t03": 224
+   },
+   "columnas": {
+    "forma": "F"
+   },
+   "desc": "Forma del terreno (lista)",
+   "opciones": {
+    "forma": [
+     "(1) Regular",
+     " (2) Irregular"
+    ]
+   }
+  },
+  "01.08.9": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "llano": 219,
+    "inclinado": 220,
+    "muy_inclinado": 221,
+    "accidentado": 222
+   },
+   "columnas": {
+    "t01": "M",
+    "t02": "O",
+    "t03": "Q"
+   },
+   "desc": "Topografía: X en el tipo, \"-\" en los demás",
+   "opciones": {
+    "t01": [
+     "X",
+     "-"
+    ],
+    "t02": [
+     "X",
+     "-"
+    ],
+    "t03": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.08.10": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 231,
+    "t02": 232,
+    "t03": 233
+   },
+   "columnas": {
+    "adjunta": "F"
+   },
+   "desc": "¿Informe de suelos? (lista SI/NO en mayúsculas)",
+   "opciones": {
+    "adjunta": [
+     "SI",
+     "NO"
+    ]
+   }
+  },
+  "01.08.11": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 237,
+    "t02": 238,
+    "t03": 239
+   },
+   "columnas": {
+    "kg_cm2": "F"
+   },
+   "desc": "Capacidad portante"
+  },
+  "01.08.12": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "t01": 243,
+    "t02": 244,
+    "t03": 245
+   },
+   "columnas": {
+    "m": "F"
+   },
+   "desc": "Nivel freático"
+  },
+  "01.08.13": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "grava": 232,
+    "arena": 233,
+    "limos_baja": 234,
+    "limos_alta": 235,
+    "organicos": 236
+   },
+   "columnas": {
+    "t01": "L",
+    "t02": "N",
+    "t03": "P"
+   },
+   "desc": "Tipo de suelo: X / -",
+   "opciones": {
+    "t01": [
+     "X",
+     "-"
+    ],
+    "t02": [
+     "X",
+     "-"
+    ],
+    "t03": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.08.14": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "profesional": "H241",
+    "cip": "P241"
+   },
+   "desc": "Responsable del estudio de suelos"
+  },
+  "01.08.15": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "F251",
+   "desc": "Arquitectura existente"
+  },
+  "01.08.16": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "estructuras": "F275",
+    "electricas": "F276",
+    "sanitarias": "F277"
+   },
+   "desc": "Estructuras / IIEE / IISS"
+  },
+  "01.08.17": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "ini_aula": 285,
+    "ini_psicomotricidad": 286,
+    "ini_sum": 287,
+    "pri_aula": 289,
+    "pri_aip": 290,
+    "pri_lab": 291,
+    "pri_biblioteca": 292,
+    "pri_auditorio": 293,
+    "pri_sum": 294,
+    "sec_aula": 296,
+    "sec_aip": 297,
+    "sec_lab": 298,
+    "sec_biblioteca": 299,
+    "sec_auditorio": 300,
+    "sec_sum": 301,
+    "administracion": 303,
+    "cocina": 304,
+    "servicios_generales": 305,
+    "deposito": 306,
+    "residencia": 307,
+    "sshh": 308
+   },
+   "columnas": {
+    "total": "G",
+    "no_interv": "I",
+    "construccion": "K",
+    "reforzamiento": "L",
+    "remodelacion": "M",
+    "reparacion": "N",
+    "demoler": "O",
+    "comentario": "P"
+   },
+   "desc": "Activos existentes en edificaciones (llenar 0 en filas sin activos)"
+  },
+  "01.08.18": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "cercos": 321,
+    "muro": 322,
+    "deportivo_sin_cob": 323,
+    "deportivo_con_cob": 324,
+    "inst_exteriores": 325,
+    "espacios_exteriores": 326
+   },
+   "columnas": {
+    "cuenta": "G",
+    "requiere": "I",
+    "construccion": "K",
+    "reforzamiento": "L",
+    "remodelacion": "M",
+    "reparacion": "N",
+    "demolicion": "O",
+    "comentario": "P"
+   },
+   "desc": "Activos de obras exteriores (Sí/No y X/-)",
+   "opciones": {
+    "cuenta": [
+     "Sí",
+     "No"
+    ],
+    "requiere": [
+     "Sí",
+     "No"
+    ],
+    "construccion": [
+     "X",
+     "-"
+    ],
+    "reforzamiento": [
+     "X",
+     "-"
+    ],
+    "remodelacion": [
+     "X",
+     "-"
+    ],
+    "reparacion": [
+     "X",
+     "-"
+    ],
+    "demolicion": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.08.19": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "mobiliario": "F331",
+    "equipo": "F332"
+   },
+   "desc": "Estado de mobiliario y equipo (01.08.19 y 01.08.20)"
+  },
+  "01.08.21": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "sismos": 339,
+    "tsunamis": 340,
+    "heladas": 341,
+    "friajes": 342,
+    "erupciones": 343,
+    "sequias": 344,
+    "granizadas": 345,
+    "lluvias": 346,
+    "avalanchas": 347,
+    "huaycos": 348,
+    "deslizamientos": 349,
+    "erosion": 350,
+    "inundaciones": 351,
+    "vientos": 352,
+    "incendios_urbanos": 353,
+    "incendios_forestales": 354,
+    "radiacion": 355,
+    "contaminacion": 357
+   },
+   "columnas": {
+    "existe": "E",
+    "nivel": "F",
+    "antecedentes": "G",
+    "especificar": "H",
+    "afectado": "K",
+    "mitigable": "L"
+   },
+   "desc": "Peligros. nivel ∈ Bajo/Medio/Alto/Muy Alto (no existe \"Medio-Alto\")",
+   "opciones": {
+    "existe": [
+     "Sí",
+     "No"
+    ],
+    "nivel": [
+     "Bajo",
+     " Medio",
+     " Alto",
+     " Muy Alto"
+    ],
+    "antecedentes": [
+     "Sí",
+     "No"
+    ],
+    "afectado": [
+     "Sí",
+     "No"
+    ],
+    "mitigable": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.08.22": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "aulas": 339,
+    "computadoras": 340,
+    "administrativo": 341,
+    "otros_ambientes": 342,
+    "redes_exteriores": 343,
+    "cerco": 344,
+    "mobiliarios": 345,
+    "equipamientos": 346
+   },
+   "columnas": {
+    "afectada": "Q"
+   },
+   "desc": "Zonas afectadas (Sí/No)",
+   "opciones": {
+    "afectada": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.08.23": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "fen": "Q349",
+    "peligro_mayor": "Q351",
+    "anio": "Q354"
+   },
+   "desc": "FEN (01.08.23), peligro mayor (01.08.24), año (01.08.25)",
+   "opciones": {
+    "fen": [
+     "Sí",
+     "No"
+    ],
+    "peligro_mayor": [
+     "Inundaciones",
+     "Heladas",
+     "Friajes",
+     "Sequías",
+     "Granizadas",
+     "Lluvias intensas",
+     "Avalanchas",
+     "Flujos de lodo (huaycos)",
+     "Deslizamientos",
+     "Erosíón"
+    ]
+   }
+  },
+  "01.09.1": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "H364",
+   "desc": "¿Se adjunta informe técnico de saneamiento?",
+   "opciones": [
+    "Sí",
+    "No"
+   ]
+  },
+  "01.09.2": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "p01": 372,
+    "p02": 373,
+    "p03": 374,
+    "p04": 375
+   },
+   "columnas": {
+    "adjunta_partida": "F",
+    "partida": "H",
+    "oficina": "K",
+    "area": "M",
+    "comentario": "O"
+   },
+   "desc": "Información registral por predio",
+   "opciones": {
+    "adjunta_partida": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.09.3": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "p01": 380,
+    "p02": 381,
+    "p03": 382,
+    "p04": 383
+   },
+   "columnas": {
+    "area_levantamiento": "F",
+    "compatibles": "M",
+    "rectificar": "O",
+    "comentario": "Q"
+   },
+   "desc": "Levantamiento topográfico vs registral",
+   "opciones": {
+    "compatibles": [
+     "Sí",
+     "No"
+    ],
+    "rectificar": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.09.4": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "p01": 387,
+    "p02": 388,
+    "p03": 389,
+    "p04": 390
+   },
+   "columnas": {
+    "margesi": "F",
+    "codigo": "H",
+    "busqueda_catastral": "K",
+    "comentario": "M"
+   },
+   "desc": "Información complementaria (Margesí)",
+   "opciones": {
+    "margesi": [
+     "Sí",
+     "No"
+    ],
+    "busqueda_catastral": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.09.5": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "p01": 401,
+    "p02": 402,
+    "p03": 403,
+    "p04": 404
+   },
+   "columnas": {
+    "minedu_titular": "E",
+    "entidad_titular": "F",
+    "derecho_inscrito": "G",
+    "tipo_derecho": "H",
+    "saneado_minedu": "I",
+    "sustentar_arreglos": "K",
+    "comentario": "L"
+   },
+   "desc": "A1 Titularidad",
+   "opciones": {
+    "minedu_titular": [
+     "Sí",
+     "No"
+    ],
+    "entidad_titular": [
+     "-",
+     "(A1) DRE y/o UGEL",
+     " (A2) Municipalidad",
+     " (A3) COFOPRI",
+     " (A4) GORE",
+     " (A5) Institución Educativa",
+     " (B) Comunidad Campesina o Nativa",
+     " (C) Privados"
+    ],
+    "derecho_inscrito": [
+     "Sí",
+     "No"
+    ],
+    "tipo_derecho": [
+     "-",
+     " Cesión en uso",
+     " Afectación de uso permanente",
+     " Afectación de uso provisional",
+     " Inscripción preventiva",
+     " Otros (especificar en comentarios)"
+    ],
+    "saneado_minedu": [
+     "Sí",
+     "No"
+    ],
+    "sustentar_arreglos": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.09.6": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "p01": 410,
+    "p02": 411,
+    "p03": 412,
+    "p04": 413
+   },
+   "columnas": {
+    "problema_titularidad": "E",
+    "subsanable_tit": "F",
+    "accion_tit": "G",
+    "problema_areas": "H",
+    "subsanable_area": "I",
+    "accion_area": "K",
+    "sustenta_area_tecnica": "L",
+    "area_tecnica": "M",
+    "acta_compromiso": "N",
+    "area_acta": "O",
+    "saneamiento_completo": "P",
+    "comentario": "Q"
+   },
+   "desc": "A2 Acciones complementarias",
+   "opciones": {
+    "problema_titularidad": [
+     "Sí",
+     "No"
+    ],
+    "subsanable_tit": [
+     "Sí",
+     "No"
+    ],
+    "accion_tit": [
+     " -",
+     " Inscripción y/o aclaración de dominio",
+     " Otros (especificar en comentarios)"
+    ],
+    "problema_areas": [
+     "Sí",
+     "No"
+    ],
+    "subsanable_area": [
+     "Sí",
+     "No"
+    ],
+    "sustenta_area_tecnica": [
+     "Sí",
+     "No"
+    ],
+    "area_tecnica": [
+     "-",
+     " DISAFIL",
+     " DRE/UGEL",
+     " Otros (especificar en comentarios)"
+    ],
+    "acta_compromiso": [
+     "Sí",
+     "No"
+    ],
+    "area_acta": [
+     "-",
+     " DISAFIL",
+     " DRE/UGEL",
+     " Otros (especificar en comentarios)"
+    ],
+    "saneamiento_completo": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.09.7": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "arreglos": "D421",
+    "comentario_arreglos": "F421",
+    "disponibilidad": "D428",
+    "documento_disponibilidad": "F428"
+   },
+   "desc": "9.2.2 y 9.2.3 (01.09.7 a 01.09.10)",
+   "opciones": {
+    "arreglos": [
+     "Sí",
+     "No"
+    ],
+    "disponibilidad": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.09.11": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "saneamiento": "G433",
+    "arreglos": "G434",
+    "disponibilidad": "G435"
+   },
+   "desc": "Verificación 9.2.4",
+   "opciones": {
+    "saneamiento": [
+     "Sí",
+     "No"
+    ],
+    "arreglos": [
+     "Si",
+     "No"
+    ],
+    "disponibilidad": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.10.1": {
+   "tipo": "lista",
+   "hoja": "FICHA",
+   "fila_inicio": 442,
+   "max_filas": 5,
+   "columnas": {
+    "actor": "D",
+    "ambito": "F",
+    "entidad": "G",
+    "posicion": "I",
+    "intereses": "L",
+    "contribucion": "N"
+   },
+   "desc": "Matriz de involucrados (máx. 5 filas)",
+   "opciones": {
+    "ambito": [
+     "Nacional",
+     " Regional",
+     " Local",
+     " Otros"
+    ],
+    "posicion": [
+     "Cooperante",
+     " Beneficiario",
+     " Oponente",
+     " Perjudicado"
+    ]
+   }
+  },
+  "01.11.2": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "causa_infra": "G457",
+    "causa_mobiliario": "G458",
+    "causa_equipo": "G459",
+    "efecto_riesgo": "O457",
+    "efecto_bajo_nivel": "O458",
+    "efecto_baja_cobertura": "O459"
+   },
+   "desc": "Causas y efectos (X)",
+   "opciones": {
+    "causa_infra": [
+     "X",
+     "-"
+    ],
+    "causa_mobiliario": [
+     "X",
+     "-"
+    ],
+    "causa_equipo": [
+     "X",
+     "-"
+    ],
+    "efecto_riesgo": [
+     "X",
+     "-"
+    ],
+    "efecto_bajo_nivel": [
+     "X",
+     "-"
+    ],
+    "efecto_baja_cobertura": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.12.2": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "medio_infra": "G473",
+    "medio_mobiliario": "G474",
+    "medio_equipo": "G475",
+    "fin_seguridad": "O473",
+    "fin_nivel": "O474",
+    "fin_cobertura": "O475"
+   },
+   "desc": "Medios y fines (X)",
+   "opciones": {
+    "medio_infra": [
+     "X",
+     "-"
+    ],
+    "medio_mobiliario": [
+     "X",
+     "-"
+    ],
+    "medio_equipo": [
+     "X",
+     "-"
+    ],
+    "fin_seguridad": [
+     "X",
+     "-"
+    ],
+    "fin_nivel": [
+     "X",
+     "-"
+    ],
+    "fin_cobertura": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.12.4": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "F479",
+   "desc": "Alternativa 2 (texto). La alternativa 1 es fórmula"
+  },
+  "01.13.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "contratacion_et": "L489",
+    "elaboracion_et": "L490",
+    "revision_aprobacion_et": "L491",
+    "otro_a": "L492"
+   },
+   "desc": "Horizonte (a) en meses"
+  },
+  "01.13.4": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "contratacion_ejecucion": "L496",
+    "ejecucion": "L497",
+    "recepcion_liquidacion": "L498",
+    "otro_b": "L499"
+   },
+   "desc": "Horizonte (b) en meses"
+  },
+  "01.14.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "fuentes": "F510",
+    "parametros": "F513",
+    "vive_area_influencia": "F516",
+    "mismas_caracteristicas": "F517",
+    "oferta_publica_privada": "F518",
+    "otros_supuestos": "F519",
+    "otros_texto": "F520"
+   },
+   "desc": "Parámetros y supuestos (01.14.1 a 01.14.7; supuestos con X)",
+   "opciones": {
+    "vive_area_influencia": [
+     "X",
+     "-"
+    ],
+    "mismas_caracteristicas": [
+     "X",
+     "-"
+    ],
+    "oferta_publica_privada": [
+     "X",
+     "-"
+    ],
+    "otros_supuestos": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.14.8": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "0_1_oferta": 528,
+    "0_1_demanda": 529,
+    "1_2_oferta": 531,
+    "1_2_demanda": 532,
+    "2_3_oferta": 534,
+    "2_3_demanda": 535,
+    "3_oferta": 538,
+    "3_demanda": 539,
+    "4_oferta": 541,
+    "4_demanda": 542,
+    "5_oferta": 544,
+    "5_demanda": 545
+   },
+   "columnas_periodo": [
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q"
+   ],
+   "desc": "Balance O/D Inicial por edad, años 1-10 (si no hay Inicial: todo 0)"
+  },
+  "01.14.10": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "g1_oferta": 554,
+    "g1_demanda": 555,
+    "g2_oferta": 557,
+    "g2_demanda": 558,
+    "g3_oferta": 560,
+    "g3_demanda": 561,
+    "g4_oferta": 563,
+    "g4_demanda": 564,
+    "g5_oferta": 566,
+    "g5_demanda": 567,
+    "g6_oferta": 569,
+    "g6_demanda": 570
+   },
+   "columnas_periodo": [
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q"
+   ],
+   "desc": "Balance O/D Primaria por grado, años 1-10. Oferta = oferta optimizada (0 si todo se demuele)"
+  },
+  "01.14.11": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "g1_oferta": 579,
+    "g1_demanda": 580,
+    "g2_oferta": 582,
+    "g2_demanda": 583,
+    "g3_oferta": 585,
+    "g3_demanda": 586,
+    "g4_oferta": 588,
+    "g4_demanda": 589,
+    "g5_oferta": 591,
+    "g5_demanda": 592
+   },
+   "columnas_periodo": [
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q"
+   ],
+   "desc": "Balance O/D Secundaria por grado, años 1-10"
+  },
+  "01.14.12": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "inicial_c1": 602,
+    "inicial_c2": 603,
+    "primaria": 604,
+    "secundaria": 605,
+    "eba": 606
+   },
+   "columnas": {
+    "unidad": "H",
+    "ultimo_anio": "K",
+    "sumatoria": "N"
+   },
+   "desc": "Beneficiarios: unidad (\"Estudiantes\"); K y N solo para EBA",
+   "opciones": {
+    "unidad": [
+     "Estudiantes",
+     " m2"
+    ]
+   }
+  },
+  "01.14.16": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "inicial_c1": 614,
+    "inicial_c2": 615,
+    "primaria": 616,
+    "secundaria": 617,
+    "eba": 618
+   },
+   "columnas": {
+    "actual": "F",
+    "aulas_optimizadas": "H",
+    "max_optimizada": "I",
+    "aulas_proyecto": "L",
+    "max_proyecto": "M"
+   },
+   "desc": "Capacidad de producción. aulas_optimizadas = aulas existentes que NO se demuelen"
+  },
+  "01.15.1": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "oferta_aulas": 633,
+    "max_por_aula": 635,
+    "secciones_manana": 637
+   },
+   "columnas_periodo": [
+    "E",
+    "G",
+    "I",
+    "L",
+    "N",
+    "P"
+   ],
+   "desc": "15.1 Inicial por edad (0-1,1-2,2-3,3,4,5). Sin servicio: secciones 0 (con 1 genera aulas fantasma)"
+  },
+  "01.15.2": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "oferta_aulas": 647,
+    "max_por_aula": 649,
+    "secciones_manana": 651
+   },
+   "columnas_periodo": [
+    "E",
+    "G",
+    "I",
+    "L",
+    "N",
+    "P"
+   ],
+   "desc": "15.1 Primaria por grado 1-6"
+  },
+  "01.15.3": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "oferta_aulas": 661,
+    "max_por_aula": 663,
+    "secciones_manana": 665
+   },
+   "columnas_periodo": [
+    "E",
+    "G",
+    "I",
+    "L",
+    "N"
+   ],
+   "desc": "15.1 Secundaria por grado 1-5"
+  },
+  "01.15.4": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "E670",
+   "desc": "Demanda de aulas funcionales JEC (opcional)"
+  },
+  "01.15.5": {
+   "tipo": "lista",
+   "hoja": "FICHA",
+   "fila_inicio": 678,
+   "max_filas": 58,
+   "columnas": {
+    "et_inicio": "P",
+    "et_fin": "Q",
+    "ejec_inicio": "R",
+    "ejec_fin": "S"
+   },
+   "desc": "Fechas de cada fila de metas 15.2 (las filas se generan desde los anexos; una entrada por fila con activo, en el mismo orden)"
+  },
+  "01.15.6": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "otras_infra": 740,
+    "otras_mobiliario": 741,
+    "otras_equipo": 742
+   },
+   "columnas": {
+    "et_inicio": "P",
+    "et_fin": "Q",
+    "ejec_inicio": "R",
+    "ejec_fin": "S"
+   },
+   "desc": "Fechas de acciones que no generan AE"
+  },
+  "01.15.11": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "C749",
+   "desc": "Comentarios sobre metas, costos y plazos"
+  },
+  "01.16.7": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "gestion": "K801",
+    "expediente": "K802",
+    "supervision": "K803",
+    "liquidacion": "K804"
+   },
+   "desc": "Otros costos de inversión (S/)"
+  },
+  "01.16.9": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "K812",
+   "desc": "Costo de control concurrente"
+  },
+  "01.16.10": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "obras": "U765",
+    "contingencia": "U775",
+    "mobiliario_equipo": "U788"
+   },
+   "desc": "Corrección por redondeo del IGV: ingresar la diferencia cuando U766/U776/U789 marcan \"X\" (ej. -0.01)"
+  },
+  "01.16.11": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "fecha_inicio": "H822",
+    "tipo_periodo": "H823",
+    "numero_periodos": "H824"
+   },
+   "desc": "Cronograma: fecha inicio (01.16.11), meses|trimestres (01.16.12), N° periodos (01.16.13). Máx. 12 columnas",
+   "opciones": {
+    "tipo_periodo": [
+     "meses",
+     " trimestres"
+    ]
+   }
+  },
+  "01.16.14": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "obras_civiles": 830,
+    "contingencia": 831,
+    "mobiliario": 833,
+    "equipo": 834,
+    "intangibles": 835,
+    "gestion": 838,
+    "expediente": 839,
+    "supervision": 840,
+    "liquidacion": 841
+   },
+   "columnas_periodo": [
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q"
+   ],
+   "desc": "Cronograma financiero por periodo. Cada fila debe sumar su total (ver verificaciones U829-U843)"
+  },
+  "01.16.16": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "aporte_si": "F855",
+    "aporte_no": "F857",
+    "aporte_monto": "M855",
+    "recursos_publicos": "M857"
+   },
+   "desc": "Aporte de beneficiarios (01.16.16-01.16.19). recursos_publicos = costo total de inversión viable",
+   "opciones": {
+    "aporte_si": [
+     "X",
+     "-"
+    ],
+    "aporte_no": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.16.21": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "inicio_om": "I872",
+    "horizonte": "I873"
+   },
+   "desc": "Inicio de operación (fecha día 1 del mes) y horizonte"
+  },
+  "01.16.23": {
+   "tipo": "anual",
+   "hoja": "FICHA",
+   "filas": {
+    "operacion_sin": 878,
+    "mantenimiento_sin": 879,
+    "operacion_con": 881,
+    "mantenimiento_con": 882
+   },
+   "columnas_periodo": [
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q"
+   ],
+   "desc": "O&M a precios de mercado, años 1-10"
+  },
+  "01.17.1": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "C893",
+   "desc": "Beneficios sociales"
+  },
+  "01.17.2": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "I902",
+   "desc": "Costo de inversión de la Alternativa 2 a precios de mercado"
+  },
+  "01.18.1": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "C921",
+   "desc": "Análisis de sostenibilidad"
+  },
+  "01.18.2": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "sismos": 931,
+    "tsunamis": 932,
+    "heladas": 933,
+    "friajes": 934,
+    "erupciones": 935,
+    "sequias": 936,
+    "granizadas": 937,
+    "lluvias": 938,
+    "avalanchas": 939,
+    "huaycos": 940,
+    "deslizamientos": 941,
+    "erosion": 942,
+    "inundaciones": 943,
+    "vientos": 944,
+    "incendios_urbanos": 945,
+    "incendios_forestales": 946,
+    "radiacion": 947
+   },
+   "columnas": {
+    "afecta": "E",
+    "peligro": "F",
+    "vulnerabilidad": "G",
+    "riesgo": "H",
+    "medidas": "K",
+    "en_presupuesto": "P"
+   },
+   "desc": "Medidas de reducción de riesgos",
+   "opciones": {
+    "afecta": [
+     "Sí",
+     "No"
+    ],
+    "peligro": [
+     "Bajo",
+     " Medio",
+     " Alto",
+     " Muy Alto"
+    ],
+    "vulnerabilidad": [
+     "Bajo",
+     " Medio",
+     " Alto",
+     " Muy Alto"
+    ],
+    "riesgo": [
+     "Bajo",
+     " Medio",
+     " Alto",
+     " Muy Alto"
+    ],
+    "en_presupuesto": [
+     "Sí",
+     "No"
+    ]
+   }
+  },
+  "01.18.4": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "M957",
+   "desc": "UEP que asume la O&M"
+  },
+  "01.18.5": {
+   "tipo": "celda",
+   "hoja": "FICHA",
+   "celda": "M959",
+   "desc": "Organización privada que asume la O&M"
+  },
+  "01.18.6": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "organo_tecnico": 964,
+    "disponibilidad_recursos": 965,
+    "arreglos_funcionamiento": 966
+   },
+   "columnas": {
+    "entidad": "G",
+    "compromiso": "L"
+   },
+   "desc": "Documentos que sustentan la O&M"
+  },
+  "01.19.1": {
+   "tipo": "filas",
+   "hoja": "FICHA",
+   "filas": {
+    "adm_directa": 974,
+    "contrata": 975,
+    "obras_por_impuestos": 976,
+    "concurso_oferta": 977,
+    "convenio": 978,
+    "estado_a_estado": 979
+   },
+   "columnas": {
+    "expediente": "K",
+    "obra": "M"
+   },
+   "desc": "Modalidad de ejecución (X)",
+   "opciones": {
+    "expediente": [
+     "X",
+     "-"
+    ],
+    "obra": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.20.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "ordinarios": "K984",
+    "directamente_recaudados": "K985",
+    "credito": "K986",
+    "donaciones": "K987",
+    "determinados": "K988"
+   },
+   "desc": "Fuente de financiamiento (X)",
+   "opciones": {
+    "ordinarios": [
+     "X",
+     "-"
+    ],
+    "directamente_recaudados": [
+     "X",
+     "-"
+    ],
+    "credito": [
+     "X",
+     "-"
+    ],
+    "donaciones": [
+     "X",
+     "-"
+    ],
+    "determinados": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.21.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "adm_directa": "K995",
+    "adm_indirecta": "K996"
+   },
+   "desc": "Modalidad de elaboración de la FTE (X)",
+   "opciones": {
+    "adm_directa": [
+     "X",
+     "-"
+    ],
+    "adm_indirecta": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.21.2": {
+   "tipo": "lista",
+   "hoja": "FICHA",
+   "fila_inicio": 1001,
+   "max_filas": 5,
+   "columnas": {
+    "nombre": "C",
+    "dni": "G",
+    "especialidad": "K",
+    "colegiatura": "N"
+   },
+   "desc": "Equipo formulador (especialidad ya trae Arquitecto/Economista/Ing. Civil en filas 1-3)"
+  },
+  "01.21.3": {
+   "tipo": "lista",
+   "hoja": "FICHA",
+   "fila_inicio": 1011,
+   "max_filas": 1,
+   "columnas": {
+    "razon_social": "C",
+    "ruc": "G",
+    "contrato": "K",
+    "fecha": "N"
+   },
+   "desc": "Consultor contratado (solo adm. indirecta)"
+  },
+  "01.23.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "viable": "F1022",
+    "no_viable": "F1024",
+    "argumentos": "C1028",
+    "lecciones": "C1034",
+    "recomendaciones": "C1040"
+   },
+   "desc": "Conclusiones (01.23.1 a 01.23.5)",
+   "opciones": {
+    "viable": [
+     "X",
+     "-"
+    ],
+    "no_viable": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "01.24.1": {
+   "tipo": "grupo",
+   "hoja": "FICHA",
+   "celdas": {
+    "ficha_firmada": "L1049",
+    "anexo01": "L1050",
+    "anexo02": "L1051",
+    "anexo03": "L1052",
+    "anexo04": "L1053",
+    "anexo05": "L1054",
+    "formato07a": "L1055",
+    "diagnostico": "L1058",
+    "oferta_demanda": "L1059",
+    "propuesta_tecnica": "L1060",
+    "propuesta_costos": "L1061",
+    "evaluacion": "L1062"
+   },
+   "desc": "Anexos que se adjuntan (X)",
+   "opciones": {
+    "ficha_firmada": [
+     "X",
+     "-"
+    ],
+    "anexo01": [
+     "X",
+     "-"
+    ],
+    "anexo02": [
+     "X",
+     "-"
+    ],
+    "anexo03": [
+     "X",
+     "-"
+    ],
+    "anexo04": [
+     "X",
+     "-"
+    ],
+    "anexo05": [
+     "X",
+     "-"
+    ],
+    "formato07a": [
+     "X",
+     "-"
+    ],
+    "diagnostico": [
+     "X",
+     "-"
+    ],
+    "oferta_demanda": [
+     "X",
+     "-"
+    ],
+    "propuesta_tecnica": [
+     "X",
+     "-"
+    ],
+    "propuesta_costos": [
+     "X",
+     "-"
+    ],
+    "evaluacion": [
+     "X",
+     "-"
+    ]
+   }
+  },
+  "02.01.1": {
+   "tipo": "grupo",
+   "hoja": "Anexo 1. Registro de C.U",
+   "celdas": {
+    "fuente": "B13",
+    "gg": "I15",
+    "utilidad": "I17",
+    "fecha": "B19",
+    "igv": "I19",
+    "justificacion": "I25"
+   },
+   "desc": "Fuente, % GG, % utilidad, fecha, % IGV (fracciones: 0.10) y justificación (I25 combinada para todas las filas)"
+  },
+  "02.01.6": {
+   "tipo": "filas",
+   "hoja": "Anexo 1. Registro de C.U",
+   "filas": {
+    "Aula de Educación Inicial": 25,
+    "Aula de Educación Primaria": 26,
+    "Aula de Educación Secundaria": 27,
+    "Sala de Psicomotricidad": 28,
+    "Aula de Innovación Pedagógica": 29,
+    "Laboratorios y/o Talleres (Taller liviano)": 30,
+    "Laboratorios y/o Talleres (Laboratorio y/o taller pesado)": 31,
+    "Laboratorios y/o Talleres": 32,
+    "Biblioteca Escolar": 33,
+    "Auditorio": 34,
+    "Sala de Usos Múltiples": 35,
+    "Espacios de circulación interior": 36,
+    "Espacios de circulación interior (escalera)": 37,
+    "Espacios de circulación interior (rampa)": 38,
+    "Ambiente de Administración y/o Gestión Pedagógica": 39,
+    "Ambiente de preparación y expendio de alimentos": 40,
+    "Ambientes de Servicios Generales": 41,
+    "Depósito": 42,
+    "Ambiente de residencia": 43,
+    "SS.HH. y/o vestidores (SS.HH.)": 44,
+    "SS.HH. y/o vestidores (vestidores)": 45,
+    "SS.HH. y/o vestidores": 46
+   },
+   "columnas": {
+    "cu_uf": "F"
+   },
+   "desc": "CU total estimado por la UF (incluye CD+GG+U+IGV). La clave es el nombre exacto del activo"
+  },
+  "03.01.3": {
+   "tipo": "celda",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "O19",
+   "desc": "N° de edificaciones"
+  },
+  "03.01.4": {
+   "tipo": "lista",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "fila_inicio": 23,
+   "max_filas": 20,
+   "columnas": {
+    "pisos": "M",
+    "niveles": "N",
+    "nombre": "O"
+   },
+   "desc": "Detalle de edificaciones (N° 1..n es fórmula)",
+   "opciones": {
+    "niveles": [
+     "I",
+     "P",
+     "S",
+     "IP",
+     "PS",
+     "IS",
+     "IPS"
+    ]
+   }
+  },
+  "03.03.1": {
+   "tipo": "lista",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "fila_inicio": 70,
+   "max_filas": 503,
+   "columnas": {
+    "edificacion": "C",
+    "piso": "D",
+    "naturaleza": "E",
+    "ambiente": "F",
+    "metrado": "H",
+    "activo": "J",
+    "nivel": "L"
+   },
+   "desc": "PASO 3 ambientes. edificacion y piso numéricos (el formato muestra E-01 / 1P). activo = nombre exacto de Anexo 1 B25:B46",
+   "opciones": {
+    "naturaleza": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "activo": [
+     "Aula de Educación Inicial",
+     "Aula de Educación Primaria",
+     "Aula de Educación Secundaria",
+     "Sala de Psicomotricidad",
+     "Aula de Innovación Pedagógica",
+     "Laboratorios y/o Talleres (Taller liviano)",
+     "Laboratorios y/o Talleres (Laboratorio y/o taller pesado)",
+     "Laboratorios y/o Talleres",
+     "Biblioteca Escolar",
+     "Auditorio",
+     "Sala de Usos Múltiples",
+     "Espacios de circulación interior",
+     "Espacios de circulación interior (escalera)",
+     "Espacios de circulación interior (rampa)",
+     "Ambiente de Administración y/o Gestión Pedagógica",
+     "Ambiente de preparación y expendio de alimentos",
+     "Ambientes de Servicios Generales",
+     "Depósito",
+     "Ambiente de residencia",
+     "SS.HH. y/o vestidores (SS.HH.)",
+     "SS.HH. y/o vestidores (vestidores)",
+     "SS.HH. y/o vestidores"
+    ],
+    "nivel": [
+     "I",
+     "P",
+     "S",
+     "IP",
+     "PS",
+     "IS",
+     "IPS"
+    ]
+   }
+  },
+  "03.03.2": {
+   "tipo": "celda",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "E588",
+   "desc": "PASO 4: justificación de variación de aulas"
+  },
+  "03.03.3": {
+   "tipo": "filas",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "filas": {
+    "cercos": 599,
+    "muro": 600,
+    "deportivo_sin_cob": 601,
+    "deportivo_con_cob": 602,
+    "espacios_exteriores": 603,
+    "inst_exteriores": 604
+   },
+   "columnas": {
+    "piso": "D",
+    "naturaleza": "E",
+    "nombre": "F",
+    "nivel": "L"
+   },
+   "desc": "PASO 5 parte A (resumen de obras exteriores)",
+   "opciones": {
+    "naturaleza": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "nivel": [
+     "I",
+     "P",
+     "S",
+     "IP",
+     "PS",
+     "IS",
+     "IPS"
+    ]
+   }
+  },
+  "03.03.4": {
+   "tipo": "lista",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "fila_inicio": 610,
+   "max_filas": 66,
+   "columnas": {
+    "naturaleza": "B",
+    "nombre": "D",
+    "metrado": "H",
+    "unidad": "I",
+    "activo": "J",
+    "nivel": "L",
+    "cu_directo": "M"
+   },
+   "desc": "PASO 5 parte B: detalle de obras exteriores (CU directo sin GG/U/IGV)",
+   "opciones": {
+    "naturaleza": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "unidad": [
+     "ml",
+     " m2",
+     "m3",
+     "und",
+     "glb"
+    ],
+    "activo": [
+     "Cercos y/o Portadas",
+     "Muro de contención",
+     "Espacios Deportivos - sin cobertura",
+     "Espacios Deportivos - con cobertura",
+     "Espacios Exteriores",
+     "Instalaciones exteriores de Servicios Básicos"
+    ],
+    "nivel": [
+     "I",
+     "P",
+     "S",
+     "IP",
+     "PS",
+     "IS",
+     "IPS"
+    ]
+   }
+  },
+  "03.03.5": {
+   "tipo": "lista",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "fila_inicio": 681,
+   "max_filas": 19,
+   "columnas": {
+    "naturaleza": "B",
+    "actividad": "D",
+    "metrado": "H",
+    "unidad": "I",
+    "tipo": "J",
+    "nivel": "L",
+    "cu_directo": "M"
+   },
+   "desc": "PASO 6 provisionales/preliminares/SSO. %EDIF y %CT: metrado como fracción (0.04) y SIN cu_directo. tipo=\"otros\"",
+   "opciones": {
+    "naturaleza": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "unidad": [
+     "ml",
+     " m2",
+     "m3",
+     "und",
+     "glb",
+     "%EDIF",
+     "%CT",
+     "kid"
+    ],
+    "tipo": [
+     "otros"
+    ],
+    "nivel": [
+     "I",
+     "P",
+     "S",
+     "IP",
+     "PS",
+     "IS",
+     "IPS"
+    ]
+   }
+  },
+  "03.03.6": {
+   "tipo": "lista",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "fila_inicio": 706,
+   "max_filas": 8,
+   "columnas": {
+    "actividad": "D",
+    "cantidad": "H",
+    "unidad": "I",
+    "metrado": "J",
+    "um": "K",
+    "nivel": "L",
+    "cu_directo": "M"
+   },
+   "desc": "PASO 7 contingencia (CD parcial = metrado × cu_directo)",
+   "opciones": {
+    "unidad": [
+     "amb",
+     " est",
+     " glb"
+    ],
+    "um": [
+     "ml",
+     " m2",
+     " glb"
+    ],
+    "nivel": [
+     "I",
+     "P",
+     "S",
+     "IP",
+     "PS",
+     "IS",
+     "IPS"
+    ]
+   }
+  },
+  "03.03.8": {
+   "tipo": "grupo",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celdas": {
+    "gg_obras": "J728",
+    "gg_contingencia": "K728",
+    "gg_mobiliario_equipo": "M728",
+    "utilidad_obras": "J730",
+    "utilidad_contingencia": "K730",
+    "utilidad_mobiliario_equipo": "M730"
+   },
+   "desc": "PASO 8: GG como MONTO (S/) y utilidad como fracción (0.07). Los GG dependen del CD calculado: segunda pasada"
+  },
+  "03.03.18": {
+   "tipo": "lista",
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "fila_inicio": 786,
+   "max_filas": 3,
+   "columnas": {
+    "descripcion": "E",
+    "monto": "H"
+   },
+   "desc": "Otros factores productivos"
+  },
+  "04.03.1": {
+   "tipo": "celda",
+   "hoja": "Anexo 3. Presup de MOB y EQUIP",
+   "celda": "F78",
+   "desc": "% transporte y embalaje (fracción, 0.08)"
+  },
+  "04.02.1": {
+   "tipo": "filas",
+   "hoja": "Anexo 3. Presup de MOB y EQUIP",
+   "filas": {
+    "inicial": 40,
+    "primaria": 41,
+    "secundaria": 42,
+    "psicomotricidad": 43,
+    "aip": 44,
+    "laboratorio": 45,
+    "taller_creativo": 46,
+    "taller_arte": 47,
+    "taller_ept": 48,
+    "cocina": 49,
+    "topico": 50,
+    "deportivos": 51,
+    "otros_espacios": 52
+   },
+   "columnas": {
+    "kits": "I"
+   },
+   "desc": "N° de kits de mobiliario (solo tienen costo los bienes con AE=No)"
+  },
+  "04.02.2": {
+   "tipo": "filas",
+   "hoja": "Anexo 3. Presup de MOB y EQUIP",
+   "filas": {
+    "inicial": 59,
+    "primaria": 60,
+    "secundaria": 61,
+    "psicomotricidad": 62,
+    "aip": 63,
+    "laboratorio": 64,
+    "taller_creativo": 65,
+    "taller_arte": 66,
+    "taller_ept": 67,
+    "cocina": 68,
+    "topico": 69,
+    "deportivos": 70,
+    "otros_espacios": 71
+   },
+   "columnas": {
+    "kits": "I"
+   },
+   "desc": "N° de kits de equipo"
+  },
+  "04.03.3": {
+   "tipo": "lista",
+   "hoja": "Anexo 3. Presup de MOB y EQUIP",
+   "fila_inicio": 86,
+   "max_filas": 1250,
+   "columnas": {
+    "ambiente": "B",
+    "bien": "D",
+    "es_ae": "E",
+    "tipo": "F",
+    "n_ambientes": "G",
+    "cantidad": "I",
+    "pu": "K"
+   },
+   "desc": "Detalle de bienes. ambiente ∈ Data!Z26:Z39 (no hay Biblioteca: usar \"Otros Espacios\"). es_ae \"Si\"/\"No\" SIN tilde. tipo M/E. pu con IGV sin flete",
+   "opciones": {
+    "ambiente": [
+     "Aula de Educación Inicial",
+     "Aula de Educación Primaria",
+     "Aula de Educación Secundaria",
+     "Sala de psicomotricidad",
+     "Aula de Innovación Pedagógica",
+     "Laboratorio",
+     "Taller creativo",
+     "Taller de arte",
+     "Taller de EPT",
+     "Cocina",
+     "Tópico",
+     "Espacios deportivos",
+     "Lanchas**",
+     "Otros Espacios"
+    ],
+    "es_ae": [
+     "Si",
+     "No"
+    ],
+    "tipo": [
+     "M",
+     " E"
+    ]
+   }
+  },
+  "06.01": {
+   "tipo": "grupo",
+   "hoja": "Anexo 5. Evaluación Eco.",
+   "celdas": {
+    "tsd": "F7",
+    "factor_inversion": "D8",
+    "factor_om": "D9",
+    "residual_pct": "F8"
+   },
+   "desc": "Alternativa 1: TSD, factores, valor residual como FRACCIÓN de la inversión (valor/inversión)"
+  },
+  "06.02": {
+   "tipo": "grupo",
+   "hoja": "Anexo 5. Evaluación Eco.",
+   "celdas": {
+    "tsd": "M7",
+    "factor_inversion": "K8",
+    "factor_om": "K9",
+    "residual_pct": "M8",
+    "om_sin_proyecto": "J18",
+    "om_con_proyecto": "L18"
+   },
+   "desc": "Alternativa 2: la inversión viene de FICHA I902; O&M anual constante (años 2-10 son fórmulas)"
+  }
+ },
+ "verificaciones": [
+  {
+   "hoja": "FICHA",
+   "celda": "U766",
+   "esperado": "OK",
+   "desc": "Obras civiles: K766 = T766"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U776",
+   "esperado": "OK",
+   "desc": "Contingencia"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U789",
+   "esperado": "OK",
+   "desc": "Mobiliario y equipo"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U797",
+   "esperado": "OK",
+   "desc": "Metas físicas"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U829",
+   "esperado": "OK",
+   "desc": "Cronograma infraestructura"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U830",
+   "esperado": "OK",
+   "desc": "Cronograma obras civiles"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U831",
+   "esperado": "OK",
+   "desc": "Cronograma contingencia"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U833",
+   "esperado": "OK",
+   "desc": "Cronograma mobiliario"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U834",
+   "esperado": "OK",
+   "desc": "Cronograma equipo"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U835",
+   "esperado": "OK",
+   "desc": "Cronograma intangibles"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U838",
+   "esperado": "OK",
+   "desc": "Cronograma gestión"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U839",
+   "esperado": "OK",
+   "desc": "Cronograma expediente"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U840",
+   "esperado": "OK",
+   "desc": "Cronograma supervisión"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U841",
+   "esperado": "OK",
+   "desc": "Cronograma liquidación"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U842",
+   "esperado": "OK",
+   "desc": "Cronograma otros costos"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U843",
+   "esperado": "OK",
+   "desc": "Costo de inversión viable"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U844",
+   "esperado": "OK",
+   "desc": "Control concurrente"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U864",
+   "esperado": "OK",
+   "desc": "Cronograma físico infraestructura"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U865",
+   "esperado": "OK",
+   "desc": "Cronograma físico equipo"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U866",
+   "esperado": "OK",
+   "desc": "Cronograma físico mobiliario"
+  },
+  {
+   "hoja": "FICHA",
+   "celda": "U867",
+   "esperado": "OK",
+   "desc": "Cronograma físico intangibles"
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "R745",
+   "esperado": "ok",
+   "desc": "CD Anexo 02 = FICHA K761"
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "R746",
+   "esperado": "OK",
+   "desc": "GG de infraestructura"
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "R777",
+   "esperado": "OK",
+   "desc": "GG de mobiliario"
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "H796",
+   "esperado_empieza": "OK",
+   "desc": "PASO 10 verificación final"
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "N581",
+   "esperado": "ok",
+   "desc": "PASO 4 aulas Inicial",
+   "si_vacio_ok": true
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "N582",
+   "esperado": "ok",
+   "desc": "PASO 4 aulas Primaria",
+   "si_vacio_ok": true
+  },
+  {
+   "hoja": "Anexo 2. Presup. Infraestruct.",
+   "celda": "N583",
+   "esperado": "ok",
+   "desc": "PASO 4 aulas Secundaria",
+   "si_vacio_ok": true
+  },
+  {
+   "hoja": "Anexo 4. RESUMEN DE PRESUPUESTO",
+   "celda": "F36",
+   "esperado": "Validación = OK",
+   "desc": "Anexo 04 edificaciones"
+  },
+  {
+   "hoja": "Anexo 4. RESUMEN DE PRESUPUESTO",
+   "celda": "G36",
+   "esperado": "Validación = OK",
+   "desc": "Anexo 04 metrados"
+  }
+ ],
+ "totales_a_leer": {
+  "cd_infraestructura": [
+   "Anexo 2. Presup. Infraestruct.",
+   "J745"
+  ],
+  "cd_contingencia": [
+   "Anexo 2. Presup. Infraestruct.",
+   "J760"
+  ],
+  "cd_mobiliario_equipo": [
+   "Anexo 2. Presup. Infraestruct.",
+   "J776"
+  ],
+  "total_obras_civiles": [
+   "FICHA",
+   "T830"
+  ],
+  "total_contingencia": [
+   "FICHA",
+   "T831"
+  ],
+  "total_mobiliario": [
+   "FICHA",
+   "T833"
+  ],
+  "total_equipo": [
+   "FICHA",
+   "T834"
+  ],
+  "diferencia_redondeo_obras": [
+   "FICHA",
+   "U767"
+  ],
+  "diferencia_redondeo_mobeq": [
+   "FICHA",
+   "U790"
+  ],
+  "costo_inversion_viable": [
+   "FICHA",
+   "K807"
+  ],
+  "costo_total": [
+   "FICHA",
+   "K815"
+  ],
+  "vac_alt1": [
+   "Anexo 5. Evaluación Eco.",
+   "D63"
+  ],
+  "vac_alt2": [
+   "Anexo 5. Evaluación Eco.",
+   "K63"
+  ],
+  "nombre_pi": [
+   "FICHA",
+   "C13"
+  ]
+ },
+ "errores_heredados": [
+  "FICHA!J106",
+  "FICHA!J107",
+  "FICHA!J108",
+  "FICHA!AR740",
+  "FICHA!AR741",
+  "FICHA!AR742",
+  "FICHA!Z702",
+  "FICHA!Z703",
+  "Anexo 4. RESUMEN DE PRESUPUESTO!B33"
+ ]
+}

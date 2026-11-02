@@ -9,7 +9,7 @@
  * El estado vive en disco (`estado.json`) porque lo escriben dos procesos distintos: el servidor y, cuando llena Claude Code, el servidor MCP
  * que Claude Code lanza (src/excel/mcp-excel.js). Nunca escriben a la vez: el servidor espera a que Claude termine.
  */
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { ErrorRespuesta, validarCampos, validarTabla } from '../validar.js';
 
@@ -199,6 +199,51 @@ export class Sesion {
     if (!this.disponible || !existsSync(this.rutaExcel)) return { valores: {} };
     const motor = await cargarMotor();
     return motor.volcarFicha({ excel: this.rutaExcel, excelEstructura: this.formato, plantilla: leerJson(this.plantilla), seccionesIds });
+  }
+
+  /** Toma el Excel que escribió Claude y lo deja como entregable de la sesión (sin reescribirlo con el motor). */
+  adoptarExcel(origen) {
+    this.extension = extname(origen) || this.extension;
+    this.rutaExcel = join(this.dir, `ficha_llenada${this.extension}`);
+    copyFileSync(origen, this.rutaExcel);
+  }
+
+  /**
+   * Lee el Excel adoptado con el volcado de la plataforma y llena campos/tablas para respuesta.json.
+   * No vuelve a escribir el libro: el entregable es el archivo de Claude.
+   */
+  async aplicarVolcado() {
+    this.recargar();
+    const dump = await this.leerDelExcel();
+    const valores = dump.valores ?? {};
+    this.valores = { ...valores };
+    for (const s of this.paq.secciones) {
+      const campos = s.campos.map((c) => {
+        const raw = valores[c.identificador];
+        const texto = raw == null ? '' : typeof raw === 'string' ? raw : JSON.stringify(raw);
+        const hay = texto.trim() !== '';
+        return {
+          id: c.identificador,
+          valor_propuesto: hay ? texto : null,
+          estado: hay ? 'extraido' : 'no_encontrado',
+          confianza: hay ? 0.6 : 0,
+          fuente: hay ? 'excel_llenado_por_ia' : '',
+          evidencia: '',
+        };
+      });
+      if (campos.length) this.res.campos.set(s.id, campos);
+      for (const tb of s.tablas) {
+        const raw = valores[tb.id];
+        if (raw == null || raw === '') continue;
+        let valor = raw;
+        if (typeof raw === 'string') {
+          try { valor = JSON.parse(raw); } catch { valor = raw; }
+        }
+        this.res.tablas.set(tb.id, { valor, fuente: 'excel_llenado_por_ia' });
+      }
+    }
+    this.persistir();
+    return valores;
   }
 
   /** Deja constancia de cada entrega de la IA (entrada y respuesta de la herramienta) para el diagnóstico. */

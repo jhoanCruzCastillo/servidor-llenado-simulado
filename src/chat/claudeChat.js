@@ -23,8 +23,7 @@ export const modeloValido = (m) => MODELOS.some((x) => x.id === m);
 
 const SISTEMA =
   'Esta es una conversación de chat general. Responde de forma clara, cercana y útil, en el idioma de la persona (por defecto español). '
-  + 'Usa Markdown cuando ayude (listas, tablas, bloques de código indicando el lenguaje). '
-  + 'No tienes herramientas ni acceso a archivos, internet ni a ejecutar código en esta conversación: no finjas hacerlo. Si no sabes algo, dilo.';
+  + 'Usa Markdown cuando ayude (listas, tablas, bloques de código indicando el lenguaje). Si no sabes algo, dilo.';
 
 const SISTEMA_CON_ARCHIVOS =
   'Esta es una conversación de chat. La persona puede adjuntar archivos; están en tu directorio de trabajo, con sus nombres originales. '
@@ -80,13 +79,13 @@ function ejecutarUnaVez({ prompt, resumeId, modelo, signal, onDelta, cwd, conArc
     '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--model', modelo,
     '--append-system-prompt', conArchivos ? SISTEMA_CON_ARCHIVOS : SISTEMA,
-    '--tools', conArchivos ? 'Read,Glob' : '',
+    '--tools', conArchivos ? 'Read,Glob' : 'Read',
+    '--allowedTools', conArchivos ? 'Read,Glob' : 'Read',
     '--permission-mode', 'dontAsk',
     '--max-turns', conArchivos ? '12' : '3',
     '--setting-sources', 'project,local',
     '--strict-mcp-config',
   ];
-  if (conArchivos) args.push('--allowedTools', 'Read,Glob');
   if (resumeId) args.push('--resume', resumeId);
 
   const { cmd, args: previos, shell } = resolverBin();

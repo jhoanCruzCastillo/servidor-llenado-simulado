@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Skill(llenar-fichas-mef)"]
+  }
+}

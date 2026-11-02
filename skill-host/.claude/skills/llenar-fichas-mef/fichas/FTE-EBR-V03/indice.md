@@ -1,0 +1,415 @@
+# Índice de campos — FTE-EBR-V03
+
+FTE para el mejoramiento, ampliación y/o recuperación de los servicios de Educación Inicial, Primaria y Secundaria (MINEDU, v03)
+
+Generado con `scripts/indice_mapa.py`; no editar a mano (editar mapa.json y regenerar).
+
+Tipos: **celda** → valor · **grupo** → {clave: valor} · **filas** → {fila: {columna: valor}} · **lista** → [{columna: valor}, …] en orden · **anual** → {fila: [periodo1, periodo2, …]}
+
+
+## FICHA
+
+- **01.01.2** `celda` — Código CUI (lo asigna el aplicativo; normalmente vacío) (`L16`)
+- **01.01.3** `celda` — Naturaleza de intervención (alimenta el nombre del PI) (`L18`)
+  - lista: AMPLIACIÓN | RECUPERACIÓN | MEJORAMIENTO | MEJORAMIENTO Y AMPLIACIÓN
+- **01.01.4** `grupo` — ¿Pertenece a un programa de inversión? marcar X
+  - claves: `si`, `no`
+  - lista `si`: X | -
+  - lista `no`: X | -
+- **01.01.6** `celda` — Código del programa de inversión (`L23`)
+- **01.02.3** `celda` — Grupo funcional (lista) (`G31`)
+  - lista: 0103 Educación Inicial | 0104 Educación Primaria | 0105 Educación Secundaria | 0106 Educación Básica Alternativa
+- **01.03.1** `grupo` — Institucionalidad OPMI
+  - claves: `nivel`, `entidad`, `nombre`, `responsable`
+- **01.03.2** `grupo` — Institucionalidad UF
+  - claves: `nivel`, `entidad`, `nombre`, `responsable`
+- **01.03.3** `grupo` — Institucionalidad UEI
+  - claves: `nivel`, `entidad`, `nombre`, `responsable`
+- **01.03.4** `celda` — Nombre de la UEP (`I63`)
+- **01.04.1** `grupo` — Servicios intervenidos (X)
+  - claves: `inicial`, `primaria`, `secundaria`, `eba`
+  - lista `inicial`: X | -
+  - lista `primaria`: X | -
+  - lista `secundaria`: X | -
+  - lista `eba`: X | -
+- **01.04.2** `celda` — Brecha de calidad (X) (`P70`)
+  - lista: X | -
+- **01.04.3** `celda` — Brecha de cobertura (X) (`P72`)
+  - lista: X | -
+- **01.04.4** `filas` — Indicadores de calidad por servicio (valor en formato %, contribución en N° IE = ítem 4.3)
+  - filas: `inicial`, `primaria`, `secundaria`, `eba`
+  - columnas: `espacio`, `anio`, `valor`, `contribucion`
+  - lista `espacio`: Distrito | Provincia | Departamento | Nacional
+- **01.04.6** `filas` — Indicadores de cobertura por servicio (contribución en persona/año = ítem 4.3)
+  - filas: `inicial`, `primaria`, `secundaria`, `eba`
+  - columnas: `espacio`, `anio`, `valor`, `contribucion`
+  - lista `espacio`: Distrito | Provincia | Departamento | Nacional
+- **01.05.4** `celda` — Código de local ESCALE (número). Llena ubicación, IE y modulares desde Padron_web (`H100`)
+- **01.05.5** `filas` — ¿Se interviene la IE? (nombre y zona son fórmulas)
+  - filas: `ie1`, `ie2`, `ie3`
+  - columnas: `interviene`
+  - lista `interviene`: Sí | No
+- **01.05.6** `filas` — Áreas productivas: altitud y ¿se interviene? (modular, nivel, lat/long son fórmulas del padrón)
+  - filas: `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`
+  - columnas: `altitud`, `interviene`
+  - lista `interviene`: Sí | No
+- **01.05.7** `grupo` — C1.3 Naturaleza de intervención en el servicio: una X, el resto "-"
+  - claves: `ampliacion`, `recuperacion`, `mejoramiento`, `mejoramiento_y_ampliacion`
+  - lista `ampliacion`: X | -
+  - lista `recuperacion`: X | -
+  - lista `mejoramiento`: X | -
+  - lista `mejoramiento_y_ampliacion`: X | -
+- **01.06.1** `filas` — Localización del área de influencia: localidad (dpto/prov/distrito son fórmulas en 1-3)
+  - filas: `1`, `2`, `3`, `4`, `5`
+  - columnas: `localidad`
+- **01.06.2** `celda` — Descripción del área de estudio / influencia (`D152`)
+- **01.07.1** `celda` — Población afectada (`F161`)
+- **01.08.1** `filas` — Servicios básicos. tipo_alt debe copiarse EXACTO de la lista (ej. "(1) Pozo Propio " con espacio final)
+  - filas: `agua`, `desague`, `electricidad`, `alumbrado`, `telefonia`, `internet`, `residuos`, `gas`
+  - columnas: `red_localidad`, `ie01`, `ie02`, `ie03`, `provision_alt`, `tipo_alt`, `comentario`
+  - lista `red_localidad`: Sí | No
+  - lista `ie01`: Sí | No
+  - lista `ie02`: Sí | No
+  - lista `ie03`: Sí | No
+  - lista `provision_alt`: Sí | No
+  - lista `tipo_alt` en `agua`: (1) Pozo Propio | (2) Río, acequia, manantial, etc. | (3) Camión Cisterna | (4) Pilón de uso público (agua potable) | (5) Otros
+  - lista `tipo_alt` en `desague`: (1) Tanque Séptico/Tanque Imhoff | (2) Pozo Percolador | (3) Zanja de Filtración | (4) Pozo con tratamiento | (5) Pozo sin tratamiento
+  - lista `tipo_alt` en `electricidad`: (1) Generador Eléctrico | (2) Motor Eléctrico | (3) Paneles Solares | (5) Otros
+  - lista `tipo_alt` en `alumbrado`: (1) Generador Eléctrico | (2) Motor Eléctrico | (3) Paneles Solares | (5) Otros
+  - lista `tipo_alt` en `telefonia`: (1) Red inalámbrica | (2) Señal de Celular | (2) Señal Satelital | (3) Red de Fibra óptica | (5) Otros
+  - lista `tipo_alt` en `internet`: (1) Red inalámbrica | (2) Señal de Celular | (2) Señal Satelital | (3) Red de Fibra óptica | (5) Otros
+  - lista `tipo_alt` en `residuos`: (1) Recolección y quemado en la IE | (2) Traslado privado a botadero | (5) Otros
+  - lista `tipo_alt` en `gas`: (1) Balón de Gas | (5) Otros
+- **01.08.3** `filas` — ¿Se adjunta estudio topográfico? por terreno
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `adjunta`
+  - lista `adjunta`: Sí | No
+- **01.08.7** `filas` — Medidas del terreno (m2, m2, m)
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `area`, `area_util`, `perimetro`
+- **01.08.4** `filas` — ¿Límites definidos?
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `limites`
+  - lista `limites`: Sí | No
+- **01.08.8** `filas` — Coordenadas UTM
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `x`, `y`
+- **01.08.5** `filas` — Cerco perimétrico (lista)
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `cerco`
+  - lista `cerco`: (1) Si cuenta - completo | (2) Si cuenta - Incompleto | (3) No Cuenta con Cerco
+- **01.08.6** `filas` — Forma del terreno (lista)
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `forma`
+  - lista `forma`: (1) Regular | (2) Irregular
+- **01.08.9** `filas` — Topografía: X en el tipo, "-" en los demás
+  - filas: `llano`, `inclinado`, `muy_inclinado`, `accidentado`
+  - columnas: `t01`, `t02`, `t03`
+  - lista `t01`: X | -
+  - lista `t02`: X | -
+  - lista `t03`: X | -
+- **01.08.10** `filas` — ¿Informe de suelos? (lista SI/NO en mayúsculas)
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `adjunta`
+  - lista `adjunta`: SI | NO
+- **01.08.11** `filas` — Capacidad portante
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `kg_cm2`
+- **01.08.12** `filas` — Nivel freático
+  - filas: `t01`, `t02`, `t03`
+  - columnas: `m`
+- **01.08.13** `filas` — Tipo de suelo: X / -
+  - filas: `grava`, `arena`, `limos_baja`, `limos_alta`, `organicos`
+  - columnas: `t01`, `t02`, `t03`
+  - lista `t01`: X | -
+  - lista `t02`: X | -
+  - lista `t03`: X | -
+- **01.08.14** `grupo` — Responsable del estudio de suelos
+  - claves: `profesional`, `cip`
+- **01.08.15** `celda` — Arquitectura existente (`F251`)
+- **01.08.16** `grupo` — Estructuras / IIEE / IISS
+  - claves: `estructuras`, `electricas`, `sanitarias`
+- **01.08.17** `filas` — Activos existentes en edificaciones (llenar 0 en filas sin activos)
+  - filas: `ini_aula`, `ini_psicomotricidad`, `ini_sum`, `pri_aula`, `pri_aip`, `pri_lab`, `pri_biblioteca`, `pri_auditorio`, `pri_sum`, `sec_aula`, `sec_aip`, `sec_lab`, `sec_biblioteca`, `sec_auditorio`, `sec_sum`, `administracion`, `cocina`, `servicios_generales`, `deposito`, `residencia`, `sshh`
+  - columnas: `total`, `no_interv`, `construccion`, `reforzamiento`, `remodelacion`, `reparacion`, `demoler`, `comentario`
+- **01.08.18** `filas` — Activos de obras exteriores (Sí/No y X/-)
+  - filas: `cercos`, `muro`, `deportivo_sin_cob`, `deportivo_con_cob`, `inst_exteriores`, `espacios_exteriores`
+  - columnas: `cuenta`, `requiere`, `construccion`, `reforzamiento`, `remodelacion`, `reparacion`, `demolicion`, `comentario`
+  - lista `cuenta`: Sí | No
+  - lista `requiere`: Sí | No
+  - lista `construccion`: X | -
+  - lista `reforzamiento`: X | -
+  - lista `remodelacion`: X | -
+  - lista `reparacion`: X | -
+  - lista `demolicion`: X | -
+- **01.08.19** `grupo` — Estado de mobiliario y equipo (01.08.19 y 01.08.20)
+  - claves: `mobiliario`, `equipo`
+- **01.08.21** `filas` — Peligros. nivel ∈ Bajo/Medio/Alto/Muy Alto (no existe "Medio-Alto")
+  - filas: `sismos`, `tsunamis`, `heladas`, `friajes`, `erupciones`, `sequias`, `granizadas`, `lluvias`, `avalanchas`, `huaycos`, `deslizamientos`, `erosion`, `inundaciones`, `vientos`, `incendios_urbanos`, `incendios_forestales`, `radiacion`, `contaminacion`
+  - columnas: `existe`, `nivel`, `antecedentes`, `especificar`, `afectado`, `mitigable`
+  - lista `existe`: Sí | No
+  - lista `nivel`: Bajo | Medio | Alto | Muy Alto
+  - lista `antecedentes`: Sí | No
+  - lista `afectado`: Sí | No
+  - lista `mitigable`: Sí | No
+- **01.08.22** `filas` — Zonas afectadas (Sí/No)
+  - filas: `aulas`, `computadoras`, `administrativo`, `otros_ambientes`, `redes_exteriores`, `cerco`, `mobiliarios`, `equipamientos`
+  - columnas: `afectada`
+  - lista `afectada`: Sí | No
+- **01.08.23** `grupo` — FEN (01.08.23), peligro mayor (01.08.24), año (01.08.25)
+  - claves: `fen`, `peligro_mayor`, `anio`
+  - lista `fen`: Sí | No
+  - lista `peligro_mayor`: Inundaciones | Heladas | Friajes | Sequías | Granizadas | Lluvias intensas | Avalanchas | Flujos de lodo (huaycos) | Deslizamientos | Erosíón
+- **01.09.1** `celda` — ¿Se adjunta informe técnico de saneamiento? (`H364`)
+  - lista: Sí | No
+- **01.09.2** `filas` — Información registral por predio
+  - filas: `p01`, `p02`, `p03`, `p04`
+  - columnas: `adjunta_partida`, `partida`, `oficina`, `area`, `comentario`
+  - lista `adjunta_partida`: Sí | No
+- **01.09.3** `filas` — Levantamiento topográfico vs registral
+  - filas: `p01`, `p02`, `p03`, `p04`
+  - columnas: `area_levantamiento`, `compatibles`, `rectificar`, `comentario`
+  - lista `compatibles`: Sí | No
+  - lista `rectificar`: Sí | No
+- **01.09.4** `filas` — Información complementaria (Margesí)
+  - filas: `p01`, `p02`, `p03`, `p04`
+  - columnas: `margesi`, `codigo`, `busqueda_catastral`, `comentario`
+  - lista `margesi`: Sí | No
+  - lista `busqueda_catastral`: Sí | No
+- **01.09.5** `filas` — A1 Titularidad
+  - filas: `p01`, `p02`, `p03`, `p04`
+  - columnas: `minedu_titular`, `entidad_titular`, `derecho_inscrito`, `tipo_derecho`, `saneado_minedu`, `sustentar_arreglos`, `comentario`
+  - lista `minedu_titular`: Sí | No
+  - lista `entidad_titular`: - | (A1) DRE y/o UGEL | (A2) Municipalidad | (A3) COFOPRI | (A4) GORE | (A5) Institución Educativa | (B) Comunidad Campesina o Nativa | (C) Privados
+  - lista `derecho_inscrito`: Sí | No
+  - lista `tipo_derecho`: - | Cesión en uso | Afectación de uso permanente | Afectación de uso provisional | Inscripción preventiva | Otros (especificar en comentarios)
+  - lista `saneado_minedu`: Sí | No
+  - lista `sustentar_arreglos`: Sí | No
+- **01.09.6** `filas` — A2 Acciones complementarias
+  - filas: `p01`, `p02`, `p03`, `p04`
+  - columnas: `problema_titularidad`, `subsanable_tit`, `accion_tit`, `problema_areas`, `subsanable_area`, `accion_area`, `sustenta_area_tecnica`, `area_tecnica`, `acta_compromiso`, `area_acta`, `saneamiento_completo`, `comentario`
+  - lista `problema_titularidad`: Sí | No
+  - lista `subsanable_tit`: Sí | No
+  - lista `accion_tit`: - | Inscripción y/o aclaración de dominio | Otros (especificar en comentarios)
+  - lista `problema_areas`: Sí | No
+  - lista `subsanable_area`: Sí | No
+  - lista `sustenta_area_tecnica`: Sí | No
+  - lista `area_tecnica`: - | DISAFIL | DRE/UGEL | Otros (especificar en comentarios)
+  - lista `acta_compromiso`: Sí | No
+  - lista `area_acta`: - | DISAFIL | DRE/UGEL | Otros (especificar en comentarios)
+  - lista `saneamiento_completo`: Sí | No
+- **01.09.7** `grupo` — 9.2.2 y 9.2.3 (01.09.7 a 01.09.10)
+  - claves: `arreglos`, `comentario_arreglos`, `disponibilidad`, `documento_disponibilidad`
+  - lista `arreglos`: Sí | No
+  - lista `disponibilidad`: Sí | No
+- **01.09.11** `grupo` — Verificación 9.2.4
+  - claves: `saneamiento`, `arreglos`, `disponibilidad`
+  - lista `saneamiento`: Sí | No
+  - lista `arreglos`: Si | No
+  - lista `disponibilidad`: Sí | No
+- **01.10.1** `lista` — Matriz de involucrados (máx. 5 filas)
+  - máx. 5 filas; columnas: `actor`, `ambito`, `entidad`, `posicion`, `intereses`, `contribucion`
+  - lista `ambito`: Nacional | Regional | Local | Otros
+  - lista `posicion`: Cooperante | Beneficiario | Oponente | Perjudicado
+- **01.11.2** `grupo` — Causas y efectos (X)
+  - claves: `causa_infra`, `causa_mobiliario`, `causa_equipo`, `efecto_riesgo`, `efecto_bajo_nivel`, `efecto_baja_cobertura`
+  - lista `causa_infra`: X | -
+  - lista `causa_mobiliario`: X | -
+  - lista `causa_equipo`: X | -
+  - lista `efecto_riesgo`: X | -
+  - lista `efecto_bajo_nivel`: X | -
+  - lista `efecto_baja_cobertura`: X | -
+- **01.12.2** `grupo` — Medios y fines (X)
+  - claves: `medio_infra`, `medio_mobiliario`, `medio_equipo`, `fin_seguridad`, `fin_nivel`, `fin_cobertura`
+  - lista `medio_infra`: X | -
+  - lista `medio_mobiliario`: X | -
+  - lista `medio_equipo`: X | -
+  - lista `fin_seguridad`: X | -
+  - lista `fin_nivel`: X | -
+  - lista `fin_cobertura`: X | -
+- **01.12.4** `celda` — Alternativa 2 (texto). La alternativa 1 es fórmula (`F479`)
+- **01.13.1** `grupo` — Horizonte (a) en meses
+  - claves: `contratacion_et`, `elaboracion_et`, `revision_aprobacion_et`, `otro_a`
+- **01.13.4** `grupo` — Horizonte (b) en meses
+  - claves: `contratacion_ejecucion`, `ejecucion`, `recepcion_liquidacion`, `otro_b`
+- **01.14.1** `grupo` — Parámetros y supuestos (01.14.1 a 01.14.7; supuestos con X)
+  - claves: `fuentes`, `parametros`, `vive_area_influencia`, `mismas_caracteristicas`, `oferta_publica_privada`, `otros_supuestos`, `otros_texto`
+  - lista `vive_area_influencia`: X | -
+  - lista `mismas_caracteristicas`: X | -
+  - lista `oferta_publica_privada`: X | -
+  - lista `otros_supuestos`: X | -
+- **01.14.8** `anual` — Balance O/D Inicial por edad, años 1-10 (si no hay Inicial: todo 0)
+  - filas: `0_1_oferta`, `0_1_demanda`, `1_2_oferta`, `1_2_demanda`, `2_3_oferta`, `2_3_demanda`, `3_oferta`, `3_demanda`, `4_oferta`, `4_demanda`, `5_oferta`, `5_demanda`
+  - 10 periodos
+- **01.14.10** `anual` — Balance O/D Primaria por grado, años 1-10. Oferta = oferta optimizada (0 si todo se demuele)
+  - filas: `g1_oferta`, `g1_demanda`, `g2_oferta`, `g2_demanda`, `g3_oferta`, `g3_demanda`, `g4_oferta`, `g4_demanda`, `g5_oferta`, `g5_demanda`, `g6_oferta`, `g6_demanda`
+  - 10 periodos
+- **01.14.11** `anual` — Balance O/D Secundaria por grado, años 1-10
+  - filas: `g1_oferta`, `g1_demanda`, `g2_oferta`, `g2_demanda`, `g3_oferta`, `g3_demanda`, `g4_oferta`, `g4_demanda`, `g5_oferta`, `g5_demanda`
+  - 10 periodos
+- **01.14.12** `filas` — Beneficiarios: unidad ("Estudiantes"); K y N solo para EBA
+  - filas: `inicial_c1`, `inicial_c2`, `primaria`, `secundaria`, `eba`
+  - columnas: `unidad`, `ultimo_anio`, `sumatoria`
+  - lista `unidad`: Estudiantes | m2
+- **01.14.16** `filas` — Capacidad de producción. aulas_optimizadas = aulas existentes que NO se demuelen
+  - filas: `inicial_c1`, `inicial_c2`, `primaria`, `secundaria`, `eba`
+  - columnas: `actual`, `aulas_optimizadas`, `max_optimizada`, `aulas_proyecto`, `max_proyecto`
+- **01.15.1** `anual` — 15.1 Inicial por edad (0-1,1-2,2-3,3,4,5). Sin servicio: secciones 0 (con 1 genera aulas fantasma)
+  - filas: `oferta_aulas`, `max_por_aula`, `secciones_manana`
+  - 6 periodos
+- **01.15.2** `anual` — 15.1 Primaria por grado 1-6
+  - filas: `oferta_aulas`, `max_por_aula`, `secciones_manana`
+  - 6 periodos
+- **01.15.3** `anual` — 15.1 Secundaria por grado 1-5
+  - filas: `oferta_aulas`, `max_por_aula`, `secciones_manana`
+  - 5 periodos
+- **01.15.4** `celda` — Demanda de aulas funcionales JEC (opcional) (`E670`)
+- **01.15.5** `lista` — Fechas de cada fila de metas 15.2 (las filas se generan desde los anexos; una entrada por fila con activo, en el mismo orden)
+  - máx. 58 filas; columnas: `et_inicio`, `et_fin`, `ejec_inicio`, `ejec_fin`
+- **01.15.6** `filas` — Fechas de acciones que no generan AE
+  - filas: `otras_infra`, `otras_mobiliario`, `otras_equipo`
+  - columnas: `et_inicio`, `et_fin`, `ejec_inicio`, `ejec_fin`
+- **01.15.11** `celda` — Comentarios sobre metas, costos y plazos (`C749`)
+- **01.16.7** `grupo` — Otros costos de inversión (S/)
+  - claves: `gestion`, `expediente`, `supervision`, `liquidacion`
+- **01.16.9** `celda` — Costo de control concurrente (`K812`)
+- **01.16.10** `grupo` — Corrección por redondeo del IGV: ingresar la diferencia cuando U766/U776/U789 marcan "X" (ej. -0.01)
+  - claves: `obras`, `contingencia`, `mobiliario_equipo`
+- **01.16.11** `grupo` — Cronograma: fecha inicio (01.16.11), meses|trimestres (01.16.12), N° periodos (01.16.13). Máx. 12 columnas
+  - claves: `fecha_inicio`, `tipo_periodo`, `numero_periodos`
+  - lista `tipo_periodo`: meses | trimestres
+- **01.16.14** `anual` — Cronograma financiero por periodo. Cada fila debe sumar su total (ver verificaciones U829-U843)
+  - filas: `obras_civiles`, `contingencia`, `mobiliario`, `equipo`, `intangibles`, `gestion`, `expediente`, `supervision`, `liquidacion`
+  - 12 periodos
+- **01.16.16** `grupo` — Aporte de beneficiarios (01.16.16-01.16.19). recursos_publicos = costo total de inversión viable
+  - claves: `aporte_si`, `aporte_no`, `aporte_monto`, `recursos_publicos`
+  - lista `aporte_si`: X | -
+  - lista `aporte_no`: X | -
+- **01.16.21** `grupo` — Inicio de operación (fecha día 1 del mes) y horizonte
+  - claves: `inicio_om`, `horizonte`
+- **01.16.23** `anual` — O&M a precios de mercado, años 1-10
+  - filas: `operacion_sin`, `mantenimiento_sin`, `operacion_con`, `mantenimiento_con`
+  - 10 periodos
+- **01.17.1** `celda` — Beneficios sociales (`C893`)
+- **01.17.2** `celda` — Costo de inversión de la Alternativa 2 a precios de mercado (`I902`)
+- **01.18.1** `celda` — Análisis de sostenibilidad (`C921`)
+- **01.18.2** `filas` — Medidas de reducción de riesgos
+  - filas: `sismos`, `tsunamis`, `heladas`, `friajes`, `erupciones`, `sequias`, `granizadas`, `lluvias`, `avalanchas`, `huaycos`, `deslizamientos`, `erosion`, `inundaciones`, `vientos`, `incendios_urbanos`, `incendios_forestales`, `radiacion`
+  - columnas: `afecta`, `peligro`, `vulnerabilidad`, `riesgo`, `medidas`, `en_presupuesto`
+  - lista `afecta`: Sí | No
+  - lista `peligro`: Bajo | Medio | Alto | Muy Alto
+  - lista `vulnerabilidad`: Bajo | Medio | Alto | Muy Alto
+  - lista `riesgo`: Bajo | Medio | Alto | Muy Alto
+  - lista `en_presupuesto`: Sí | No
+- **01.18.4** `celda` — UEP que asume la O&M (`M957`)
+- **01.18.5** `celda` — Organización privada que asume la O&M (`M959`)
+- **01.18.6** `filas` — Documentos que sustentan la O&M
+  - filas: `organo_tecnico`, `disponibilidad_recursos`, `arreglos_funcionamiento`
+  - columnas: `entidad`, `compromiso`
+- **01.19.1** `filas` — Modalidad de ejecución (X)
+  - filas: `adm_directa`, `contrata`, `obras_por_impuestos`, `concurso_oferta`, `convenio`, `estado_a_estado`
+  - columnas: `expediente`, `obra`
+  - lista `expediente`: X | -
+  - lista `obra`: X | -
+- **01.20.1** `grupo` — Fuente de financiamiento (X)
+  - claves: `ordinarios`, `directamente_recaudados`, `credito`, `donaciones`, `determinados`
+  - lista `ordinarios`: X | -
+  - lista `directamente_recaudados`: X | -
+  - lista `credito`: X | -
+  - lista `donaciones`: X | -
+  - lista `determinados`: X | -
+- **01.21.1** `grupo` — Modalidad de elaboración de la FTE (X)
+  - claves: `adm_directa`, `adm_indirecta`
+  - lista `adm_directa`: X | -
+  - lista `adm_indirecta`: X | -
+- **01.21.2** `lista` — Equipo formulador (especialidad ya trae Arquitecto/Economista/Ing. Civil en filas 1-3)
+  - máx. 5 filas; columnas: `nombre`, `dni`, `especialidad`, `colegiatura`
+- **01.21.3** `lista` — Consultor contratado (solo adm. indirecta)
+  - máx. 1 filas; columnas: `razon_social`, `ruc`, `contrato`, `fecha`
+- **01.23.1** `grupo` — Conclusiones (01.23.1 a 01.23.5)
+  - claves: `viable`, `no_viable`, `argumentos`, `lecciones`, `recomendaciones`
+  - lista `viable`: X | -
+  - lista `no_viable`: X | -
+- **01.24.1** `grupo` — Anexos que se adjuntan (X)
+  - claves: `ficha_firmada`, `anexo01`, `anexo02`, `anexo03`, `anexo04`, `anexo05`, `formato07a`, `diagnostico`, `oferta_demanda`, `propuesta_tecnica`, `propuesta_costos`, `evaluacion`
+  - lista `ficha_firmada`: X | -
+  - lista `anexo01`: X | -
+  - lista `anexo02`: X | -
+  - lista `anexo03`: X | -
+  - lista `anexo04`: X | -
+  - lista `anexo05`: X | -
+  - lista `formato07a`: X | -
+  - lista `diagnostico`: X | -
+  - lista `oferta_demanda`: X | -
+  - lista `propuesta_tecnica`: X | -
+  - lista `propuesta_costos`: X | -
+  - lista `evaluacion`: X | -
+
+## Anexo 1. Registro de C.U
+
+- **02.01.1** `grupo` — Fuente, % GG, % utilidad, fecha, % IGV (fracciones: 0.10) y justificación (I25 combinada para todas las filas)
+  - claves: `fuente`, `gg`, `utilidad`, `fecha`, `igv`, `justificacion`
+- **02.01.6** `filas` — CU total estimado por la UF (incluye CD+GG+U+IGV). La clave es el nombre exacto del activo
+  - filas: `Aula de Educación Inicial`, `Aula de Educación Primaria`, `Aula de Educación Secundaria`, `Sala de Psicomotricidad`, `Aula de Innovación Pedagógica`, `Laboratorios y/o Talleres (Taller liviano)`, `Laboratorios y/o Talleres (Laboratorio y/o taller pesado)`, `Laboratorios y/o Talleres`, `Biblioteca Escolar`, `Auditorio`, `Sala de Usos Múltiples`, `Espacios de circulación interior`, `Espacios de circulación interior (escalera)`, `Espacios de circulación interior (rampa)`, `Ambiente de Administración y/o Gestión Pedagógica`, `Ambiente de preparación y expendio de alimentos`, `Ambientes de Servicios Generales`, `Depósito`, `Ambiente de residencia`, `SS.HH. y/o vestidores (SS.HH.)`, `SS.HH. y/o vestidores (vestidores)`, `SS.HH. y/o vestidores`
+  - columnas: `cu_uf`
+
+## Anexo 2. Presup. Infraestruct.
+
+- **03.01.3** `celda` — N° de edificaciones (`O19`)
+- **03.01.4** `lista` — Detalle de edificaciones (N° 1..n es fórmula)
+  - máx. 20 filas; columnas: `pisos`, `niveles`, `nombre`
+  - lista `niveles`: I | P | S | IP | PS | IS | IPS
+- **03.03.1** `lista` — PASO 3 ambientes. edificacion y piso numéricos (el formato muestra E-01 / 1P). activo = nombre exacto de Anexo 1 B25:B46
+  - máx. 503 filas; columnas: `edificacion`, `piso`, `naturaleza`, `ambiente`, `metrado`, `activo`, `nivel`
+  - lista `naturaleza`: 1 | 2 | 3 | 4 | 5
+  - lista `activo`: Aula de Educación Inicial | Aula de Educación Primaria | Aula de Educación Secundaria | Sala de Psicomotricidad | Aula de Innovación Pedagógica | Laboratorios y/o Talleres (Taller liviano) | Laboratorios y/o Talleres (Laboratorio y/o taller pesado) | Laboratorios y/o Talleres | Biblioteca Escolar | Auditorio | Sala de Usos Múltiples | Espacios de circulación interior | Espacios de circulación interior (escalera) | Espacios de circulación interior (rampa) | Ambiente de Administración y/o Gestión Pedagógica | Ambiente de preparación y expendio de alimentos | Ambientes de Servicios Generales | Depósito | Ambiente de residencia | SS.HH. y/o vestidores (SS.HH.) | SS.HH. y/o vestidores (vestidores) | SS.HH. y/o vestidores
+  - lista `nivel`: I | P | S | IP | PS | IS | IPS
+- **03.03.2** `celda` — PASO 4: justificación de variación de aulas (`E588`)
+- **03.03.3** `filas` — PASO 5 parte A (resumen de obras exteriores)
+  - filas: `cercos`, `muro`, `deportivo_sin_cob`, `deportivo_con_cob`, `espacios_exteriores`, `inst_exteriores`
+  - columnas: `piso`, `naturaleza`, `nombre`, `nivel`
+  - lista `naturaleza`: 1 | 2 | 3 | 4 | 5
+  - lista `nivel`: I | P | S | IP | PS | IS | IPS
+- **03.03.4** `lista` — PASO 5 parte B: detalle de obras exteriores (CU directo sin GG/U/IGV)
+  - máx. 66 filas; columnas: `naturaleza`, `nombre`, `metrado`, `unidad`, `activo`, `nivel`, `cu_directo`
+  - lista `naturaleza`: 1 | 2 | 3 | 4 | 5
+  - lista `unidad`: ml | m2 | m3 | und | glb
+  - lista `activo`: Cercos y/o Portadas | Muro de contención | Espacios Deportivos - sin cobertura | Espacios Deportivos - con cobertura | Espacios Exteriores | Instalaciones exteriores de Servicios Básicos
+  - lista `nivel`: I | P | S | IP | PS | IS | IPS
+- **03.03.5** `lista` — PASO 6 provisionales/preliminares/SSO. %EDIF y %CT: metrado como fracción (0.04) y SIN cu_directo. tipo="otros"
+  - máx. 19 filas; columnas: `naturaleza`, `actividad`, `metrado`, `unidad`, `tipo`, `nivel`, `cu_directo`
+  - lista `naturaleza`: 1 | 2 | 3 | 4 | 5
+  - lista `unidad`: ml | m2 | m3 | und | glb | %EDIF | %CT | kid
+  - lista `tipo`: otros
+  - lista `nivel`: I | P | S | IP | PS | IS | IPS
+- **03.03.6** `lista` — PASO 7 contingencia (CD parcial = metrado × cu_directo)
+  - máx. 8 filas; columnas: `actividad`, `cantidad`, `unidad`, `metrado`, `um`, `nivel`, `cu_directo`
+  - lista `unidad`: amb | est | glb
+  - lista `um`: ml | m2 | glb
+  - lista `nivel`: I | P | S | IP | PS | IS | IPS
+- **03.03.8** `grupo` — PASO 8: GG como MONTO (S/) y utilidad como fracción (0.07). Los GG dependen del CD calculado: segunda pasada
+  - claves: `gg_obras`, `gg_contingencia`, `gg_mobiliario_equipo`, `utilidad_obras`, `utilidad_contingencia`, `utilidad_mobiliario_equipo`
+- **03.03.18** `lista` — Otros factores productivos
+  - máx. 3 filas; columnas: `descripcion`, `monto`
+
+## Anexo 3. Presup de MOB y EQUIP
+
+- **04.03.1** `celda` — % transporte y embalaje (fracción, 0.08) (`F78`)
+- **04.02.1** `filas` — N° de kits de mobiliario (solo tienen costo los bienes con AE=No)
+  - filas: `inicial`, `primaria`, `secundaria`, `psicomotricidad`, `aip`, `laboratorio`, `taller_creativo`, `taller_arte`, `taller_ept`, `cocina`, `topico`, `deportivos`, `otros_espacios`
+  - columnas: `kits`
+- **04.02.2** `filas` — N° de kits de equipo
+  - filas: `inicial`, `primaria`, `secundaria`, `psicomotricidad`, `aip`, `laboratorio`, `taller_creativo`, `taller_arte`, `taller_ept`, `cocina`, `topico`, `deportivos`, `otros_espacios`
+  - columnas: `kits`
+- **04.03.3** `lista` — Detalle de bienes. ambiente ∈ Data!Z26:Z39 (no hay Biblioteca: usar "Otros Espacios"). es_ae "Si"/"No" SIN tilde. tipo M/E. pu con IGV sin flete
+  - máx. 1250 filas; columnas: `ambiente`, `bien`, `es_ae`, `tipo`, `n_ambientes`, `cantidad`, `pu`
+  - lista `ambiente`: Aula de Educación Inicial | Aula de Educación Primaria | Aula de Educación Secundaria | Sala de psicomotricidad | Aula de Innovación Pedagógica | Laboratorio | Taller creativo | Taller de arte | Taller de EPT | Cocina | Tópico | Espacios deportivos | Lanchas** | Otros Espacios
+  - lista `es_ae`: Si | No
+  - lista `tipo`: M | E
+
+## Anexo 5. Evaluación Eco.
+
+- **06.01** `grupo` — Alternativa 1: TSD, factores, valor residual como FRACCIÓN de la inversión (valor/inversión)
+  - claves: `tsd`, `factor_inversion`, `factor_om`, `residual_pct`
+- **06.02** `grupo` — Alternativa 2: la inversión viene de FICHA I902; O&M anual constante (años 2-10 son fórmulas)
+  - claves: `tsd`, `factor_inversion`, `factor_om`, `residual_pct`, `om_sin_proyecto`, `om_con_proyecto`

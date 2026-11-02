@@ -49,18 +49,39 @@ export function guardarIdem(clave, id) {
 }
 const persistirIdem = () => writeFileSync(archivoIdem, JSON.stringify(idempotencia, null, 2));
 
-/** Al arrancar: carga los trabajos del disco. Los que estaban en curso se dan por fallidos (el proceso murió con ellos). */
+/** Ventana para reanudar un llenado que quedó a medias al morir el proceso (el backend espera hasta 180 min). */
+const REANUDAR_MS = 4 * 3600_000;
+
+/**
+ * Al arrancar: carga los trabajos del disco.
+ * Los que estaban en curso y se actualizaron hace poco se reencolan (el cliente sigue esperando el mismo id).
+ * `esperando_datos` se deja igual. Los demás no terminales (viejos) se marcan error reintentable.
+ */
 export function cargarDeDisco() {
   for (const id of readdirSync(dirTrabajos)) {
     const f = join(dirDe(id), 'estado.json');
     if (!existsSync(f)) continue;
     try {
       const t = JSON.parse(readFileSync(f, 'utf8'));
-      if (!TERMINALES.includes(t.estado)) {
+      if (t.estado === 'esperando_datos' || TERMINALES.includes(t.estado)) {
+        trabajos.set(t.id, t);
+        continue;
+      }
+      const marca = Date.parse(t.actualizado_en || t.iniciado_en || t.creado_en || 0);
+      const reciente = Number.isFinite(marca) && (Date.now() - marca) < REANUDAR_MS;
+      if (reciente) {
+        t.estado = 'en_cola';
+        t.mensaje = 'Reanudando el llenado…';
+        t.error = null;
+        t.terminado_en = null;
+        t.cancelando = false;
+        guardar(t);
+        console.log(`[store] se reanuda ${t.id}`);
+      } else {
         t.estado = 'error';
         t.etapa = t.etapa ?? 'recibido';
-        t.mensaje = 'El servidor se reinició durante el llenado. Envía el paquete de nuevo.';
-        t.error = { codigo: 'interno', mensaje: 'El servidor se reinició mientras el trabajo estaba en curso.', reintentable: true, detalle: null };
+        t.mensaje = 'El servidor se detuvo durante el llenado. Envía el paquete de nuevo.';
+        t.error = { codigo: 'interno', mensaje: 'El servidor se detuvo mientras el trabajo estaba en curso.', reintentable: true, detalle: null };
         t.terminado_en = ahora();
         guardar(t);
       }
@@ -97,7 +118,13 @@ export function porcentajeDe(t) {
   const x = totalesDe(t);
   const total = x.campos_totales + x.tablas_totales;
   const bruto = total === 0 ? 0 : Math.floor((100 * (x.campos_completados + x.tablas_completadas)) / total);
-  t.porcentajeMax = Math.max(t.porcentajeMax ?? 0, Math.min(bruto, 99));
+  let n = Math.min(bruto, 99);
+  // Skill (un solo disparo) tarda minutos sin entregar: rampa suave ~1% cada 12 s, tope 12%, hasta que haya campos/tablas reales.
+  if (n === 0 && t.estado === 'procesando' && t.iniciado_en) {
+    const seg = (Date.now() - Date.parse(t.iniciado_en)) / 1000;
+    n = Math.min(12, Math.floor(seg / 12));
+  }
+  t.porcentajeMax = Math.max(t.porcentajeMax ?? 0, n);
   return t.porcentajeMax;
 }
 

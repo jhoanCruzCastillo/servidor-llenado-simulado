@@ -1,0 +1,23 @@
+{
+ "plantilla": "CODIGO",
+ "nombre": "Nombre oficial de la ficha",
+ "columnas_ocultas": {"HOJA": ["J"]},
+ "campos": {
+  "01.01.3": {"tipo": "celda", "hoja": "FICHA", "celda": "L18", "desc": "Naturaleza de intervención",
+              "opciones": ["MEJORAMIENTO", "AMPLIACIÓN"]},
+  "01.03.1": {"tipo": "grupo", "hoja": "FICHA", "celdas": {"nivel": "I39", "entidad": "I40"}, "desc": "OPMI"},
+  "01.08.1": {"tipo": "filas", "hoja": "FICHA", "filas": {"agua": 178, "desague": 179},
+              "columnas": {"localidad": "E", "comentario": "O"}, "desc": "Servicios básicos"},
+  "03.03.1": {"tipo": "lista", "hoja": "Anexo 2", "fila_inicio": 70, "max_filas": 500,
+              "columnas": {"ambiente": "F", "metrado": "H"}, "desc": "Ambientes"},
+  "01.16.23": {"tipo": "anual", "hoja": "FICHA", "filas": {"operacion_sin": 878},
+               "columnas_periodo": ["G", "H", "I", "K"], "desc": "O&M por año"}
+ },
+ "verificaciones": [
+  {"hoja": "FICHA", "celda": "U766", "esperado": "OK", "desc": "Total obras civiles"},
+  {"hoja": "Anexo 2", "celda": "H796", "esperado_empieza": "OK", "desc": "Verificación final"},
+  {"hoja": "Anexo 2", "celda": "N581", "esperado": "ok", "si_vacio_ok": true, "desc": "Aulas"}
+ ],
+ "totales_a_leer": {"costo_total": ["FICHA", "K815"]},
+ "errores_heredados": ["FICHA!J106"]
+}

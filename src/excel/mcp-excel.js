@@ -83,8 +83,11 @@ server.registerTool(
   async ({ seccion_id, campos }) => {
     try {
       const u = unidad();
-      if (u.tipo !== 'campos' || u.seccionId !== seccion_id) {
-        return falla(`Ahora no corresponde entregar campos de la sección «${seccion_id}». ${u.tipo === 'campos' ? `La sección en curso es ${u.seccionId}.` : 'Ahora se piden tablas: usa llenar_tablas.'}`);
+      if (u.tipo === 'tablas') {
+        return falla('Ahora se piden tablas: usa llenar_tablas.');
+      }
+      if (u.tipo !== 'ficha' && (u.tipo !== 'campos' || u.seccionId !== seccion_id)) {
+        return falla(`Ahora no corresponde entregar campos de la sección «${seccion_id}». ${u.tipo === 'campos' ? `La sección en curso es ${u.seccionId}.` : 'Usa llenar_tablas.'}`);
       }
       const r = await sesion.guardarCampos(seccion_id, { campos });
       const informe = await informeCampos(sesion, seccion_id, r);
@@ -116,8 +119,8 @@ server.registerTool(
   async ({ tablas }) => {
     try {
       const u = unidad();
-      if (u.tipo !== 'tablas') return falla('Ahora se piden los campos de texto de la sección: usa llenar_campos.');
-      const r = await sesion.guardarTablas(tablas, u.tablas);
+      if (u.tipo !== 'ficha' && u.tipo !== 'tablas') return falla('Ahora se piden los campos de texto de la sección: usa llenar_campos.');
+      const r = await sesion.guardarTablas(tablas, u.tipo === 'ficha' ? undefined : u.tablas);
       const informe = await informeTablas(sesion, u, r);
       sesion.registrar('llenar_tablas', { tablas }, informe);
       return texto(informe);
